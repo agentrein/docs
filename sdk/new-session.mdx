@@ -1,0 +1,41 @@
+---
+title: newSession()
+description: Create a new agent session before executing actions.
+---
+
+## Signature
+```ts
+agentrein.newSession(options?: SessionOptions | string): Promise<Session>
+```
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `options.agentId` | `string` | No | Developer-defined identifier for the agent. Defaults to a random UUID. |
+| `options.intent` | `string` | No | Natural language description of what this session is trying to accomplish. Used by drift detection. |
+
+## Returns
+```ts
+interface Session {
+  id: string;
+  organizationId: string;
+  agentId: string;
+  intent: string | null;
+  status: string;
+  startedAt: string;
+  endedAt: string | null;
+}
+```
+
+## Example
+```ts
+const session = await agentrein.newSession({
+  agentId: 'billing-agent',
+  intent: 'Create an invoice for customer cus_xxx and notify them on Slack',
+});
+```
+
+<Warning>
+`newSession()` is always awaited and will throw if the backend is unreachable — regardless of `failureMode`. A session ID is required for all subsequent `call()` and `completeSession()` calls.
+</Warning>

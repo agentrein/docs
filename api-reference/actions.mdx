@@ -1,0 +1,61 @@
+---
+title: Actions
+description: Actions are individual API calls logged within a session.
+---
+
+## Log Action
+```http
+POST /sessions/:id/actions
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "apiName": "stripe.invoices.create",
+  "operationType": "CREATE",
+  "payload": { "customer": "cus_xxx" },
+  "response": { "id": "in_xxx" },
+  "status": "SUCCESS",
+  "undoConfig": null,
+  "beforeState": null
+}
+```
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `apiName` | string | Yes | Fully qualified name e.g. `stripe.invoices.create` |
+| `operationType` | `CREATE \| UPDATE \| DELETE` | Yes | Type of mutation |
+| `payload` | object | Yes | Arguments passed to the action |
+| `response` | object | No | Return value of the action |
+| `status` | string | No | Defaults to `SUCCESS` |
+| `undoConfig` | object | No | Custom rollback instructions |
+| `beforeState` | object | No | Resource state before mutation — used for snapshot |
+| `timeoutMs` | number | No | Required when `status` is `PENDING_APPROVAL` |
+
+When `beforeState` is present, the backend creates a linked `Snapshot` record automatically.
+
+When `status` is `PENDING_APPROVAL`, the backend creates a linked `ApprovalRequest` record and returns it in the response.
+
+---
+
+## Update Action
+```http
+PATCH /sessions/:id/actions/:actionId
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{ "status": "SUCCESS", "response": { "id": "in_xxx" } }
+```
+
+Valid status values: `SUCCESS`, `ROLLED_BACK`, `FAILED`, `PENDING_APPROVAL`, `ROLLBACK_FAILED`.
+
+---
+
+## Action Statuses
+
+| Status | Description |
+|---|---|
+| `SUCCESS` | Action completed successfully |
+| `PENDING_APPROVAL` | Waiting for human approval |
+| `ROLLED_BACK` | Action was reversed successfully |
+| `FAILED` | Action failed |
+| `ROLLBACK_FAILED` | Rollback was attempted 3 times and failed |

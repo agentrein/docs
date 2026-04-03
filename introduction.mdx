@@ -1,0 +1,37 @@
+---
+title: Introduction
+description: AgentRein is an AI Agent Reliability Platform. It wraps your agent's API calls with automatic rollback, human-in-the-loop approval gates, and intent drift detection.
+---
+
+## What AgentRein Does
+
+When an AI agent executes a sequence of actions — creating a Stripe invoice, posting a Slack message, opening a GitHub issue — any failure midway leaves the system in a partial state. AgentRein solves this by:
+
+- **Automatic LIFO Rollback** — if any action throws, AgentRein reverses all previous actions in the session in Last-In-First-Out order.
+- **Human-in-the-Loop (HITL)** — flag sensitive actions for human approval before they execute.
+- **Intent Drift Detection** — GPT-4o-mini evaluates every action against the session's original intent and flags deviations above a configurable threshold.
+
+## How It Works
+Your Agent Code
+↓
+AgentRein SDK (wraps every action)
+↓
+AgentRein Backend (logs, snapshots, queues)
+↓
+Rollback Engine (LIFO compensation via BullMQ)
+
+## Supported Connectors
+
+AgentRein includes built-in rollback strategies for:
+
+| Connector | Rollback Strategy |
+|---|---|
+| Stripe | Deletes created invoices and customers |
+| Slack | Posts a threaded correction message |
+| GitHub | Closes created issues |
+| HubSpot | Deletes creates, restores beforeState for updates |
+| Salesforce | Deletes creates, restores beforeState for updates |
+| Notion | Moves pages to trash, deletes appended blocks |
+| Gmail | Sends a correction reply, untrashes, deletes drafts |
+| Google Drive | Deletes files, restores metadata |
+| Google Sheets | Clears ranges, deletes spreadsheets |

@@ -1,0 +1,43 @@
+---
+title: Human-in-the-Loop
+description: Require human approval before executing sensitive actions.
+---
+
+## Overview
+
+Pass `requiresApproval: true` in `CallOptions` to hold an action for human review before it executes. The SDK logs the action with status `PENDING_APPROVAL` and polls until a decision is made.
+
+## Usage
+```ts
+const result = await agentrein.call(
+  stripe.invoices.create,
+  session,
+  { customer: 'cus_xxx' },
+  { requiresApproval: true, timeoutMs: 300_000 }
+);
+```
+
+## Flow
+
+1. SDK logs action with status `PENDING_APPROVAL`
+2. SDK polls `GET /approvals/:id` every `pollIntervalMs` (default: 2000ms)
+3. A human approves or rejects from the dashboard at `app.agentrein.com/approvals`
+
+**If approved:**
+- SDK executes the action
+- Action status updated to `SUCCESS`
+
+**If rejected:**
+- SDK throws `ApprovalRejectedError`
+- Session rollback is triggered automatically
+
+**If timeout exceeded:**
+- SDK throws `Error: Approval timeout exceeded`
+
+## Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `requiresApproval` | `boolean` | `false` | Enable HITL gate |
+| `pollIntervalMs` | `number` | `2000` | Polling interval in ms |
+| `timeoutMs` | `number` | `86400000` | Max wait time in ms (24h) |

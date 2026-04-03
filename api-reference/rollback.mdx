@@ -1,0 +1,42 @@
+---
+title: Rollback
+description: Trigger LIFO rollback of all successful actions in a session.
+---
+
+## Trigger Rollback
+```http
+POST /sessions/:id/rollback
+Authorization: Bearer <token>
+```
+
+Only allowed when session `status` is `ACTIVE` or `FAILED`.
+
+Rolls back all actions with status `SUCCESS` in Last-In-First-Out order. Each action's rollback is attempted up to 3 times with exponential backoff (2s, 4s, 8s).
+
+**After rollback:**
+- Actions that reversed successfully → status `ROLLED_BACK`
+- Actions that failed all 3 attempts → status `ROLLBACK_FAILED`
+- Session status → `ROLLED_BACK`
+
+---
+
+## Get Dirty Actions
+
+Actions with status `ROLLBACK_FAILED` require manual intervention.
+```http
+GET /sessions/:id/dirty
+Authorization: Bearer <token>
+```
+
+Returns all actions in the session with status `ROLLBACK_FAILED`, ordered by `order` ascending.
+
+---
+
+## Rollback Priority
+
+For each action, the engine uses this priority:
+
+1. If `undoConfig` is present and `type` is not `none` — execute it
+2. Otherwise — look up `apiName` in the built-in undo registry
+
+If neither exists, the action is marked `ROLLBACK_FAILED` and the engine continues to the next action.

@@ -1,0 +1,49 @@
+---
+title: Quickstart
+description: Get AgentRein protecting your agent in under 5 minutes.
+---
+
+## 1. Install the SDK
+```bash
+npm install agentrein
+```
+
+## 2. Get Your API Key
+
+Log in to [app.agentrein.com](https://app.agentrein.com), go to **Settings**, and copy your API key.
+
+## 3. Initialize the Client
+```ts
+import pkg from 'agentrein';
+const { AgentRein } = pkg;
+
+const agentrein = new AgentRein({
+  apiKey: process.env.AGENTREIN_API_KEY,
+});
+```
+
+## 4. Create a Session
+```ts
+const session = await agentrein.newSession({
+  agentId: 'my-agent',
+  intent: 'Cancel the subscription for customer cus_xxx and notify them on Slack',
+});
+```
+
+## 5. Wrap Your Actions
+```ts
+import { stripe } from 'agentrein/connectors';
+
+const invoice = await agentrein.call(
+  stripe.invoices.create,
+  session,
+  { customer: 'cus_xxx', currency: 'usd' }
+);
+```
+
+If `stripe.invoices.create` throws, AgentRein automatically rolls back all previous actions in the session.
+
+## 6. Complete the Session
+```ts
+await agentrein.completeSession(session);
+```

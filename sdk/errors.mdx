@@ -1,0 +1,44 @@
+---
+title: Errors
+description: Error types thrown by the AgentRein SDK.
+---
+
+## AgentReinUnavailableError
+
+Thrown when the SDK cannot reach the AgentRein backend and `failureMode` is set to `'closed'`.
+
+Also thrown unconditionally from `newSession()` if the backend is unreachable — regardless of `failureMode`.
+```ts
+import pkg from 'agentrein';
+const { AgentReinUnavailableError } = pkg;
+
+try {
+  const session = await agentrein.newSession({ agentId: 'my-agent' });
+} catch (err) {
+  if (err instanceof AgentReinUnavailableError) {
+    // backend is down
+  }
+}
+```
+
+## ApprovalRejectedError
+
+Thrown when a human rejects a `requiresApproval` action. AgentRein automatically triggers session rollback before throwing.
+```ts
+import pkg from 'agentrein';
+const { ApprovalRejectedError } = pkg;
+
+try {
+  await agentrein.call(
+    stripe.invoices.create,
+    session,
+    { customer: 'cus_xxx' },
+    { requiresApproval: true }
+  );
+} catch (err) {
+  if (err instanceof ApprovalRejectedError) {
+    console.log('Rejected:', err.message);
+    // session has already been rolled back
+  }
+}
+```

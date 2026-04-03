@@ -1,0 +1,58 @@
+---
+title: Environment Variables
+description: All environment variables required to run the AgentRein backend.
+---
+
+## Required
+
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `REDIS_HOST` | Redis host for BullMQ queues |
+| `REDIS_PORT` | Redis port for BullMQ queues |
+| `JWT_SECRET` | Secret used to sign JWTs |
+| `OPENAI_API_KEY` | Used by drift detection (GPT-4o-mini) |
+
+## Auth
+
+| Variable | Description |
+|---|---|
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
+| `GITHUB_CLIENT_ID` | GitHub OAuth client ID |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth client secret |
+
+## URLs
+
+| Variable | Description |
+|---|---|
+| `API_URL` | Public URL of the backend e.g. `https://api.agentrein.com` |
+| `UI_URL` | Public URL of the dashboard e.g. `https://app.agentrein.com` |
+
+## Connectors
+
+| Variable | Required For |
+|---|---|
+| `STRIPE_KEY` | Stripe connector |
+| `SLACK_TOKEN` | Slack connector (Bot Token) |
+| `GITHUB_TOKEN` | GitHub connector |
+| `HUBSPOT_ACCESS_TOKEN` | HubSpot connector |
+| `SALESFORCE_INSTANCE_URL` | Salesforce connector |
+| `SALESFORCE_ACCESS_TOKEN` | Salesforce connector |
+| `NOTION_API_KEY` | Notion connector |
+| `GMAIL_CLIENT_ID` | Gmail connector |
+| `GMAIL_CLIENT_SECRET` | Gmail connector |
+| `GMAIL_REFRESH_TOKEN` | Gmail connector |
+| `GOOGLE_CLIENT_ID` | Google Drive + Sheets connectors |
+| `GOOGLE_CLIENT_SECRET` | Google Drive + Sheets connectors |
+| `GOOGLE_REFRESH_TOKEN` | Google Drive + Sheets connectors |
+
+## Email
+
+| Variable | Description |
+|---|---|
+| `RESEND_API_KEY` | Transactional email via Resend (password reset) |
+
+<Info>
+If `RESEND_API_KEY` is not set, the backend logs the reset token to stdout instead of sending an email. All other missing connector variables cause the connector's client initializer to throw at runtime only when that connector is used.
+</Info>

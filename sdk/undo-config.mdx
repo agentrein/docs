@@ -1,0 +1,64 @@
+---
+title: UndoConfig
+description: Provide custom rollback instructions for actions not covered by built-in connectors.
+---
+
+## Overview
+
+When using a built-in `ConnectorAction`, rollback is handled automatically. For custom API calls, pass an `UndoConfig` to tell AgentRein how to reverse the action.
+
+## createUndoConfig()
+```ts
+import pkg from 'agentrein';
+const { createUndoConfig } = pkg;
+
+const undoConfig = createUndoConfig({
+  type: 'http-delete',
+  url: `https://api.example.com/resources/${resourceId}`,
+  headers: { Authorization: `Bearer ${token}` },
+});
+```
+
+## Types
+
+### `http-delete`
+
+Sends a `DELETE` request to `url` with optional `headers`.
+```ts
+createUndoConfig({
+  type: 'http-delete',
+  url: 'https://api.example.com/resources/123',
+  headers: { Authorization: 'Bearer token' },
+})
+```
+
+### `slack-correction`
+
+Sends a `POST` request to `url` with optional `body`.
+```ts
+createUndoConfig({
+  type: 'slack-correction',
+  url: 'https://hooks.slack.com/services/xxx',
+  body: { text: 'This message was sent in error.' },
+})
+```
+
+### `none`
+
+Marks the action as intentionally non-reversible. No rollback is attempted.
+```ts
+createUndoConfig({ type: 'none' })
+```
+
+## Usage with call()
+```ts
+const resource = await agentrein.call(
+  myCreateFunction,
+  session,
+  createUndoConfig({
+    type: 'http-delete',
+    url: `https://api.example.com/resources/${resourceId}`,
+  }),
+  { actionName: 'myApi.resource.create' }
+);
+```

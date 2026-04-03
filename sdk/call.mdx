@@ -1,0 +1,58 @@
+---
+title: call()
+description: Wrap an agent action with automatic rollback protection.
+---
+
+## Signature
+```ts
+agentrein.call(fn, session, ...args): Promise<T>
+agentrein.call(fn, session, undoConfig, ...args): Promise<T>
+```
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `fn` | `ConnectorAction \| Function` | Yes | The action to execute. Pass a built-in `ConnectorAction` or a plain function. |
+| `session` | `Session` | Yes | The session returned by `newSession()`. |
+| `undoConfig` | `UndoConfig` | No | Custom rollback instructions. Created with `createUndoConfig()`. |
+| `...args` | `any[]` | No | Arguments forwarded to `fn`. Last arg may be `CallOptions`. |
+
+## CallOptions
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `actionName` | `string` | `fn.name` | Override the logged action name. Required when passing a plain function. |
+| `requiresApproval` | `boolean` | `false` | If true, action is held for human approval before executing. |
+| `pollIntervalMs` | `number` | `2000` | How often to poll for approval decision. |
+| `timeoutMs` | `number` | `86400000` | How long to wait for approval before throwing. |
+
+## Behavior
+
+1. Executes `fn` (or `ConnectorAction.execute`)
+2. Logs the action to the backend asynchronously (fire-and-forget)
+3. If `fn` throws — triggers `POST /sessions/:id/rollback` before re-throwing
+
+## With a Built-in Connector
+```ts
+import { stripe } from 'agentrein/connectors';
+
+const invoice = await agentrein.call(
+  stripe.invoices.create,
+  session,
+  { customer: 'cus_xxx', currency: 'usd' }
+);
+```
+
+## With a Plain Function
+```ts
+const result = await agentrein.call(
+  myApiFunction,
+  session,
+  { actionName: 'myConnector.resource.create' }
+);
+```
+
+## Fail-Open Guarantee
+
+If the AgentRein backend is unreachable, `call()` still executes `fn` and returns the result. Logging and rollback are silently skipped. Set `failureMode: 'closed'` to disable this.

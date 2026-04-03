@@ -1,0 +1,101 @@
+---
+title: Built-in Connectors
+description: Use AgentRein's typed connectors for automatic rollback and snapshot capture.
+---
+
+## Overview
+
+Built-in connectors are `ConnectorAction` objects that carry `apiName`, `operationType`, and rollback logic. When passed to `call()`, AgentRein reads these automatically — no need to set `actionName` or `operationType` manually.
+
+For `UPDATE` and `DELETE` actions, the SDK calls `getState()` on the connector before execution to capture `beforeState` for snapshot-based rollback.
+
+## Available Connectors
+
+### Stripe
+```ts
+import { stripe } from 'agentrein/connectors';
+
+stripe.invoices.create   // operationType: CREATE
+stripe.invoices.del      // operationType: DELETE
+stripe.customers.create  // operationType: CREATE
+stripe.customers.del     // operationType: DELETE
+stripe.refunds.create    // operationType: CREATE
+```
+
+### Slack
+```ts
+import { slack } from 'agentrein/connectors';
+
+slack.chat.postMessage   // operationType: CREATE
+slack.chat.update        // operationType: UPDATE
+slack.chat.delete        // operationType: DELETE
+```
+
+### GitHub
+```ts
+import { github } from 'agentrein/connectors';
+
+github.issues.create     // operationType: CREATE
+github.issues.update     // operationType: UPDATE
+github.repos.delete      // operationType: DELETE
+```
+
+### HubSpot
+```ts
+import { hubspot } from 'agentrein/connectors';
+
+hubspot.contacts.create  // operationType: CREATE
+hubspot.contacts.update  // operationType: UPDATE
+hubspot.deals.create     // operationType: CREATE
+hubspot.deals.update     // operationType: UPDATE
+```
+
+### Salesforce
+```ts
+import { salesforce } from 'agentrein/connectors';
+
+salesforce.contacts.create       // operationType: CREATE
+salesforce.contacts.update       // operationType: UPDATE
+salesforce.opportunities.create  // operationType: CREATE
+salesforce.opportunities.update  // operationType: UPDATE
+```
+
+### Notion
+```ts
+import { notion } from 'agentrein/connectors';
+
+notion.pages.create           // operationType: CREATE
+notion.pages.update           // operationType: UPDATE
+notion.database_items.create  // operationType: CREATE
+notion.blocks.append          // operationType: CREATE
+```
+
+### Gmail
+```ts
+import { gmail } from 'agentrein/connectors';
+
+gmail.messages.send    // operationType: CREATE
+gmail.messages.trash   // operationType: UPDATE
+gmail.drafts.create    // operationType: CREATE
+gmail.labels.modify    // operationType: UPDATE
+```
+
+### Google Drive
+```ts
+import { gdrive } from 'agentrein/connectors';
+
+gdrive.files.create  // operationType: CREATE
+gdrive.files.update  // operationType: UPDATE
+gdrive.files.move    // operationType: UPDATE
+gdrive.files.trash   // operationType: UPDATE
+```
+
+### Google Sheets
+```ts
+import { gsheets } from 'agentrein/connectors';
+
+gsheets.values.append         // operationType: CREATE
+gsheets.values.update         // operationType: UPDATE
+gsheets.spreadsheets.create   // operationType: CREATE
+gsheets.sheets.add            // operationType: CREATE
+```

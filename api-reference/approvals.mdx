@@ -1,0 +1,65 @@
+---
+title: Approvals
+description: Human-in-the-Loop approval requests for sensitive actions.
+---
+
+## List Pending Approvals
+```http
+GET /approvals
+Authorization: Bearer <token>
+```
+
+Returns all `PENDING` approval requests for the organization. Each item includes:
+
+| Field | Description |
+|---|---|
+| `approvalId` | ID of the ApprovalRequest |
+| `actionId` | ID of the linked Action |
+| `apiName` | e.g. `stripe.invoices.create` |
+| `operationType` | `CREATE`, `UPDATE`, or `DELETE` |
+| `sessionId` | Parent session |
+| `agentId` | Agent that created the session |
+| `payloadSummary` | First 200 chars of the action payload |
+| `requestedAt` | ISO timestamp |
+| `timeoutAt` | ISO timestamp when the approval window closes |
+| `timeRemaining` | Seconds remaining (0 if expired) |
+
+---
+
+## Get Approval
+```http
+GET /approvals/:id
+Authorization: Bearer <token>
+```
+
+Returns full approval details including the linked action and snapshot.
+
+---
+
+## Approve
+```http
+POST /approvals/:id/approve
+Authorization: Bearer <token>
+```
+
+- Sets `ApprovalRequest.status` → `APPROVED`
+- Sets linked `Action.status` → `SUCCESS`
+
+The SDK detects the approval on its next poll and executes the action.
+
+---
+
+## Reject
+```http
+POST /approvals/:id/reject
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{ "reason": "Amount too high" }
+```
+
+- Sets `ApprovalRequest.status` → `REJECTED`
+- Sets linked `Action.status` → `FAILED`
+- Triggers `rollbackAll()` for the session immediately on the backend
+
+The SDK detects the rejection on its next poll and throws `ApprovalRejectedError`.

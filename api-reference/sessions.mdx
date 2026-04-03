@@ -1,0 +1,77 @@
+---
+title: Sessions
+description: Sessions represent a single agent run. All actions are scoped to a session.
+---
+
+## List Sessions
+```http
+GET /sessions
+Authorization: Bearer <token>
+```
+
+Returns all sessions for the organization. Each session includes `_count.actions` (integer) instead of the full actions array.
+
+---
+
+## Create Session
+```http
+POST /sessions
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "agentId": "billing-agent",
+  "intent": "Cancel subscription and notify customer"
+}
+```
+
+| Field | Type | Required |
+|---|---|---|
+| `agentId` | string | No — defaults to random UUID |
+| `intent` | string | No |
+
+**Response:** `201` — full Session object.
+
+---
+
+## Get Session
+```http
+GET /sessions/:id
+Authorization: Bearer <token>
+```
+
+Returns full session including all actions and their snapshots.
+
+---
+
+## Complete Session
+```http
+PATCH /sessions/:id
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{ "status": "COMPLETED" }
+```
+
+Only allowed when session `status` is `ACTIVE`. Only `COMPLETED` is an accepted value.
+
+---
+
+## Session Statuses
+
+| Status | Description |
+|---|---|
+| `ACTIVE` | Session is running |
+| `COMPLETED` | Session finished successfully |
+| `ROLLED_BACK` | Rollback was triggered and completed |
+| `FAILED` | Session failed |
+
+---
+
+## GDPR Purge
+```http
+DELETE /sessions/:id/purge
+Authorization: Bearer <token>
+```
+
+Redacts all `payload` and `response` fields in every action, and all `beforeState`/`afterState` in every snapshot. Also sets `intent` to null. Irreversible.

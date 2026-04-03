@@ -1,0 +1,39 @@
+---
+title: Installation
+description: Install the AgentRein SDK and configure your API key.
+---
+
+## Install
+```bash
+npm install agentrein
+```
+
+## Import
+
+The SDK ships as a dual CJS/ESM package. Use the following import pattern:
+```ts
+import pkg from 'agentrein';
+const { AgentRein, createUndoConfig } = pkg;
+```
+
+## Initialize
+```ts
+const agentrein = new AgentRein({
+  apiKey: process.env.AGENTREIN_API_KEY,
+  serverUrl: 'https://api.agentrein.com', // optional, this is the default
+  failureMode: 'open',                     // optional, 'open' | 'closed'
+});
+```
+
+### Options
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `apiKey` | `string` | Yes | — | Your organization API key from the dashboard |
+| `serverUrl` | `string` | No | `https://api.agentrein.com` | AgentRein backend URL |
+| `failureMode` | `'open' \| 'closed'` | No | `'open'` | `open` — SDK continues if backend is unreachable. `closed` — throws `AgentReinUnavailableError` |
+
+## Environment Variable
+```bash
+AGENTREIN_API_KEY=ag_live_your_key_here
+```
