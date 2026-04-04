@@ -12,13 +12,13 @@
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg"
   },
-  "navigation": [
-    {
-      "group": "Getting Started",
+  "navigation": {
+    "getting-started": {
+      "title": "Getting Started",
       "pages": ["introduction", "quickstart"]
     },
-    {
-      "group": "SDK Reference",
+    "sdk-reference": {
+      "title": "SDK Reference",
       "pages": [
         "sdk/installation",
         "sdk/new-session",
@@ -29,8 +29,8 @@
         "sdk/errors"
       ]
     },
-    {
-      "group": "API Reference",
+    "api-reference": {
+      "title": "API Reference",
       "pages": [
         "api-reference/authentication",
         "api-reference/sessions",
@@ -39,11 +39,11 @@
         "api-reference/approvals"
       ]
     },
-    {
-      "group": "Self-Hosting",
+    "self-hosting": {
+      "title": "Self-Hosting",
       "pages": ["self-hosting/environment"]
     }
-  ],
+  },
   "footerSocials": {
     "github": "https://github.com/AgentReinAi"
   }
