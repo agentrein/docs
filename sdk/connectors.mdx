@@ -36,9 +36,33 @@ Notice the `actionName` argument. It should always follow the pattern `'connecto
 
 ## Support Matrix
 
-| Connector     | Action name to use              | Auto-rollback on server | What the server does to undo                      |
-|---------------|---------------------------------|-------------------------|---------------------------------------------------|
-| Stripe        | `stripe.invoices.create`        | Yes                     | Voids the created invoice                         |
-| Stripe        | `stripe.customers.create`       | Yes                     | Deletes the created customer                      |
-| Slack         | `slack.chat.postMessage`        | Yes                     | Deletes the posted message                        |
-| GitHub        | `github.issues.create`          | Yes                     | Closes the created issue                          |
+| Connector | Action name to use | Auto-rollback on server | What the server does to undo |
+| --- | --- | --- | --- |
+| Stripe | `stripe.invoices.create` | Yes | Voids the created invoice |
+| Stripe | `stripe.customers.create` | Yes | Deletes the created customer |
+| Slack | `slack.chat.postMessage` | Yes | Posts a correction message in the same thread |
+| GitHub | `github.issues.create` | Yes | Closes the created issue |
+| HubSpot | `hubspot.contacts.create` | Yes | Deletes the created contact |
+| HubSpot | `hubspot.contacts.update` | Yes | Restores the contact to its previous state |
+| HubSpot | `hubspot.deals.create` | Yes | Deletes the created deal |
+| HubSpot | `hubspot.deals.update` | Yes | Restores the deal to its previous state |
+| Salesforce | `salesforce.contacts.create` | Yes | Deletes the created contact |
+| Salesforce | `salesforce.contacts.update` | Yes | Restores the contact to its previous state |
+| Salesforce | `salesforce.opportunities.create` | Yes | Deletes the created opportunity |
+| Salesforce | `salesforce.opportunities.update` | Yes | Restores the opportunity to its previous state |
+| Notion | `notion.pages.create` | Yes | Moves the page to trash |
+| Notion | `notion.pages.update` | Yes | Restores the page to its previous state |
+| Notion | `notion.database_items.create` | Yes | Moves the database item to trash |
+| Notion | `notion.blocks.append` | Yes | Deletes all appended blocks |
+| Gmail | `gmail.messages.send` | Yes | Sends a correction reply in the same thread |
+| Gmail | `gmail.messages.trash` | Yes | Untrashes the message |
+| Gmail | `gmail.drafts.create` | Yes | Deletes the created draft |
+| Gmail | `gmail.labels.modify` | Yes | Reverts the label changes |
+| Google Drive | `gdrive.files.create` | Yes | Deletes the created file |
+| Google Drive | `gdrive.files.update` | Yes | Restores the file metadata to its previous state |
+| Google Drive | `gdrive.files.move` | Yes | Moves the file back to its original location |
+| Google Drive | `gdrive.files.trash` | Yes | Untrashes the file |
+| Google Sheets | `gsheets.values.append` | Yes | Clears the appended range |
+| Google Sheets | `gsheets.values.update` | Yes | Restores the previous cell values |
+| Google Sheets | `gsheets.spreadsheets.create` | Yes | Deletes the created spreadsheet |
+| Google Sheets | `gsheets.sheets.add` | Yes | Deletes the added sheet |
