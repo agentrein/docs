@@ -45,12 +45,14 @@ Only `actionName` and `requiresApproval` are used to detect CallOptions. Passing
 > When using a ConnectorAction, all args are passed as a single object to the connector's execute() method. Multiple positional args after the undoConfig are not supported for Connector Actions - use a single args object.
 
 ```ts
-import { stripe } from 'agentrein/connectors';
+import Stripe from 'stripe';
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const invoice = await agentrein.call(
   stripe.invoices.create,
   session,
-  { customer: 'cus_xxx', currency: 'usd' }
+  { customer: 'cus_xxx', currency: 'usd' },
+  { actionName: 'stripe.invoices.create' }
 );
 ```
 
@@ -61,7 +63,7 @@ const invoiceWithOptions = await agentrein.call(
   stripe.invoices.create,
   session,
   { customer: 'cus_xxx', currency: 'usd' },
-  { requiresApproval: false }
+  { actionName: 'stripe.invoices.create', requiresApproval: false }
 );
 ```
 
