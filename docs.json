@@ -1,5 +1,4 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
   "theme": "almond",
   "name": "AgentRein",
   "colors": {
@@ -25,6 +24,7 @@
         "groups": [
           {
             "group": "Getting Started",
+            "icon": "rocket",
             "pages": [
               "introduction",
               "quickstart"
@@ -32,6 +32,7 @@
           },
           {
             "group": "SDK Reference",
+            "icon": "code",
             "pages": [
               "sdk/installation",
               "sdk/new-session",
@@ -41,12 +42,6 @@
               "sdk/hitl",
               "sdk/errors"
             ]
-          },
-          {
-            "group": "Self-Hosting",
-            "pages": [
-              "self-hosting/environment"
-            ]
           }
         ]
       },
@@ -55,6 +50,7 @@
         "groups": [
           {
             "group": "API Reference",
+            "icon": "rectangle-stack",
             "pages": [
               "api-reference/authentication",
               "api-reference/sessions",
@@ -71,6 +67,7 @@
         "groups": [
           {
             "group": "Changelog",
+            "icon": "clock",
             "pages": [
               "changelog"
             ]
