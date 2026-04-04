@@ -32,7 +32,9 @@ const session = await agentrein.newSession({
 
 ## 5. Wrap Your Actions
 ```ts
-import { stripe } from 'agentrein/connectors';
+// Bring your own API client — AgentRein wraps any async function
+import Stripe from 'stripe';
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const invoice = await agentrein.call(
   stripe.invoices.create,
