@@ -17,9 +17,12 @@
       "vscode"
     ]
   },
-  "topbarCtaButton": {
-    "name": "Dashboard",
-    "url": "https://www.agentrein.com/sessions"
+  "navbar": {
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://www.agentrein.com/sessions"
+    }
   },
   "topbarLinks": [
     {
