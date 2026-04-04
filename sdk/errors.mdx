@@ -10,8 +10,7 @@ Thrown when the SDK cannot reach the AgentRein backend during authentication. If
 > [!NOTE]
 > Developers should catch both error types when using `failureMode: 'closed'`.
 ```ts
-import pkg from 'agentrein';
-const { AgentReinUnavailableError } = pkg;
+import { AgentReinUnavailableError } from 'agentrein';
 
 try {
   const session = await agentrein.newSession({ agentId: 'my-agent' });
@@ -26,8 +25,7 @@ try {
 
 Thrown when a human rejects a `requiresApproval` action. AgentRein automatically triggers session rollback before throwing.
 ```ts
-import pkg from 'agentrein';
-const { ApprovalRejectedError } = pkg;
+import { ApprovalRejectedError } from 'agentrein';
 
 try {
   await agentrein.call(
