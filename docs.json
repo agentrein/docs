@@ -52,7 +52,6 @@
             "group": "API Reference",
             "icon": "rectangle-stack",
             "pages": [
-              "api-reference/introduction",
               "api-reference/authentication",
               "api-reference/sessions",
               "api-reference/actions",
