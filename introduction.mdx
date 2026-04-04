@@ -1,37 +1,66 @@
 ---
-title: Introduction
-description: AgentRein is an AI Agent Reliability Platform. It wraps your agent's API calls with automatic rollback, human-in-the-loop approval gates, and intent drift detection.
+title: "Introduction"
+description: "The AI Agent Reliability Platform. Automatic rollback, human-in-the-loop approvals, and intent drift detection for your agents."
 ---
 
-## What AgentRein Does
+## Get started
 
-When an AI agent executes a sequence of actions — creating a Stripe invoice, posting a Slack message, opening a GitHub issue — any failure midway leaves the system in a partial state. AgentRein solves this by:
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Protect your first agent in under 5 minutes.
+  </Card>
+  <Card title="Installation" icon="package" href="/sdk/installation">
+    Install the SDK and configure your API key.
+  </Card>
+</CardGroup>
 
-- **Automatic LIFO Rollback** — if any action throws, AgentRein reverses all previous actions in the session in Last-In-First-Out order.
-- **Human-in-the-Loop (HITL)** — flag sensitive actions for human approval before they execute.
-- **Intent Drift Detection** — GPT-4o-mini evaluates every action against the session's original intent and flags deviations above a configurable threshold.
+## Core concepts
 
-## How It Works
-Your Agent Code
-↓
-AgentRein SDK (wraps every action)
-↓
-AgentRein Backend (logs, snapshots, queues)
-↓
-Rollback Engine (LIFO compensation via BullMQ)
+<CardGroup cols={3}>
+  <Card title="Automatic Rollback" icon="rotate-left" href="/sdk/call">
+    LIFO rollback of all actions when anything throws.
+  </Card>
+  <Card title="Human-in-the-Loop" icon="user-check" href="/sdk/hitl">
+    Hold sensitive actions for human approval before they execute.
+  </Card>
+  <Card title="Intent Drift Detection" icon="crosshairs" href="/api-reference/sessions">
+    GPT-4o-mini flags when agent actions deviate from the original intent.
+  </Card>
+</CardGroup>
 
-## Supported Connectors
+## SDK Reference
 
-AgentRein includes built-in rollback strategies for:
+<CardGroup cols={2}>
+  <Card title="newSession()" icon="play" href="/sdk/new-session">
+    Create a session before your agent starts executing actions.
+  </Card>
+  <Card title="call()" icon="bolt" href="/sdk/call">
+    Wrap any async function with rollback protection.
+  </Card>
+  <Card title="UndoConfig" icon="arrow-uturn-left" href="/sdk/undo-config">
+    Provide custom rollback instructions for any API.
+  </Card>
+  <Card title="Connectors" icon="plug" href="/sdk/connectors">
+    Bring your own Stripe, Slack, or GitHub client.
+  </Card>
+</CardGroup>
 
-| Connector | Rollback Strategy |
-|---|---|
-| Stripe | Deletes created invoices and customers |
-| Slack | Posts a threaded correction message |
+## Supported connectors
+
+AgentRein includes built-in server-side rollback strategies for:
+
+| Connector | Rollback strategy |
+| --- | --- |
+| Stripe | Voids created invoices, deletes created customers |
+| Slack | Deletes posted messages |
 | GitHub | Closes created issues |
-| HubSpot | Deletes creates, restores beforeState for updates |
-| Salesforce | Deletes creates, restores beforeState for updates |
+| HubSpot | Deletes creates, restores `beforeState` for updates |
+| Salesforce | Deletes creates, restores `beforeState` for updates |
 | Notion | Moves pages to trash, deletes appended blocks |
-| Gmail | Sends a correction reply, untrashes, deletes drafts |
+| Gmail | Sends correction reply, untrashes, deletes drafts |
 | Google Drive | Deletes files, restores metadata |
 | Google Sheets | Clears ranges, deletes spreadsheets |
+
+<Note>
+  The SDK does **not** provide connector wrappers. Bring your own API client and pass it to `agentrein.call()`. The rollback strategies run automatically on the AgentRein server.
+</Note>
