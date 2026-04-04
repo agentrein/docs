@@ -75,3 +75,44 @@ Authorization: Bearer <token>
 ```
 
 Redacts all `payload` and `response` fields in every action, and all `beforeState`/`afterState` in every snapshot. Also sets `intent` to null. Irreversible.
+
+---
+
+## Intent Drift
+
+AgentRein uses GPT-4o-mini to evaluate every action against the session's original `intent`. A `driftScore` of `0.7` or above is flagged as drift.
+
+### Get Drift Logs
+```http
+GET /sessions/:id/intent
+Authorization: Bearer <token>
+```
+
+Returns one entry per action that has an intent log:
+
+| Field | Description |
+|---|---|
+| `stepNumber` | Action order in the session |
+| `apiName` | e.g. `stripe.invoices.create` |
+| `originalIntent` | The session's `intent` string |
+| `actualOutput` | The action's response |
+| `driftDetected` | `true` if `driftScore >= 0.7` |
+| `driftScore` | Float from `0.0` to `1.0` |
+| `reason` | LLM explanation |
+| `suggestion` | LLM suggestion |
+| `createdAt` | ISO timestamp |
+
+---
+
+### Get Drift Summary
+```http
+GET /sessions/:id/intent/summary
+Authorization: Bearer <token>
+```
+
+| Field | Description |
+|---|---|
+| `totalSteps` | Number of actions with intent logs |
+| `driftedSteps` | Number of actions where `driftDetected` is `true` |
+| `avgDriftScore` | Average drift score across all steps |
+| `highestDrift` | `{ stepNumber, driftScore, reason }` or `null` |

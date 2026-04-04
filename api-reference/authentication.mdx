@@ -50,6 +50,38 @@ Content-Type: application/json
 
 OAuth callbacks redirect to the dashboard with a JWT in the URL query param `?token=`.
 
+## Password Reset
+
+### Forgot Password
+```http
+POST /auth/forgot-password
+Content-Type: application/json
+
+{ "email": "user@example.com" }
+```
+
+Always returns `200` regardless of whether the email exists, to prevent account enumeration.
+```json
+{ "message": "If this email exists, a reset link has been sent" }
+```
+
+If `RESEND_API_KEY` is configured, a reset link is emailed to the user. The link expires after 1 hour.
+
+---
+
+### Reset Password
+```http
+POST /auth/reset-password
+Content-Type: application/json
+
+{ "token": "uuid-reset-token", "newPassword": "newSecret" }
+```
+```json
+{ "message": "Password reset successfully" }
+```
+
+Returns `400` if the token is invalid or expired.
+
 ## Error Format
 
 All errors follow RFC 7807:

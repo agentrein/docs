@@ -37,7 +37,9 @@ try {
   );
 } catch (err) {
   if (err instanceof ApprovalRejectedError) {
-    console.log('Rejected:', err.message);
+    // err.reason — the reason string provided by the human reviewer
+    // err.message — "Action rejected by reviewer: <reason>"
+    console.log('Rejected:', err.reason);
     // session has already been rolled back
   }
 }
