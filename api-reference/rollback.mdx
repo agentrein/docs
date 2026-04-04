@@ -18,6 +18,13 @@ Rolls back all actions with status `SUCCESS` in Last-In-First-Out order. Each ac
 - Actions that failed all 3 attempts → status `ROLLBACK_FAILED`
 - Session status → `ROLLED_BACK`
 
+## Architecture: Two Rollback Paths
+
+The AgentRein backend implements two distinct rollback code paths:
+
+1. **`POST /sessions/:id/rollback` (API endpoint)**: Executes synchronously using `rollbackAll()` which calls the compensation engine directly with 3 retries and exponential backoff (2s, 4s, 8s). This is what developers use via the dashboard or API. **This API documentation describes path #1 only.**
+2. **BullMQ queue path (internal)**: Used for high-throughput programmatic rollback from backend code via `enqueueSessionRollback()`. This adds per-connector rate limiting (Stripe: 10/s, Slack: 20/s) but is NOT triggered by the REST API.
+
 ---
 
 ## Get Dirty Actions

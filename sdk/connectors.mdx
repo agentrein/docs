@@ -1,101 +1,44 @@
 ---
-title: Built-in Connectors
-description: Use AgentRein's typed connectors for automatic rollback and snapshot capture.
+title: "Connectors"
+description: "Using standard API clients with AgentRein"
 ---
 
-## Overview
+# Connectors
 
-Built-in connectors are `ConnectorAction` objects that carry `apiName`, `operationType`, and rollback logic. When passed to `call()`, AgentRein reads these automatically — no need to set `actionName` or `operationType` manually.
+The AgentRein SDK does **NOT** provide connector wrappers. Instead of learning a new abstraction layer, developers bring their own standard API clients (Stripe, Slack, GitHub, etc.).
 
-For `UPDATE` and `DELETE` actions, the SDK calls `getState()` on the connector before execution to capture `beforeState` for snapshot-based rollback.
+## Server-Side Rollback Strategies
 
-## Available Connectors
+The server-side backend has built-in rollback strategies for Stripe, Slack, GitHub, and other platforms. These rollback actions run **automatically on the AgentRein server** during a rollback, not in the developer's app. 
 
-### Stripe
-```ts
-import { stripe } from 'agentrein/connectors';
+Because the rollback executes on the server infrastructure, your backend service requires the necessary secret API keys (e.g., `STRIPE_KEY`, `SLACK_TOKEN`), rather than managing connection secrets inside the SDK environment.
 
-stripe.invoices.create   // operationType: CREATE
-stripe.invoices.del      // operationType: DELETE
-stripe.customers.create  // operationType: CREATE
-stripe.customers.del     // operationType: DELETE
-stripe.refunds.create    // operationType: CREATE
+## Usage Pattern
+
+To use a connector with AgentRein, wrap the native API client call in `agentrein.call()`.
+
+```javascript
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+await agentrein.call(
+  stripe.invoices.create, 
+  session, 
+  { customer: 'cus_xxx' }, 
+  { actionName: 'stripe.invoices.create' }
+);
 ```
 
-### Slack
-```ts
-import { slack } from 'agentrein/connectors';
+### Required `actionName` Format
 
-slack.chat.postMessage   // operationType: CREATE
-slack.chat.update        // operationType: UPDATE
-slack.chat.delete        // operationType: DELETE
-```
+Notice the `actionName` argument. It should always follow the pattern `'connector.resource.operation'` (e.g., `'stripe.invoices.create'`). The AgentRein backend parses this string to know which specific rollback strategy to apply automatically.
 
-### GitHub
-```ts
-import { github } from 'agentrein/connectors';
+## Support Matrix
 
-github.issues.create     // operationType: CREATE
-github.issues.update     // operationType: UPDATE
-github.repos.delete      // operationType: DELETE
-```
-
-### HubSpot
-```ts
-import { hubspot } from 'agentrein/connectors';
-
-hubspot.contacts.create  // operationType: CREATE
-hubspot.contacts.update  // operationType: UPDATE
-hubspot.deals.create     // operationType: CREATE
-hubspot.deals.update     // operationType: UPDATE
-```
-
-### Salesforce
-```ts
-import { salesforce } from 'agentrein/connectors';
-
-salesforce.contacts.create       // operationType: CREATE
-salesforce.contacts.update       // operationType: UPDATE
-salesforce.opportunities.create  // operationType: CREATE
-salesforce.opportunities.update  // operationType: UPDATE
-```
-
-### Notion
-```ts
-import { notion } from 'agentrein/connectors';
-
-notion.pages.create           // operationType: CREATE
-notion.pages.update           // operationType: UPDATE
-notion.database_items.create  // operationType: CREATE
-notion.blocks.append          // operationType: CREATE
-```
-
-### Gmail
-```ts
-import { gmail } from 'agentrein/connectors';
-
-gmail.messages.send    // operationType: CREATE
-gmail.messages.trash   // operationType: UPDATE
-gmail.drafts.create    // operationType: CREATE
-gmail.labels.modify    // operationType: UPDATE
-```
-
-### Google Drive
-```ts
-import { gdrive } from 'agentrein/connectors';
-
-gdrive.files.create  // operationType: CREATE
-gdrive.files.update  // operationType: UPDATE
-gdrive.files.move    // operationType: UPDATE
-gdrive.files.trash   // operationType: UPDATE
-```
-
-### Google Sheets
-```ts
-import { gsheets } from 'agentrein/connectors';
-
-gsheets.values.append         // operationType: CREATE
-gsheets.values.update         // operationType: UPDATE
-gsheets.spreadsheets.create   // operationType: CREATE
-gsheets.sheets.add            // operationType: CREATE
-```
+| Connector     | Action name to use              | Auto-rollback on server | What the server does to undo                      |
+|---------------|---------------------------------|-------------------------|---------------------------------------------------|
+| Stripe        | `stripe.invoices.create`        | Yes                     | Voids the created invoice                         |
+| Stripe        | `stripe.customers.create`       | Yes                     | Deletes the created customer                      |
+| Slack         | `slack.chat.postMessage`        | Yes                     | Deletes the posted message                        |
+| GitHub        | `github.issues.create`          | Yes                     | Closes the created issue                          |

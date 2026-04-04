@@ -37,5 +37,5 @@ const session = await agentrein.newSession({
 ```
 
 <Warning>
-`newSession()` is always awaited and will throw if the backend is unreachable — regardless of `failureMode`. A session ID is required for all subsequent `call()` and `completeSession()` calls.
+`newSession()` must always be awaited and will throw `AgentReinUnavailableError` if authentication with the AgentRein server fails (e.g. invalid API key, server down during token exchange). If auth succeeds but session creation fails due to a network error, an AxiosError is thrown. A session ID is required for all subsequent `call()` and `completeSession()` calls.
 </Warning>

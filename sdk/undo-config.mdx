@@ -51,14 +51,20 @@ createUndoConfig({ type: 'none' })
 ```
 
 ## Usage with call()
+
+> [!NOTE]
+> The `undoConfig` must be the argument immediately after `session`. API payload args come after `undoConfig`. `CallOptions` (with `actionName` or `requiresApproval`) must be the last argument.
+
 ```ts
 const resource = await agentrein.call(
-  myCreateFunction,
+  myApiClient.createResource,
   session,
   createUndoConfig({
     type: 'http-delete',
     url: `https://api.example.com/resources/${resourceId}`,
+    headers: { Authorization: `Bearer ${token}` },
   }),
-  { actionName: 'myApi.resource.create' }
+  { name: 'My Resource', type: 'widget' }, // actual API payload args
+  { actionName: 'myApi.resource.create' } // CallOptions last
 );
 ```

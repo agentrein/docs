@@ -29,6 +29,10 @@ description: All environment variables required to run the AgentRein backend.
 |---|---|
 | `API_URL` | Public URL of the backend e.g. `https://api.agentrein.com` |
 | `UI_URL` | Public URL of the dashboard e.g. `https://app.agentrein.com` |
+| `VITE_API_URL` | Alternative to `API_URL` for Vite-based frontend builds. Falls back to `API_URL` if set. |
+| `VITE_UI_URL` | Alternative to `UI_URL` for Vite-based builds. Falls back to `UI_URL` if set. |
+| `DASHBOARD_URL` | Public URL of dashboard used in approval notification emails/Slack messages. Defaults to `http://localhost:5173`. Must be set in production. |
+| `RAILWAY_PUBLIC_DOMAIN` | Automatically set by Railway.app deployments. When present, `API_URL` defaults to `https://{RAILWAY_PUBLIC_DOMAIN}`. |
 
 ## Connectors
 
