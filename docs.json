@@ -7,6 +7,16 @@
     "dark": "#ffa7eb"
   },
   "favicon": "/favicon.svg",
+  "contextual": {
+    "options": [
+      "copy",
+      "chatgpt",
+      "claude",
+      "add-mcp",
+      "cursor",
+      "vscode"
+    ]
+  },
   "topbarCtaButton": {
     "name": "Dashboard",
     "url": "https://www.agentrein.com/sessions"
