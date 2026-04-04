@@ -1,0 +1,60 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "almond",
+  "name": "AgentRein",
+  "colors": {
+    "primary": "#ffa7eb",
+    "light": "#ffa7eb",
+    "dark": "#ffa7eb"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Getting Started",
+        "pages": [
+          "introduction",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "SDK Reference",
+        "pages": [
+          "sdk/installation",
+          "sdk/new-session",
+          "sdk/call",
+          "sdk/undo-config",
+          "sdk/connectors",
+          "sdk/hitl",
+          "sdk/errors"
+        ]
+      },
+      {
+        "group": "API Reference",
+        "pages": [
+          "api-reference/authentication",
+          "api-reference/sessions",
+          "api-reference/actions",
+          "api-reference/rollback",
+          "api-reference/approvals",
+          "api-reference/metrics"
+        ]
+      },
+      {
+        "group": "Self-Hosting",
+        "pages": [
+          "self-hosting/environment"
+        ]
+      }
+    ]
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/AgentReinAi"
+    }
+  }
+}
