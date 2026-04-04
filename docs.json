@@ -53,40 +53,12 @@
             "icon": "rectangle-stack",
             "pages": [
               "api-reference/introduction",
-              {
-                "page": "api-reference/authentication",
-                "group": "Authentication"
-              },
-              {
-                "page": "api-reference/sessions",
-                "method": "get",
-                "label": "List Sessions"
-              },
-              {
-                "page": "api-reference/sessions",
-                "method": "post",
-                "label": "Create Session"
-              },
-              {
-                "page": "api-reference/rollback",
-                "method": "post",
-                "label": "Trigger Rollback"
-              },
-              {
-                "page": "api-reference/approvals",
-                "method": "get",
-                "label": "List Approvals"
-              },
-              {
-                "page": "api-reference/approvals",
-                "method": "post",
-                "label": "Approve / Reject"
-              },
-              {
-                "page": "api-reference/metrics",
-                "method": "get",
-                "label": "Get Metrics"
-              }
+              "api-reference/authentication",
+              "api-reference/sessions",
+              "api-reference/actions",
+              "api-reference/rollback",
+              "api-reference/approvals",
+              "api-reference/metrics"
             ]
           }
         ]
