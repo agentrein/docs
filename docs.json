@@ -13,36 +13,44 @@
     "dark": "/logo/dark.svg"
   },
   "navigation": {
-    "getting-started": {
-      "title": "Getting Started",
-      "pages": ["introduction", "quickstart"]
-    },
-    "sdk-reference": {
-      "title": "SDK Reference",
-      "pages": [
-        "sdk/installation",
-        "sdk/new-session",
-        "sdk/call",
-        "sdk/undo-config",
-        "sdk/connectors",
-        "sdk/hitl",
-        "sdk/errors"
-      ]
-    },
-    "api-reference": {
-      "title": "API Reference",
-      "pages": [
-        "api-reference/authentication",
-        "api-reference/sessions",
-        "api-reference/actions",
-        "api-reference/rollback",
-        "api-reference/approvals"
-      ]
-    },
-    "self-hosting": {
-      "title": "Self-Hosting",
-      "pages": ["self-hosting/environment"]
-    }
+    "products": [],
+    "languages": [],
+    "versions": [],
+    "tabs": [],
+    "dropdowns": [],
+    "anchors": [],
+    "groups": [
+      {
+        "title": "Getting Started",
+        "pages": ["introduction", "quickstart"]
+      },
+      {
+        "title": "SDK Reference",
+        "pages": [
+          "sdk/installation",
+          "sdk/new-session",
+          "sdk/call",
+          "sdk/undo-config",
+          "sdk/connectors",
+          "sdk/hitl",
+          "sdk/errors"
+        ]
+      },
+      {
+        "title": "API Reference",
+        "pages": [
+          "api-reference/authentication",
+          "api-reference/sessions",
+          "api-reference/actions",
+          "api-reference/rollback",
+          "api-reference/approvals"
+        ]
+      },
+      {
+        "title": "Self-Hosting",
+        "pages": ["self-hosting/environment"]
+      }
+    ]
   },
   "footerSocials": {
     "github": "https://github.com/AgentReinAi"
