@@ -3,9 +3,9 @@
   "theme": "almond",
   "name": "AgentRein",
   "colors": {
-    "primary": "#6366f1",
-    "light": "#818cf8",
-    "dark": "#4f46e5"
+    "primary": "#ffa7eb",
+    "light": "#ffa7eb",
+    "dark": "#ffa7eb"
   },
   "favicon": "/favicon.svg",
   "logo": {
