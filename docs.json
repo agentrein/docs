@@ -1,57 +1,49 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "almond",
+  "theme": "mint",
   "name": "AgentRein",
   "colors": {
-    "primary": "#ffa7eb",
-    "light": "#ffa7eb",
-    "dark": "#ffa7eb"
+    "primary": "#6366f1",
+    "light": "#818cf8",
+    "dark": "#4f46e5"
   },
   "favicon": "/favicon.svg",
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg"
   },
-  "navigation": {
-    "products": [],
-    "languages": [],
-    "versions": [],
-    "tabs": [],
-    "dropdowns": [],
-    "anchors": [],
-    "groups": [
-      {
-        "title": "Getting Started",
-        "pages": ["introduction", "quickstart"]
-      },
-      {
-        "title": "SDK Reference",
-        "pages": [
-          "sdk/installation",
-          "sdk/new-session",
-          "sdk/call",
-          "sdk/undo-config",
-          "sdk/connectors",
-          "sdk/hitl",
-          "sdk/errors"
-        ]
-      },
-      {
-        "title": "API Reference",
-        "pages": [
-          "api-reference/authentication",
-          "api-reference/sessions",
-          "api-reference/actions",
-          "api-reference/rollback",
-          "api-reference/approvals"
-        ]
-      },
-      {
-        "title": "Self-Hosting",
-        "pages": ["self-hosting/environment"]
-      }
-    ]
-  },
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": ["introduction", "quickstart"]
+    },
+    {
+      "group": "SDK Reference",
+      "pages": [
+        "sdk/installation",
+        "sdk/new-session",
+        "sdk/call",
+        "sdk/undo-config",
+        "sdk/connectors",
+        "sdk/hitl",
+        "sdk/errors"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/authentication",
+        "api-reference/sessions",
+        "api-reference/actions",
+        "api-reference/rollback",
+        "api-reference/approvals"
+      ]
+    },
+    {
+      "group": "Self-Hosting",
+      "pages": ["self-hosting/environment"]
+    }
+  ],
   "footerSocials": {
     "github": "https://github.com/AgentReinAi"
   }
