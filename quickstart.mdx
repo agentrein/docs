@@ -29,20 +29,32 @@ const session = await agentrein.newSession({
 });
 ```
 
-## 5. Wrap Your Actions
+## 5. Wrap Your Clients
 ```ts
-// Bring your own API client — AgentRein wraps any async function
-import Stripe from 'stripe';
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+import { AgentRein } from 'agentrein';
+import { Octokit } from '@octokit/rest';
+import { WebClient } from '@slack/web-api';
 
-const invoice = await agentrein.call(
-  stripe.invoices.create,
-  session,
-  { customer: 'cus_xxx', currency: 'usd' }
-);
+const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+const slackClient = new WebClient(process.env.SLACK_TOKEN);
+
+const agentOctokit = agentrein.wrap(octokit, session, { connector: 'github' });
+const agentSlack = agentrein.wrap(slackClient, session, { connector: 'slack' });
+
+// Use exactly as before
+const issue = await agentOctokit.issues.create({
+  owner: 'my-org',
+  repo: 'my-repo',
+  title: 'Onboarding task',
+});
+
+const msg = await agentSlack.chat.postMessage({
+  channel: '#onboarding',
+  text: `Issue created: ${issue.data.html_url}`,
+});
 ```
 
-If `stripe.invoices.create` throws, AgentRein automatically rolls back all previous actions in the session.
+If any call throws, AgentRein automatically rolls back all previous actions in the session.
 
 ## 6. Complete the Session
 ```ts

@@ -49,6 +49,7 @@
             "pages": [
               "sdk/installation",
               "sdk/new-session",
+              "sdk/wrap",
               "sdk/call",
               "sdk/undo-config",
               "sdk/connectors",

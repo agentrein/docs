@@ -28,6 +28,19 @@ description: "The AI Agent Reliability Platform. Automatic rollback, human-in-th
   </Card>
 </CardGroup>
 
+## How It Works
+```
+Your Agent Code
+      ↓
+agentrein.wrap(client, session, { connector: 'github' })
+      ↓
+Recursive Proxy — intercepts every method call
+      ↓
+AgentRein Backend — logs actions, captures snapshots
+      ↓
+Rollback Engine — LIFO compensation via BullMQ
+```
+
 ## SDK Reference
 
 <CardGroup cols={2}>
