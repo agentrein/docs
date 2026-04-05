@@ -14,7 +14,7 @@ Log in to [app.agentrein.com](https://app.agentrein.com), go to **Settings**, an
 
 ## 3. Initialize the Client
 ```ts
-import { AgentRein } from '@agentrein/sdk';
+import { AgentRein } from 'agentrein';
 import { Octokit } from '@octokit/rest'; // Developer's own standard SDK
 
 const agentrein = new AgentRein({ apiKey: 'YOUR_API_KEY' });
@@ -30,22 +30,30 @@ const session = await agentrein.newSession({
 ```
 
 ## 5. Wrap Your Existing Clients
-
-Bring your own standard SDKs. Wrap them once and use them forever.
 ```ts
-// The Magic: Wrap the client once
+import { Octokit } from '@octokit/rest';
+import { WebClient } from '@slack/web-api';
+
+const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+const slackClient = new WebClient(process.env.SLACK_TOKEN);
+
 const agentOctokit = agentrein.wrap(octokit, session, { connector: 'github' });
+const agentSlack = agentrein.wrap(slackClient, session, { connector: 'slack' });
+
+// Use exactly as before — nothing changes
+const issue = await agentOctokit.issues.create({
+  owner: 'my-org',
+  repo: 'my-repo',
+  title: 'Onboarding task',
+});
+
+await agentSlack.chat.postMessage({
+  channel: '#onboarding',
+  text: `Issue created: ${issue.data.html_url}`,
+});
 ```
 
-## 6. Use Them Exactly As Before
-
-Use the SDK exactly as normal. AgentRein handles logging and rollbacks automatically!
-
-```ts
-await agentOctokit.issues.create({ owner: 'my-org', repo: 'my-repo', title: 'Onboarding task' });
-```
-
-If any action throws, AgentRein automatically reverses all previous actions. The session always ends in a consistent state.
+If any call throws, AgentRein automatically rolls back all previous actions in the session.
 
 ## 7. Complete the Session
 ```ts
