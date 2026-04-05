@@ -40,7 +40,8 @@
             "icon": "rocket",
             "pages": [
               "introduction",
-              "quickstart"
+              "quickstart",
+              "core-concepts"
             ]
           },
           {
@@ -49,10 +50,9 @@
             "pages": [
               "sdk/installation",
               "sdk/new-session",
-              "sdk/wrap",
-              "sdk/call",
+              "api-reference",
               "sdk/undo-config",
-              "sdk/connectors",
+              "sdk/supported-integrations",
               "sdk/hitl",
               "sdk/errors"
             ]

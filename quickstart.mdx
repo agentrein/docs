@@ -1,24 +1,24 @@
 ---
-title: Quickstart
+title: Quick Start
 description: Get AgentRein protecting your agent in under 5 minutes.
 ---
 
 ## 1. Install the SDK
 ```bash
-npm install agentrein
+npm install @agentrein/sdk
 ```
 
 ## 2. Get Your API Key
 
-Log in to [Dashboard](https://www.agentrein.com/sessions), go to **Settings**, and copy your API key.
+Log in to [app.agentrein.com](https://app.agentrein.com), go to **Settings**, and copy your API key.
 
 ## 3. Initialize the Client
 ```ts
-import { AgentRein } from 'agentrein';
+import { AgentRein } from '@agentrein/sdk';
+import { Octokit } from '@octokit/rest'; // Developer's own standard SDK
 
-const agentrein = new AgentRein({
-  apiKey: process.env.AGENTREIN_API_KEY,
-});
+const agentrein = new AgentRein({ apiKey: 'YOUR_API_KEY' });
+const octokit = new Octokit({ auth: 'GITHUB_TOKEN' });
 ```
 
 ## 4. Create a Session
@@ -30,41 +30,24 @@ const session = await agentrein.newSession({
 ```
 
 ## 5. Wrap Your Existing Clients
+
+Bring your own standard SDKs. Wrap them once and use them forever.
 ```ts
-import { Octokit } from '@octokit/rest';
-import { WebClient } from '@slack/web-api';
-
-const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
-const slackClient = new WebClient(process.env.SLACK_TOKEN);
-
-// Wrap once — use forever
+// The Magic: Wrap the client once
 const agentOctokit = agentrein.wrap(octokit, session, { connector: 'github' });
-const agentSlack = agentrein.wrap(slackClient, session, { connector: 'slack' });
 ```
-
-Your existing clients are unchanged. The wrapped versions look and behave identically — but every call is now tracked.
 
 ## 6. Use Them Exactly As Before
-```ts
-const issue = await agentOctokit.issues.create({
-  owner: 'my-org',
-  repo: 'my-repo',
-  title: 'Onboarding: New Customer',
-});
 
-await agentSlack.chat.postMessage({
-  channel: '#onboarding',
-  text: `Issue created: ${issue.data.html_url}`,
-});
+Use the SDK exactly as normal. AgentRein handles logging and rollbacks automatically!
+
+```ts
+await agentOctokit.issues.create({ owner: 'my-org', repo: 'my-repo', title: 'Onboarding task' });
 ```
 
-If `chat.postMessage` throws, AgentRein automatically closes the GitHub issue. If `issues.create` throws, nothing needs to be reversed. The session always ends in a consistent state.
+If any action throws, AgentRein automatically reverses all previous actions. The session always ends in a consistent state.
 
 ## 7. Complete the Session
 ```ts
 await agentrein.completeSession(session);
 ```
-
-<Info>
-Need to protect an API not in the supported list? Use [`call()`](/sdk/call) with a custom [`undoConfig`](/sdk/undo-config) for full control over rollback logic.
-</Info>

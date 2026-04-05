@@ -1,43 +1,22 @@
 ---
-title: Human-in-the-Loop
-description: Require human approval before executing sensitive actions.
+title: Human-in-the-Loop (HITL)
+description: Add approval gates for sensitive operations.
 ---
 
-## Overview
+## Approval Gates
 
-Pass `requiresApproval: true` in `CallOptions` to hold an action for human review before it executes. The SDK logs the action with status `PENDING_APPROVAL` and polls until a decision is made.
+Sometimes you want an agent to prepare an action, but hold it until a human reviews it. Using the `wrap()` method, you can easily enforce human approval gates on specific, highly-sensitive methods using the wrap options. 
 
-## Usage
-```ts
-const result = await agentrein.call(
-  stripe.invoices.create,
-  session,
-  { customer: 'cus_xxx' },
-  { requiresApproval: true, timeoutMs: 300_000 }
-);
+Simply pass an array of methods into `requireApproval`:
+
+```typescript
+const safeStripe = agentrein.wrap(stripe, session, { 
+  connector: 'stripe',
+  requireApproval: ['subscriptions.cancel', 'refunds.create'] // Intercepts and pauses these calls
+});
+
+// This will halt execution until approved in the dashboard
+await safeStripe.subscriptions.cancel({ id: 'sub_123' });
 ```
 
-## Flow
-
-1. SDK logs action with status `PENDING_APPROVAL`
-2. SDK polls `GET /approvals/:id` every `pollIntervalMs` (default: 2000ms)
-3. A human approves or rejects from the dashboard at `app.agentrein.com/approvals`
-
-**If approved:**
-- SDK executes the action
-- Action status updated to `SUCCESS`
-
-**If rejected:**
-- SDK throws `ApprovalRejectedError`
-- Session rollback is triggered automatically
-
-**If timeout exceeded:**
-- SDK throws `Error: Approval timeout exceeded`
-
-## Options
-
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `requiresApproval` | `boolean` | `false` | Enable HITL gate |
-| `pollIntervalMs` | `number` | `2000` | Polling interval in ms |
-| `timeoutMs` | `number` | `86400000` | Max wait time in ms (24h) |
+If the human rejects the action, the backend issues an exception to the SDK, bypassing the execution and automatically triggering a rollback of all previous session actions!

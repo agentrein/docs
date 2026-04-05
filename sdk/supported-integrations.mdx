@@ -1,0 +1,30 @@
+---
+title: Supported Integrations
+description: Out-of-the-box auto-rollback support for your standard SDKs.
+---
+
+## Seamless Rollback Registry
+
+AgentRein intercepts your function calls and matches them to our Backend Rollback Registry. The registry automatically knows how to undo common methods from these SDKs out-of-the-box. For example, reversing `stripe.invoices.create` directly calls a deletion endpoint for that specific invoice. You do not need to rely on custom @agentrein/connector-xyz packages.
+
+## Supported SDKs
+
+### GitHub (`connector: 'github'`)
+Supported methods include issue creation (closes the issue) and updates (restores previous state). 
+
+### Slack (`connector: 'slack'`)
+Supported methods include sending messages (posts a correction/deletion) and updates (restores previous message).
+
+### Stripe (`connector: 'stripe'`)
+Supported methods include creating invoices and customers (triggers secure deletion for rollbacks).
+
+### HubSpot (`connector: 'hubspot'`)
+Supported methods include creating and updating contacts and deals, with `beforeState` capture ensuring perfect restoration.
+
+### Salesforce (`connector: 'salesforce'`)
+Supported methods include creating and updating contacts and opportunities.
+
+### Notion (`connector: 'notion'`)
+Supported methods include creating pages (moves to trash) and appending blocks.
+
+... and more (Gmail, Google Drive, Google Sheets). Simply pass your original clients through the `wrap()` parameter with the proper `connector` identifier.

@@ -1,0 +1,18 @@
+---
+title: Core Concepts
+description: How AgentRein's transparent proxy enables zero-friction reliability.
+---
+
+## The Recursive Proxy
+
+The core of AgentRein SDK's power comes from the `wrap()` method. Rather than forcing you to learn a new syntax, `wrap()` uses a Recursive JavaScript Proxy to intercept your existing client's actions. 
+
+When you call `agentrein.wrap(client, session, { connector })`, it intercepts every method call, no matter how deeply nested (e.g., `octokit.rest.issues.create`). It tracks the action, logs it to the backend natively, executes the original function, and registers it for potential rollback—while completely preserving your developer's original TypeScript types.
+
+## `wrap()` vs. `call()` (Hybrid Approach)
+
+### Use `wrap()` (Standard)
+The `wrap()` method is our primary, standard approach. Use `wrap()` for fully supported third-party SDKs (like Stripe, GitHub, Slack) to get automatic rollbacks for free, with zero changes to your actual business logic. 
+
+### Use `call()` (Advanced)
+The `call()` method is an advanced fallback. Use `call()` when you are dealing with internal Custom APIs, manually injecting `undoConfig` objects for unsupported endpoints, or executing highly specific one-off functions that don't neatly fit inside a traditional client wrapper.
