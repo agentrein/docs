@@ -1,68 +1,134 @@
 ---
-title: "Connectors"
-description: "Using standard API clients with AgentRein"
+title: Supported SDKs
+description: SDKs supported for automatic rollback when used with agentrein.wrap().
 ---
 
-# Connectors
+## Overview
 
-The AgentRein SDK does **NOT** provide connector wrappers. Instead of learning a new abstraction layer, developers bring their own standard API clients (Stripe, Slack, GitHub, etc.).
+When you use `agentrein.wrap(client, session, { connector })`, AgentRein intercepts every method call and maps it to a built-in rollback strategy using the `connector` prefix and method path.
 
-## Server-Side Rollback Strategies
+For example:
+- `connector: 'github'` + method path `issues.create` → `apiName: github.issues.create` → rollback closes the issue
+- `connector: 'slack'` + method path `chat.postMessage` → `apiName: slack.chat.postMessage` → rollback posts a correction message
 
-The server-side backend has built-in rollback strategies for Stripe, Slack, GitHub, and other platforms. These rollback actions run **automatically on the AgentRein server** during a rollback, not in the developer's app. 
+## Supported SDKs
 
-Because the rollback executes on the server infrastructure, your backend service requires the necessary secret API keys (e.g., `STRIPE_KEY`, `SLACK_TOKEN`), rather than managing connection secrets inside the SDK environment.
+### GitHub — `connector: 'github'`
 
-## Usage Pattern
+Install: `npm install @octokit/rest`
 
-To use a connector with AgentRein, wrap the native API client call in `agentrein.call()`.
+| Method Path | Operation | Rollback |
+|---|---|---|
+| `issues.create` | CREATE | Closes the issue |
+| `issues.update` | UPDATE | Restores previous state |
+| `repos.delete` | DELETE | No rollback available |
 
-```javascript
-import Stripe from 'stripe';
+---
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+### Slack — `connector: 'slack'`
 
-await agentrein.call(
-  stripe.invoices.create, 
-  session, 
-  { customer: 'cus_xxx' }, 
-  { actionName: 'stripe.invoices.create' }
+Install: `npm install @slack/web-api`
+
+| Method Path | Operation | Rollback |
+|---|---|---|
+| `chat.postMessage` | CREATE | Posts a correction reply in thread |
+| `chat.update` | UPDATE | Restores previous message |
+| `chat.delete` | DELETE | No rollback available |
+
+---
+
+### Stripe — `connector: 'stripe'`
+
+Install: `npm install stripe`
+
+| Method Path | Operation | Rollback |
+|---|---|---|
+| `invoices.create` | CREATE | Deletes the invoice |
+| `invoices.del` | DELETE | No rollback available |
+| `customers.create` | CREATE | Deletes the customer |
+| `customers.del` | DELETE | No rollback available |
+| `refunds.create` | CREATE | No rollback available |
+
+---
+
+### HubSpot — `connector: 'hubspot'`
+
+| Method Path | Operation | Rollback |
+|---|---|---|
+| `contacts.create` | CREATE | Deletes the contact |
+| `contacts.update` | UPDATE | Restores beforeState |
+| `deals.create` | CREATE | Deletes the deal |
+| `deals.update` | UPDATE | Restores beforeState |
+
+---
+
+### Salesforce — `connector: 'salesforce'`
+
+| Method Path | Operation | Rollback |
+|---|---|---|
+| `contacts.create` | CREATE | Deletes the contact |
+| `contacts.update` | UPDATE | Restores beforeState |
+| `opportunities.create` | CREATE | Deletes the opportunity |
+| `opportunities.update` | UPDATE | Restores beforeState |
+
+---
+
+### Notion — `connector: 'notion'`
+
+| Method Path | Operation | Rollback |
+|---|---|---|
+| `pages.create` | CREATE | Moves page to trash |
+| `pages.update` | UPDATE | Restores beforeState |
+| `database_items.create` | CREATE | Moves page to trash |
+| `blocks.append` | CREATE | Deletes appended blocks |
+
+---
+
+### Gmail — `connector: 'gmail'`
+
+| Method Path | Operation | Rollback |
+|---|---|---|
+| `messages.send` | CREATE | Sends correction reply |
+| `messages.trash` | UPDATE | Untrashes the message |
+| `drafts.create` | CREATE | Deletes the draft |
+| `labels.modify` | UPDATE | Reverses label changes |
+
+---
+
+### Google Drive — `connector: 'gdrive'`
+
+| Method Path | Operation | Rollback |
+|---|---|---|
+| `files.create` | CREATE | Deletes the file |
+| `files.update` | UPDATE | Restores beforeState |
+| `files.move` | UPDATE | Moves back to original parent |
+| `files.trash` | UPDATE | Untrashes the file |
+
+---
+
+### Google Sheets — `connector: 'gsheets'`
+
+| Method Path | Operation | Rollback |
+|---|---|---|
+| `values.append` | CREATE | Clears the range |
+| `values.update` | UPDATE | Restores beforeState |
+| `spreadsheets.create` | CREATE | Deletes the spreadsheet |
+| `sheets.add` | CREATE | Deletes the sheet |
+
+---
+
+## Unsupported APIs
+
+If your API is not listed above, use [`call()`](/sdk/call) with a custom [`undoConfig`](/sdk/undo-config):
+```ts
+const result = await agentrein.call(
+  myApiFunction,
+  session,
+  createUndoConfig({
+    type: 'http-delete',
+    url: `https://api.example.com/resources/${resourceId}`,
+    headers: { Authorization: `Bearer ${token}` },
+  }),
+  { actionName: 'myApi.resource.create' }
 );
 ```
-
-### Required `actionName` Format
-
-Notice the `actionName` argument. It should always follow the pattern `'connector.resource.operation'` (e.g., `'stripe.invoices.create'`). The AgentRein backend parses this string to know which specific rollback strategy to apply automatically.
-
-## Support Matrix
-
-| Connector | Action name to use | Auto-rollback on server | What the server does to undo |
-| --- | --- | --- | --- |
-| Stripe | `stripe.invoices.create` | Yes | Voids the created invoice |
-| Stripe | `stripe.customers.create` | Yes | Deletes the created customer |
-| Slack | `slack.chat.postMessage` | Yes | Posts a correction message in the same thread |
-| GitHub | `github.issues.create` | Yes | Closes the created issue |
-| HubSpot | `hubspot.contacts.create` | Yes | Deletes the created contact |
-| HubSpot | `hubspot.contacts.update` | Yes | Restores the contact to its previous state |
-| HubSpot | `hubspot.deals.create` | Yes | Deletes the created deal |
-| HubSpot | `hubspot.deals.update` | Yes | Restores the deal to its previous state |
-| Salesforce | `salesforce.contacts.create` | Yes | Deletes the created contact |
-| Salesforce | `salesforce.contacts.update` | Yes | Restores the contact to its previous state |
-| Salesforce | `salesforce.opportunities.create` | Yes | Deletes the created opportunity |
-| Salesforce | `salesforce.opportunities.update` | Yes | Restores the opportunity to its previous state |
-| Notion | `notion.pages.create` | Yes | Moves the page to trash |
-| Notion | `notion.pages.update` | Yes | Restores the page to its previous state |
-| Notion | `notion.database_items.create` | Yes | Moves the database item to trash |
-| Notion | `notion.blocks.append` | Yes | Deletes all appended blocks |
-| Gmail | `gmail.messages.send` | Yes | Sends a correction reply in the same thread |
-| Gmail | `gmail.messages.trash` | Yes | Untrashes the message |
-| Gmail | `gmail.drafts.create` | Yes | Deletes the created draft |
-| Gmail | `gmail.labels.modify` | Yes | Reverts the label changes |
-| Google Drive | `gdrive.files.create` | Yes | Deletes the created file |
-| Google Drive | `gdrive.files.update` | Yes | Restores the file metadata to its previous state |
-| Google Drive | `gdrive.files.move` | Yes | Moves the file back to its original location |
-| Google Drive | `gdrive.files.trash` | Yes | Untrashes the file |
-| Google Sheets | `gsheets.values.append` | Yes | Clears the appended range |
-| Google Sheets | `gsheets.values.update` | Yes | Restores the previous cell values |
-| Google Sheets | `gsheets.spreadsheets.create` | Yes | Deletes the created spreadsheet |
-| Google Sheets | `gsheets.sheets.add` | Yes | Deletes the added sheet |

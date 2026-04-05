@@ -24,39 +24,47 @@ const agentrein = new AgentRein({
 ## 4. Create a Session
 ```ts
 const session = await agentrein.newSession({
-  agentId: 'my-agent',
-  intent: 'Cancel the subscription for customer cus_xxx and notify them on Slack',
+  agentId: 'onboarding-agent',
+  intent: 'Create a GitHub issue and notify the team on Slack',
 });
 ```
 
-## 5. Wrap Your Clients
+## 5. Wrap Your Existing Clients
 ```ts
-import { AgentRein } from 'agentrein';
 import { Octokit } from '@octokit/rest';
 import { WebClient } from '@slack/web-api';
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 const slackClient = new WebClient(process.env.SLACK_TOKEN);
 
+// Wrap once — use forever
 const agentOctokit = agentrein.wrap(octokit, session, { connector: 'github' });
 const agentSlack = agentrein.wrap(slackClient, session, { connector: 'slack' });
+```
 
-// Use exactly as before
+Your existing clients are unchanged. The wrapped versions look and behave identically — but every call is now tracked.
+
+## 6. Use Them Exactly As Before
+```ts
 const issue = await agentOctokit.issues.create({
   owner: 'my-org',
   repo: 'my-repo',
-  title: 'Onboarding task',
+  title: 'Onboarding: New Customer',
 });
 
-const msg = await agentSlack.chat.postMessage({
+await agentSlack.chat.postMessage({
   channel: '#onboarding',
   text: `Issue created: ${issue.data.html_url}`,
 });
 ```
 
-If any call throws, AgentRein automatically rolls back all previous actions in the session.
+If `chat.postMessage` throws, AgentRein automatically closes the GitHub issue. If `issues.create` throws, nothing needs to be reversed. The session always ends in a consistent state.
 
-## 6. Complete the Session
+## 7. Complete the Session
 ```ts
 await agentrein.completeSession(session);
 ```
+
+<Info>
+Need to protect an API not in the supported list? Use [`call()`](/sdk/call) with a custom [`undoConfig`](/sdk/undo-config) for full control over rollback logic.
+</Info>

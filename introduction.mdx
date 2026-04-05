@@ -1,79 +1,69 @@
 ---
-title: "Introduction"
-description: "The AI Agent Reliability Platform. Automatic rollback, human-in-the-loop approvals, and intent drift detection for your agents."
+title: Introduction
+description: AgentRein gives your AI agents automatic rollback, approval gates, and drift detection — without changing your existing code.
 ---
 
-## Get started
+## Zero-Friction Reliability
 
-<CardGroup cols={2}>
-  <Card title="Quickstart" icon="rocket" href="/quickstart">
-    Protect your first agent in under 5 minutes.
-  </Card>
-  <Card title="Installation" icon="package" href="/sdk/installation">
-    Install the SDK and configure your API key.
-  </Card>
-</CardGroup>
+AI agents execute sequences of real API calls — creating GitHub issues, sending Slack messages, charging Stripe customers. When something fails midway, the system is left in a partial state.
 
-## Core concepts
+AgentRein solves this through **Transparent Interception**. You keep using the same SDKs you already know. AgentRein wraps them silently and takes care of the rest.
+```ts
+// Before AgentRein
+const issue = await octokit.issues.create({ owner, repo, title });
 
-<CardGroup cols={3}>
-  <Card title="Automatic Rollback" icon="rotate-left" href="/sdk/call">
-    LIFO rollback of all actions when anything throws.
-  </Card>
-  <Card title="Human-in-the-Loop" icon="user-check" href="/sdk/hitl">
-    Hold sensitive actions for human approval before they execute.
-  </Card>
-  <Card title="Intent Drift Detection" icon="crosshairs" href="/api-reference/sessions">
-    GPT-4o-mini flags when agent actions deviate from the original intent.
-  </Card>
-</CardGroup>
+// After AgentRein — one line added, nothing else changes
+const agentOctokit = agentrein.wrap(octokit, session, { connector: 'github' });
+const issue = await agentOctokit.issues.create({ owner, repo, title });
+```
+
+If any subsequent action fails, AgentRein automatically closes that issue — and reverses every other action in the session — in the correct order.
+
+## What AgentRein Does
+
+- **Automatic LIFO Rollback** — reverses all actions in Last-In-First-Out order on any failure
+- **Human-in-the-Loop (HITL)** — hold sensitive actions for human approval before they execute
+- **Intent Drift Detection** — GPT-4o-mini flags actions that deviate from the session's original intent
 
 ## How It Works
 ```
-Your Agent Code
-      ↓
-agentrein.wrap(client, session, { connector: 'github' })
-      ↓
+Your existing SDK clients (Octokit, Stripe, WebClient...)
+↓
+agentrein.wrap(client, session, { connector })
+↓
 Recursive Proxy — intercepts every method call
-      ↓
+↓
 AgentRein Backend — logs actions, captures snapshots
-      ↓
+↓
 Rollback Engine — LIFO compensation via BullMQ
 ```
 
-## SDK Reference
+## The Session
 
-<CardGroup cols={2}>
-  <Card title="newSession()" icon="play" href="/sdk/new-session">
-    Create a session before your agent starts executing actions.
-  </Card>
-  <Card title="call()" icon="bolt" href="/sdk/call">
-    Wrap any async function with rollback protection.
-  </Card>
-  <Card title="UndoConfig" icon="arrow-uturn-left" href="/sdk/undo-config">
-    Provide custom rollback instructions for any API.
-  </Card>
-  <Card title="Connectors" icon="plug" href="/sdk/connectors">
-    Bring your own Stripe, Slack, or GitHub client.
-  </Card>
-</CardGroup>
+The `session` is the thread that connects all actions together. Every wrapped client call in the same session is part of the same transaction. If rollback is triggered, every action in the session is reversed — in reverse order.
+```ts
+const session = await agentrein.newSession({
+  agentId: 'onboarding-agent',
+  intent: 'Onboard new customer and notify team',
+});
 
-## Supported connectors
+// All wrapped clients share this session
+const agentOctokit = agentrein.wrap(octokit, session, { connector: 'github' });
+const agentSlack = agentrein.wrap(slackClient, session, { connector: 'slack' });
+```
 
-AgentRein includes built-in server-side rollback strategies for:
+## Supported SDKs for Auto-Rollback
 
-| Connector | Rollback strategy |
-| --- | --- |
-| Stripe | Voids created invoices, deletes created customers |
-| Slack | Deletes posted messages |
-| GitHub | Closes created issues |
-| HubSpot | Deletes creates, restores `beforeState` for updates |
-| Salesforce | Deletes creates, restores `beforeState` for updates |
-| Notion | Moves pages to trash, deletes appended blocks |
-| Gmail | Sends correction reply, untrashes, deletes drafts |
-| Google Drive | Deletes files, restores metadata |
-| Google Sheets | Clears ranges, deletes spreadsheets |
+| SDK | Connector Prefix |
+|---|---|
+| Octokit (`@octokit/rest`) | `github` |
+| Slack (`@slack/web-api`) | `slack` |
+| Stripe (`stripe`) | `stripe` |
+| HubSpot | `hubspot` |
+| Salesforce | `salesforce` |
+| Notion | `notion` |
+| Gmail (googleapis) | `gmail` |
+| Google Drive (googleapis) | `gdrive` |
+| Google Sheets (googleapis) | `gsheets` |
 
-<Note>
-  The SDK does **not** provide connector wrappers. Bring your own API client and pass it to `agentrein.call()`. The rollback strategies run automatically on the AgentRein server.
-</Note>
+For APIs not in this list, use [`call()`](/sdk/call) with a custom [`undoConfig`](/sdk/undo-config).
