@@ -1,17 +1,67 @@
 ---
 title: Connectors
-description: AgentRein out-of-the-box connectors for third-party SDKs.
+description: How AgentRein intercepts your existing API clients.
 ---
 
-## Importing Connectors
+## Bring Your Own Client
 
-You can import any of the built-in connectors from the `agentrein/connectors` subpath:
-
+AgentRein's SDK contains zero connector logic. There are no Stripe, GitHub,
+or Slack classes to import from `agentrein`. Instead, you install and 
+initialize your own standard SDK clients as you normally would, then pass 
+them to `wrap()`.
 ```ts
-import { stripe } from 'agentrein/connectors';
-import { slack } from 'agentrein/connectors';
-import { github } from 'agentrein/connectors';
-// etc.
+import { AgentRein } from 'agentrein';
+import { Octokit } from '@octokit/rest';
+import { WebClient } from '@slack/web-api';
+import Stripe from 'stripe';
+
+const agentrein = new AgentRein({ apiKey: process.env.AGENTREIN_API_KEY });
+
+// Your own clients — initialized with your own credentials
+const octokit  = new Octokit({ auth: process.env.GITHUB_TOKEN });
+const slack    = new WebClient(process.env.SLACK_TOKEN);
+const stripe   = new Stripe(process.env.STRIPE_KEY);
+
+const session = await agentrein.newSession({ agentId: 'my-agent', intent: '...' });
+
+// Wrap once — use exactly as before
+const agentOctokit = agentrein.wrap(octokit, session, { connector: 'github' });
+const agentSlack   = agentrein.wrap(slack,   session, { connector: 'slack' });
+const agentStripe  = agentrein.wrap(stripe,  session, { connector: 'stripe' });
+
+await agentOctokit.issues.create({ owner: 'my-org', repo: 'my-repo', title: 'Task' });
+await agentSlack.chat.postMessage({ channel: '#ops', text: 'Issue created' });
+await agentStripe.invoices.create({ customer: 'cus_123' });
 ```
 
-These connectors automatically handle rollbacks and snapshots for their respective services when used with `agentrein.call()` or `agentrein.wrap()`.
+## How the Proxy Works
+
+`wrap()` returns a Proxy that is transparent to your code — TypeScript types,
+autocompletion, and runtime behavior are all preserved. When you call any
+method on the wrapped client:
+
+1. The Proxy captures the method path and arguments
+2. Your original SDK method executes normally
+3. AgentRein logs the action to the backend asynchronously (fire-and-forget)
+4. If the call throws, AgentRein triggers a LIFO rollback of all previous
+   actions in the session
+
+## Connector Prefix
+
+The `connector` string you pass to `wrap()` must match the prefix used in
+the AgentRein backend rollback registry. The supported prefixes are:
+
+| Prefix | External SDK |
+|---|---|
+| `github` | `@octokit/rest` |
+| `slack` | `@slack/web-api` |
+| `stripe` | `stripe` |
+| `hubspot` | axios (REST) |
+| `salesforce` | axios (REST) |
+| `notion` | axios (REST) |
+| `gmail` | `googleapis` |
+| `gdrive` | `googleapis` |
+| `gsheets` | `googleapis` |
+
+For any service not in this list, use `call()` with a custom `rollback`
+function instead. See [Execution Methods](/sdk/call) for details.

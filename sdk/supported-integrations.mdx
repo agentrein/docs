@@ -1,30 +1,107 @@
 ---
 title: Supported Integrations
-description: Out-of-the-box auto-rollback support for your standard SDKs.
+description: Which external SDKs have automatic rollback support in the backend.
 ---
 
-## Seamless Rollback Registry
+## How Rollback Works
 
-AgentRein intercepts your function calls and matches them to our Backend Rollback Registry. The registry automatically knows how to undo common methods from these SDKs out-of-the-box. For example, reversing `stripe.invoices.create` directly calls a deletion endpoint for that specific invoice. You do not need to rely on custom @agentrein/connector-xyz packages.
+When you use `wrap()`, AgentRein intercepts every method call and logs it
+to the backend with the action name (e.g. `stripe.invoices.create`) and
+the method response. The backend maintains a **Rollback Registry** — a map
+of action names to compensation strategies.
 
-## Supported SDKs
+When rollback is triggered for a session, the backend looks up each action
+in the registry and executes the appropriate undo strategy in LIFO order.
+
+## Registry
+
+The following action names have automatic rollback strategies registered
+in the backend:
 
 ### GitHub (`connector: 'github'`)
-Supported methods include issue creation (closes the issue) and updates (restores previous state). 
+| Action | Undo Strategy |
+|---|---|
+| `github.issues.create` | Close the issue |
+| `github.issues.update` | Restore `beforeState` |
 
 ### Slack (`connector: 'slack'`)
-Supported methods include sending messages (posts a correction/deletion) and updates (restores previous message).
+| Action | Undo Strategy |
+|---|---|
+| `slack.chat.postMessage` | Post correction in thread |
+| `slack.chat.update` | Restore `beforeState` |
+| `slack.chat.delete` | No undo (logged only) |
 
 ### Stripe (`connector: 'stripe'`)
-Supported methods include creating invoices and customers (triggers secure deletion for rollbacks).
+| Action | Undo Strategy |
+|---|---|
+| `stripe.invoices.create` | Delete the invoice |
+| `stripe.customers.create` | Delete the customer |
+| `stripe.refunds.create` | No undo (logged only) |
 
 ### HubSpot (`connector: 'hubspot'`)
-Supported methods include creating and updating contacts and deals, with `beforeState` capture ensuring perfect restoration.
+| Action | Undo Strategy |
+|---|---|
+| `hubspot.contacts.create` | Delete the contact |
+| `hubspot.contacts.update` | Restore `beforeState` |
+| `hubspot.deals.create` | Delete the deal |
+| `hubspot.deals.update` | Restore `beforeState` |
 
 ### Salesforce (`connector: 'salesforce'`)
-Supported methods include creating and updating contacts and opportunities.
+| Action | Undo Strategy |
+|---|---|
+| `salesforce.contacts.create` | Delete the record |
+| `salesforce.contacts.update` | Restore `beforeState` |
+| `salesforce.opportunities.create` | Delete the record |
+| `salesforce.opportunities.update` | Restore `beforeState` |
 
 ### Notion (`connector: 'notion'`)
-Supported methods include creating pages (moves to trash) and appending blocks.
+| Action | Undo Strategy |
+|---|---|
+| `notion.pages.create` | Move to trash |
+| `notion.pages.update` | Restore `beforeState` |
+| `notion.database_items.create` | Move to trash |
+| `notion.blocks.append` | Delete appended blocks |
 
-... and more (Gmail, Google Drive, Google Sheets). Simply pass your original clients through the `wrap()` parameter with the proper `connector` identifier.
+### Gmail (`connector: 'gmail'`)
+| Action | Undo Strategy |
+|---|---|
+| `gmail.messages.send` | Send correction reply in thread |
+| `gmail.messages.trash` | Untrash the message |
+| `gmail.drafts.create` | Delete the draft |
+| `gmail.labels.modify` | Reverse the label changes |
+
+### Google Drive (`connector: 'gdrive'`)
+| Action | Undo Strategy |
+|---|---|
+| `gdrive.files.create` | Delete the file |
+| `gdrive.files.update` | Restore `beforeState` |
+| `gdrive.files.move` | Reverse the move |
+| `gdrive.files.trash` | Untrash the file |
+
+### Google Sheets (`connector: 'gsheets'`)
+| Action | Undo Strategy |
+|---|---|
+| `gsheets.values.append` | Clear the appended range |
+| `gsheets.values.update` | Restore `beforeState` |
+| `gsheets.spreadsheets.create` | Delete the spreadsheet |
+| `gsheets.sheets.add` | Delete the added sheet |
+
+## Custom Rollback
+
+For services not in the registry, use `call()` with a `rollback` function:
+```ts
+await agentrein.call(
+  myCustomApi.createRecord,
+  session,
+  {
+    actionName: 'myService.records.create',
+    operationType: 'CREATE',
+    args: [{ name: 'Ahmed' }],
+    rollback: async (createdRecord) => {
+      await myCustomApi.deleteRecord(createdRecord.id);
+    },
+  }
+);
+```
+
+See [Execution Methods](/sdk/call) for full `call()` documentation.
