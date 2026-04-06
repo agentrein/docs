@@ -1,0 +1,17 @@
+---
+title: Connectors
+description: AgentRein out-of-the-box connectors for third-party SDKs.
+---
+
+## Importing Connectors
+
+You can import any of the built-in connectors from the `agentrein/connectors` subpath:
+
+```ts
+import { stripe } from 'agentrein/connectors';
+import { slack } from 'agentrein/connectors';
+import { github } from 'agentrein/connectors';
+// etc.
+```
+
+These connectors automatically handle rollbacks and snapshots for their respective services when used with `agentrein.call()` or `agentrein.wrap()`.

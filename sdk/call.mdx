@@ -1,0 +1,43 @@
+---
+title: Execution Methods
+description: Core execution methods in AgentRein.
+---
+
+## `wrap()` vs `call()`
+
+AgentRein provides two primary means of intercepting API calls to automatically track side-effects and execute rollbacks.
+
+### `wrap()`
+Use `wrap()` for existing third-party API clients. This dynamically proxies the client so its calls are tracked.
+
+```ts
+import { AgentRein } from 'agentrein';
+import { Octokit } from '@octokit/rest';
+
+const agentrein = new AgentRein({ apiKey: '...' });
+const octokit = new Octokit({ auth: '...' });
+
+// Wrap the client
+const agentOctokit = agentrein.wrap(octokit, session, { connector: 'github' });
+
+// Use exactly as before
+await agentOctokit.issues.create({ owner: 'my-org', repo: 'my-repo', title: 'Task' });
+```
+
+### `call()`
+Use `call()` for custom functions, custom API calls using `fetch`, or when you need explicit Human-in-the-Loop (HITL) approval gates.
+
+```ts
+import { AgentRein, createUndoConfig } from 'agentrein';
+
+await agentrein.call(
+  myApiClient.createResource,
+  session,
+  createUndoConfig({
+    type: 'http-delete',
+    url: 'https://api.example.com/resource/123'
+  }),
+  { name: 'My Resource' },
+  { actionName: 'createResource', requiresApproval: true } // HITL approval gate
+);
+```
