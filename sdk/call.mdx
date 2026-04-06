@@ -28,16 +28,31 @@ await agentOctokit.issues.create({ owner: 'my-org', repo: 'my-repo', title: 'Tas
 Use `call()` for custom functions, custom API calls using `fetch`, or when you need explicit Human-in-the-Loop (HITL) approval gates.
 
 ```ts
-import { AgentRein, createUndoConfig } from 'agentrein';
+import { AgentRein } from 'agentrein';
 
+// Custom API — use call() with a rollback function
 await agentrein.call(
   myApiClient.createResource,
   session,
-  createUndoConfig({
-    type: 'http-delete',
-    url: 'https://api.example.com/resource/123'
-  }),
-  { name: 'My Resource' },
-  { actionName: 'createResource', requiresApproval: true } // HITL approval gate
+  {
+    actionName: 'myService.resource.create',
+    operationType: 'CREATE',
+    args: [{ name: 'My Resource' }],
+    rollback: async (createdResource) => {
+      await myApiClient.deleteResource(createdResource.id);
+    },
+  }
+);
+
+// With HITL approval gate
+await agentrein.call(
+  myApiClient.createResource,
+  session,
+  {
+    actionName: 'myService.resource.create',
+    operationType: 'CREATE',
+    args: [{ name: 'My Resource' }],
+    requiresApproval: true,
+  }
 );
 ```

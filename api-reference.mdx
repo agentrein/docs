@@ -29,5 +29,18 @@ The manual executor. Use this when dealing with custom integrations, internal AP
 
 **Signature:**  
 ```ts
-call<T>(fn: Function, session: Session, undoConfig: UndoConfig, ...args: any[]): Promise<T>
+call<T>(fn: Function, session: Session, options: CallOptions): Promise<T>
+```
+
+Where `CallOptions` is:
+```ts
+{
+  actionName: string;                          // required
+  operationType?: 'CREATE' | 'UPDATE' | 'DELETE';
+  args?: any[];
+  rollback?: (result: T) => Promise<void>;
+  requiresApproval?: boolean;
+  pollIntervalMs?: number;
+  timeoutMs?: number;
+}
 ```
