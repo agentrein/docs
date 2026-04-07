@@ -57,5 +57,5 @@ Valid status values: `SUCCESS`, `ROLLED_BACK`, `FAILED`, `PENDING_APPROVAL`, `RO
 | `SUCCESS` | Action completed successfully |
 | `PENDING_APPROVAL` | Waiting for human approval |
 | `ROLLED_BACK` | Action was reversed successfully |
-| `FAILED` | Action failed |
+| `FAILED` | Action failed. **Note:** Logging or updating an action to `FAILED` status automatically triggers a session rollback. |
 | `ROLLBACK_FAILED` | Rollback was attempted 3 times and failed |
