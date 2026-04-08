@@ -49,6 +49,5 @@ Marks the action as intentionally non-reversible. No rollback is attempted.
 createUndoConfig({ type: 'none' })
 ```
 
-> **Note:** `UndoConfig` is stored by the backend automatically when you 
-> use `wrap()`. For `call()`, provide a `rollback` function in the options 
-> object instead — this keeps the rollback logic co-located with your code.
+> **Note:** UndoConfig is a backend concept — it is stored alongside actions 
+> automatically. You do not pass it through the SDK.

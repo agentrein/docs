@@ -1,14 +1,12 @@
 ---
 title: Execution Methods
-description: Core execution methods in AgentRein.
+description: How AgentRein intercepts and protects your API calls.
 ---
 
-## `wrap()` vs `call()`
+## wrap()
 
-AgentRein provides two primary means of intercepting API calls to automatically track side-effects and execute rollbacks.
-
-### `wrap()`
-Use `wrap()` for existing third-party API clients. This dynamically proxies the client so its calls are tracked.
+The single execution primitive in AgentRein. Pass any API client and 
+AgentRein intercepts every method call automatically.
 
 ```ts
 import { AgentRein } from 'agentrein';
@@ -17,42 +15,31 @@ import { Octokit } from '@octokit/rest';
 const agentrein = new AgentRein({ apiKey: '...' });
 const octokit = new Octokit({ auth: '...' });
 
-// Wrap the client
 const agentOctokit = agentrein.wrap(octokit, session, { connector: 'github' });
 
-// Use exactly as before
+// Use exactly as before — rollback is automatic on any failure
 await agentOctokit.issues.create({ owner: 'my-org', repo: 'my-repo', title: 'Task' });
 ```
 
-### `call()`
-Use `call()` for custom functions, custom API calls using `fetch`, or when you need explicit Human-in-the-Loop (HITL) approval gates.
+## Approval Gates with wrap()
+
+Pass `requiresApproval` with a list of method paths that need human 
+sign-off before executing.
 
 ```ts
-import { AgentRein } from 'agentrein';
+const agentStripe = agentrein.wrap(stripe, session, {
+    connector: 'stripe',
+    requiresApproval: ['subscriptions.cancel', 'invoices.del'],
+    pollIntervalMs: 2000,
+    timeoutMs: 300000,
+});
 
-// Custom API — use call() with a rollback function
-await agentrein.call(
-  myApiClient.createResource,
-  session,
-  {
-    actionName: 'myService.resource.create',
-    operationType: 'CREATE',
-    args: [{ name: 'My Resource' }],
-    rollback: async (createdResource) => {
-      await myApiClient.deleteResource(createdResource.id);
-    },
-  }
-);
+// Executes immediately — no approval needed
+await agentStripe.invoices.create({ customer: 'cus_123', amount: 500 });
 
-// With HITL approval gate
-await agentrein.call(
-  myApiClient.createResource,
-  session,
-  {
-    actionName: 'myService.resource.create',
-    operationType: 'CREATE',
-    args: [{ name: 'My Resource' }],
-    requiresApproval: true,
-  }
-);
+// Pauses here until a reviewer approves from the dashboard
+await agentStripe.subscriptions.cancel({ id: 'sub_123' });
 ```
+
+If rejected, `ApprovalRejectedError` is thrown and the session is 
+automatically rolled back.

@@ -31,25 +31,18 @@ const session = await agentrein.newSession({
 
 ## 5. Wrap Your Existing Clients
 ```ts
-import { Octokit } from '@octokit/rest';
-import { WebClient } from '@slack/web-api';
-
-const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
-const slackClient = new WebClient(process.env.SLACK_TOKEN);
-
 const agentOctokit = agentrein.wrap(octokit, session, { connector: 'github' });
-const agentSlack = agentrein.wrap(slackClient, session, { connector: 'slack' });
+const agentSlack   = agentrein.wrap(slackClient, session, { connector: 'slack' });
 
-// Use exactly as before — nothing changes
 const issue = await agentOctokit.issues.create({
-  owner: 'my-org',
-  repo: 'my-repo',
-  title: 'Onboarding task',
+    owner: 'my-org',
+    repo: 'my-repo',
+    title: 'Onboarding task',
 });
 
 await agentSlack.chat.postMessage({
-  channel: '#onboarding',
-  text: `Issue created: ${issue.data.html_url}`,
+    channel: '#onboarding',
+    text: `Issue created: ${issue.data.html_url}`,
 });
 ```
 

@@ -14,33 +14,18 @@ wrap<T extends object>(client: T, session: string | Session, options: WrapOption
 
 - `client`: The standard SDK instance (e.g., `octokit`).
 - `session`: The active agent session ID or object.
-- `options`: A `WrapOptions` object including the `connector` identifier (and optional `requireApproval` array).
+- `options`: A `WrapOptions` object including the `connector` identifier.
 
 **Returns:**  
 A recursive Proxy of the original client (`T`), ensuring 100% type preservation.
 
----
 
-## Advanced Methods
-
-### `call()`
-
-The manual executor. Use this when dealing with custom integrations, internal APIs, or manual back-outs not natively supported by the Rollback Registry.
-
-**Signature:**  
-```ts
-call<T>(fn: Function, session: Session, options: CallOptions): Promise<T>
-```
-
-Where `CallOptions` is:
+Where `WrapOptions` is:
 ```ts
 {
-  actionName: string;                          // required
-  operationType?: 'CREATE' | 'UPDATE' | 'DELETE';
-  args?: any[];
-  rollback?: (result: T) => Promise<void>;
-  requiresApproval?: boolean;
-  pollIntervalMs?: number;
-  timeoutMs?: number;
+    connector: string;
+    requiresApproval?: string[];
+    pollIntervalMs?: number;
+    timeoutMs?: number;
 }
 ```

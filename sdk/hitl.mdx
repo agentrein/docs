@@ -1,69 +1,53 @@
 ---
 title: Human-in-the-Loop (HITL)
-description: Add approval gates for sensitive operations using call().
+description: Add approval gates for sensitive operations using wrap().
 ---
 
-## Approval Gates
+## Overview
 
-Human-in-the-loop approval is available through the `call()` method.
-When `requiresApproval: true` is set, the action is paused until a reviewer
-approves or rejects it from the AgentRein dashboard.
+Approval gates are configured directly on `wrap()` via the 
+`requiresApproval` option — no separate method needed.
+
 ```ts
 import { AgentRein, ApprovalRejectedError } from 'agentrein';
 
 const agentrein = new AgentRein({ apiKey: process.env.AGENTREIN_API_KEY });
 const session = await agentrein.newSession({ agentId: 'billing-agent' });
 
+const agentStripe = agentrein.wrap(stripe, session, {
+    connector: 'stripe',
+    requiresApproval: ['subscriptions.cancel'],
+    pollIntervalMs: 2000,
+    timeoutMs: 300000,
+});
+
 try {
-  await agentrein.call(
-    stripe.subscriptions.cancel,
-    session,
-    {
-      actionName: 'stripe.subscriptions.cancel',
-      operationType: 'DELETE',
-      args: [{ id: 'sub_123' }],
-      requiresApproval: true,
-      pollIntervalMs: 2000,   // how often to check for a decision (ms)
-      timeoutMs: 300000,      // auto-reject after 5 minutes
-    }
-  );
+    // This call pauses until approved from the dashboard
+    await agentStripe.subscriptions.cancel({ id: 'sub_123' });
 } catch (err) {
-  if (err instanceof ApprovalRejectedError) {
-    console.log('Rejected:', err.reason);
-    // all previous session actions were already rolled back automatically
-  }
+    if (err instanceof ApprovalRejectedError) {
+        console.log('Rejected:', err.reason);
+        // all previous session actions were already rolled back automatically
+    }
 }
 ```
 
 ## Flow
 
-1. `call()` logs the action as `PENDING_APPROVAL` to the backend
-2. The SDK polls `GET /approvals/:id` at the configured `pollIntervalMs`
-3. A reviewer approves or rejects from the dashboard
-4. **Approved** → the function executes → action updated to `SUCCESS`
-5. **Rejected** → `ApprovalRejectedError` is thrown → session rollback triggered
+1. `wrap()` detects the method path is in `requiresApproval`
+2. Logs the action as `PENDING_APPROVAL` to the backend (awaited)
+3. SDK polls `GET /approvals/:id` at `pollIntervalMs`
+4. A reviewer approves or rejects from the dashboard
+5. **Approved** → method executes → action updated to `SUCCESS`
+6. **Rejected** → `ApprovalRejectedError` thrown → session auto-rolled back
 
-## Approval Gates with wrap()
+## requiresApproval path matching
 
-`wrap()` does not support `requiresApproval` directly. If a specific method
-on a wrapped client needs human approval, call it via `call()` instead:
-```ts
-// Most methods — use wrap() for automatic logging
-const agentStripe = agentrein.wrap(stripe, session, { connector: 'stripe' });
-await agentStripe.invoices.create({ customer: 'cus_123', amount: 500 });
+The strings in `requiresApproval` match the method path after the connector 
+prefix. For `agentrein.wrap(stripe, session, { connector: 'stripe' })`:
 
-// High-risk method — use call() with requiresApproval
-await agentrein.call(
-  stripe.subscriptions.cancel,
-  session,
-  {
-    actionName: 'stripe.subscriptions.cancel',
-    operationType: 'DELETE',
-    args: [{ id: 'sub_123' }],
-    requiresApproval: true,
-  }
-);
-```
-
-Both `wrap()` and `call()` log to the same session, so rollback covers
-all actions regardless of which method was used.
+| Method called | Path to match |
+|---|---|
+| `agentStripe.subscriptions.cancel(...)` | `'subscriptions.cancel'` |
+| `agentStripe.invoices.del(...)` | `'invoices.del'` |
+| `agentStripe.customers.del(...)` | `'customers.del'` |
