@@ -86,12 +86,11 @@ in the backend:
 | `gsheets.spreadsheets.create` | Delete the spreadsheet |
 | `gsheets.sheets.add` | Delete the added sheet |
 
-## Custom Rollback
+## Unsupported Services
 
-For services not in the registry, contact support or open an issue to 
-request a new connector. In the meantime, you can still use `wrap()` — 
-actions will be logged and the session will roll back, but the 
-compensation step will be marked `ROLLBACK_FAILED` since no undo 
-strategy exists yet.
+For services not in the registry, `wrap()` will still log all actions and 
+trigger session rollback on failure — but the compensation step will be 
+marked `ROLLBACK_FAILED` since no undo strategy exists yet.
 
-> To request a new connector: [github.com/AgentReinAi](https://github.com/AgentReinAi)
+To request support for a new connector, open an issue at 
+[github.com/AgentReinAi](https://github.com/AgentReinAi).

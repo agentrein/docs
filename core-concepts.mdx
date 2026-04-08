@@ -5,14 +5,33 @@ description: How AgentRein's transparent proxy enables zero-friction reliability
 
 ## The Recursive Proxy
 
-The core of AgentRein SDK's power comes from the `wrap()` method. Rather than forcing you to learn a new syntax, `wrap()` uses a Recursive JavaScript Proxy to intercept your existing client's actions. 
+The core of AgentRein SDK's power comes from the `wrap()` method. Rather 
+than forcing you to learn a new syntax, `wrap()` uses a Recursive JavaScript 
+Proxy to intercept your existing client's actions.
 
-When you call `agentrein.wrap(client, session, { connector })`, it intercepts every method call, no matter how deeply nested (e.g., `octokit.rest.issues.create`). It tracks the action, logs it to the backend natively, executes the original function, and registers it for potential rollback—while completely preserving your developer's original TypeScript types.
+When you call `agentrein.wrap(client, session, { connector })`, it intercepts 
+every method call, no matter how deeply nested (e.g., `octokit.rest.issues.create`). 
+It tracks the action, logs it to the backend, executes the original function, 
+and registers it for potential rollback — while completely preserving your 
+original TypeScript types.
 
-## `wrap()` vs. `call()` (Hybrid Approach)
+## Approval Gates
 
-### Use `wrap()` (Standard)
-The `wrap()` method is our primary, standard approach. Use `wrap()` for fully supported third-party SDKs (like Stripe, GitHub, Slack) to get automatic rollbacks for free, with zero changes to your actual business logic. 
+For high-risk methods that need human sign-off, pass `requiresApproval` 
+directly to `wrap()`:
 
-### Use `call()` (Advanced)
-The `call()` method is an advanced fallback. Use `call()` when you are dealing with internal Custom APIs, manually injecting `undoConfig` objects for unsupported endpoints, or executing highly specific one-off functions that don't neatly fit inside a traditional client wrapper.
+```ts
+const agentStripe = agentrein.wrap(stripe, session, {
+    connector: 'stripe',
+    requiresApproval: ['subscriptions.cancel', 'invoices.del'],
+});
+
+// Normal methods execute immediately
+await agentStripe.invoices.create({ customer: 'cus_123' });
+
+// Methods in requiresApproval pause until a reviewer approves
+await agentStripe.subscriptions.cancel({ id: 'sub_123' });
+```
+
+If a reviewer rejects the action, `ApprovalRejectedError` is thrown and 
+the session is automatically rolled back.
