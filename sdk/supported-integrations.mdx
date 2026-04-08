@@ -88,20 +88,10 @@ in the backend:
 
 ## Custom Rollback
 
-For services not in the registry, use `call()` with a `rollback` function:
-```ts
-await agentrein.call(
-  myCustomApi.createRecord,
-  session,
-  {
-    actionName: 'myService.records.create',
-    operationType: 'CREATE',
-    args: [{ name: 'Ahmed' }],
-    rollback: async (createdRecord) => {
-      await myCustomApi.deleteRecord(createdRecord.id);
-    },
-  }
-);
-```
+For services not in the registry, contact support or open an issue to 
+request a new connector. In the meantime, you can still use `wrap()` — 
+actions will be logged and the session will roll back, but the 
+compensation step will be marked `ROLLBACK_FAILED` since no undo 
+strategy exists yet.
 
-See [Execution Methods](/sdk/call) for full `call()` documentation.
+> To request a new connector: [github.com/AgentReinAi](https://github.com/AgentReinAi)

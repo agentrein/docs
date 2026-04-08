@@ -25,21 +25,20 @@ try {
 
 Thrown when a human rejects a `requiresApproval` action. AgentRein automatically triggers session rollback before throwing.
 ```ts
-import { ApprovalRejectedError } from 'agentrein';
+import { AgentRein, ApprovalRejectedError } from 'agentrein';
+
+const agentStripe = agentrein.wrap(stripe, session, {
+    connector: 'stripe',
+    requiresApproval: ['subscriptions.cancel'],
+});
 
 try {
-  await agentrein.call(
-    stripe.invoices.create,
-    session,
-    { customer: 'cus_xxx' },
-    { requiresApproval: true }
-  );
+    await agentStripe.subscriptions.cancel({ id: 'sub_123' });
 } catch (err) {
-  if (err instanceof ApprovalRejectedError) {
-    // err.reason — the reason string provided by the human reviewer
-    // err.message — "Action rejected by reviewer: <reason>"
-    console.log('Rejected:', err.reason);
-    // session has already been rolled back
-  }
+    if (err instanceof ApprovalRejectedError) {
+        // err.reason — the reason string provided by the human reviewer
+        console.log('Rejected:', err.reason);
+        // session has already been rolled back
+    }
 }
 ```
