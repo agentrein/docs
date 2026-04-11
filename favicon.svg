@@ -1,4 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <rect width="32" height="32" rx="8" fill="#1e293b" />
-  <circle cx="16" cy="16" r="6" fill="#ffa7eb" />
+<svg width="512" height="512" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1c1c1e" />
+      <stop offset="100%" stop-color="#0f0f11" />
+    </linearGradient>
+    <radialGradient id="glowG" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6"/>
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="clip">
+      <rect width="28" height="28" rx="14" />
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#clip)">
+    <!-- Base Background -->
+    <rect width="28" height="28" rx="14" fill="url(#bg)" />
+    
+    <!-- Inner Background overlay -->
+    <rect width="28" height="28" rx="14" fill="#ffffff" fill-opacity="0.02" />
+
+    <!-- Native SVG Glow Equivalent -->
+    <circle cx="14" cy="14" r="9" fill="url(#glowG)" />
+
+    <!-- Inner diamond -->
+    <rect x="9" y="9" width="10" height="10" rx="1" fill="#ffffff" fill-opacity="0.8" transform="rotate(45 14 14)" />
+  </g>
+
+  <!-- Border overlay -->
+  <rect x="0.5" y="0.5" width="27" height="27" rx="13.5" stroke="#ffffff" stroke-opacity="0.1" stroke-width="1" />
 </svg>
