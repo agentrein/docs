@@ -1,10 +1,10 @@
 {
-  "theme": "almond",
+  "theme": "luma",
   "name": "AgentRein",
   "colors": {
-    "primary": "#ffffff",
-    "light": "#050506",
-    "dark": "#050506"
+    "primary": "#ffa7eb",
+    "light": "#ffa7eb",
+    "dark": "#ffa7eb"
   },
   "favicon": "/favicon.svg",
   "contextual": {
