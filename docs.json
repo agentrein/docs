@@ -1,5 +1,5 @@
 {
-  "theme": "Palm",
+  "theme": "palm",
   "name": "AgentRein",
   "colors": {
     "primary": "#ffa7eb",
@@ -39,7 +39,7 @@
             "group": "Getting Started",
             "icon": "rocket",
             "pages": [
-              "introduction",
+              "index",
               "quickstart",
               "core-concepts"
             ]
