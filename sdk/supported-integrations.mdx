@@ -27,7 +27,7 @@ in the backend:
 ### Slack (`connector: 'slack'`)
 | Action | Undo Strategy |
 |---|---|
-| `slack.chat.postMessage` | Post correction in thread |
+| `slack.chat.postMessage` | Posts correction reply in thread, then deletes the original message |
 | `slack.chat.update` | Restore `beforeState` |
 | `slack.chat.delete` | No undo (logged only) |
 
