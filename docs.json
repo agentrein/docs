@@ -7,6 +7,9 @@
     "dark": "#c6f135"
   },
   "favicon": "/favicon.svg",
+  "modeToggle": {
+    "isHidden": true
+  },
   "contextual": {
     "options": [
       "copy",
@@ -24,12 +27,6 @@
       "href": "https://www.agentrein.com/sessions"
     }
   },
-  "topbarLinks": [
-    {
-      "name": "GitHub",
-      "url": "https://github.com/AgentReinAi"
-    }
-  ],
   "navigation": {
     "tabs": [
       {
@@ -57,35 +54,6 @@
               "sdk/supported-integrations",
               "sdk/hitl",
               "sdk/errors"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "API Reference",
-        "groups": [
-          {
-            "group": "API Reference",
-            "icon": "rectangle-stack",
-            "pages": [
-              "api-reference/authentication",
-              "api-reference/sessions",
-              "api-reference/actions",
-              "api-reference/rollback",
-              "api-reference/approvals",
-              "api-reference/metrics"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Changelog",
-        "groups": [
-          {
-            "group": "Changelog",
-            "icon": "clock",
-            "pages": [
-              "changelog"
             ]
           }
         ]
