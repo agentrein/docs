@@ -8,6 +8,7 @@
   },
   "favicon": "/favicon.svg",
   "modeToggle": {
+    "default": "dark",
     "isHidden": true
   },
   "contextual": {
@@ -19,13 +20,6 @@
       "cursor",
       "vscode"
     ]
-  },
-  "navbar": {
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://www.agentrein.com/sessions"
-    }
   },
   "navigation": {
     "tabs": [
