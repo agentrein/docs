@@ -25,6 +25,7 @@
     "tabs": [
       {
         "tab": "Documentation",
+        "hidden": true,
         "groups": [
           {
             "group": "Getting Started",
