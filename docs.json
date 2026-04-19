@@ -4,12 +4,9 @@
   "colors": {
     "primary": "#c6f135",
     "light": "#c6f135",
-    "dark": "#c6f135",
-    "background": {
-      "light": "#0a0a0a",
-      "dark": "#0a0a0a"
-    }
+    "dark": "#c6f135"
   },
+  "backgroundImage": "/background.svg",
   "favicon": "/favicon.svg",
   "modeToggle": {
     "default": "dark",
