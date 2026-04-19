@@ -54,13 +54,17 @@
       }
     ]
   },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
+  "logo": "/logo/dark.svg",
   "footer": {
     "socials": {
       "github": "https://github.com/AgentReinAi"
     }
+  },
+  "appearance": {
+    "strict": true,
+    "default": "dark"
+  },
+  "background": {
+    "decoration": "windows"
   }
 }
