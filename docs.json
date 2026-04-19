@@ -49,7 +49,11 @@
       }
     ]
   },
-  "logo": "/logo/dark.svg",
+  "logo": {
+    "light": "/logo/dark.svg",
+    "dark": "/logo/dark.svg",
+    "href": "https://agentrein.com"
+  },
   "footer": {
     "socials": {
       "github": "https://github.com/AgentReinAi"
