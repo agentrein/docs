@@ -65,6 +65,6 @@
     "default": "dark"
   },
   "background": {
-    "decoration": "windows"
+    "decoration": "grid"
   }
 }
