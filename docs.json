@@ -65,7 +65,7 @@
     "default": "dark"
   },
   "background": {
-    "decoration": "grid"
+    "decoration": "gradient"
   },
   "navbar": {
     "links": [
