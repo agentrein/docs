@@ -22,33 +22,33 @@
     ]
   },
   "navigation": {
-  "groups": [
-    {
-      "group": "Getting Started",
-      "icon": "rocket",
-      "pages": [
-        "index",
-        "quickstart",
-        "core-concepts"
-      ]
-    },
-    {
-      "group": "SDK Reference",
-      "icon": "code",
-      "pages": [
-        "sdk/installation",
-        "sdk/new-session",
-        "sdk/call",
-        "api-reference",
-        "sdk/undo-config",
-        "sdk/connectors",
-        "sdk/supported-integrations",
-        "sdk/hitl",
-        "sdk/errors"
-      ]
-    }
-  ]
-},
+    "groups": [
+      {
+        "group": "Getting Started",
+        "icon": "rocket",
+        "pages": [
+          "index",
+          "quickstart",
+          "core-concepts"
+        ]
+      },
+      {
+        "group": "SDK Reference",
+        "icon": "code",
+        "pages": [
+          "sdk/installation",
+          "sdk/new-session",
+          "sdk/call",
+          "api-reference",
+          "sdk/undo-config",
+          "sdk/connectors",
+          "sdk/supported-integrations",
+          "sdk/hitl",
+          "sdk/errors"
+        ]
+      }
+    ]
+  },
   "logo": "/logo/dark.svg",
   "footer": {
     "socials": {
@@ -60,7 +60,9 @@
     "default": "dark"
   },
   "background": {
-    "decoration": "gradient"
+    "color": {
+      "dark": "#0a0a0a"
+    }
   },
   "navbar": {
     "links": [
