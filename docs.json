@@ -66,5 +66,13 @@
   },
   "background": {
     "decoration": "grid"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Dashboard",
+        "href": "https://www.agentrein.com/dashboard"
+      }
+    ]
   }
 }
