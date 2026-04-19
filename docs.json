@@ -63,13 +63,5 @@
     "color": {
       "dark": "#0a0a0a"
     }
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Dashboard",
-        "href": "https://www.agentrein.com/dashboard"
-      }
-    ]
   }
 }
