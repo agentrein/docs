@@ -65,7 +65,8 @@
   "background": {
     "color": {
       "dark": "#0a0a0a"
-    }
+    },
+    "decoration": "grid"
   },
   "description": "AI Agent Reliability Platform"
 }
