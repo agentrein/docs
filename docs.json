@@ -3,7 +3,7 @@
   "name": "AgentRein",
   "colors": {
     "primary": "#ffffff",
-    "light": "#0a0a0a",
+    "light": "#ffffff",
     "dark": "#FFFFFF"
   },
   "favicon": "/favicon.svg",
@@ -67,5 +67,6 @@
     "color": {
       "dark": "#0a0a0a"
     }
-  }
+  },
+  "description": "AI Agent Reliability Platform"
 }
