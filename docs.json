@@ -1,5 +1,5 @@
 {
-  "theme": "mint",
+  "theme": "luma",
   "name": "AgentRein",
   "colors": {
     "primary": "#ffffff",
@@ -59,9 +59,9 @@
   },
   "background": {
     "color": {
-      "dark": "#0a0a0a"
+      "dark": "#000000"
     },
-    "decoration": "windows"
+    "decoration": "gradient"
   },
   "description": "AI Agent Reliability Platform"
 }
