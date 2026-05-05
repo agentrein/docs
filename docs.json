@@ -1,12 +1,11 @@
 {
-  "theme": "almond",
+  "theme": "mint",
   "name": "AgentRein",
   "colors": {
     "primary": "#ffffff",
     "light": "#ffffff",
     "dark": "#FFFFFF"
   },
-  "favicon": "/favicon.svg",
   "modeToggle": {
     "default": "dark",
     "isHidden": true
