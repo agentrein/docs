@@ -2,9 +2,9 @@
   "theme": "almond",
   "name": "agentein",
   "colors": {
-    "primary": "#00ff07",
+    "primary": "#ff0000",
     "light": "#ffffff",
-    "dark": "#00ff07"
+    "dark": "#ff0000"
   },
   "modeToggle": {
     "default": "dark",
