@@ -1,10 +1,10 @@
 {
-  "theme": "luma",
+  "theme": "almond",
   "name": "AgentRein",
   "colors": {
-    "primary": "#959bfa",
-    "light": "#959bfa",
-    "dark": "#959bfa"
+    "primary": "#77a8e7",
+    "light": "#77a8e7",
+    "dark": "#77a8e7"
   },
   "modeToggle": {
     "default": "dark",
