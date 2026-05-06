@@ -2,7 +2,7 @@
   "theme": "almond",
   "name": "AgentRein",
   "colors": {
-    "primary": "#ffffff",
+    "primary": "#000",
     "light": "#ffffff",
     "dark": "#FFFFFF"
   },
