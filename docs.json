@@ -2,7 +2,7 @@
   "theme": "luma",
   "name": "AgentRein",
   "colors": {
-    "primary": "#3ec0c3",
+    "primary": "#0590cb",
     "light": "#ffffff",
     "dark": "#FFFFFF"
   },
@@ -61,7 +61,7 @@
     "color": {
       "dark": "#000000"
     },
-    "decoration": "grid"
+    "decoration": "gradient"
   },
   "description": "AI Agent Reliability Platform",
   "favicon": "/images/fav.svg"
