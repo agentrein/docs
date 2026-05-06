@@ -1,10 +1,10 @@
 {
-  "theme": "almond",
-  "name": "agentein",
+  "theme": "luma",
+  "name": "AgentRein",
   "colors": {
-    "primary": "#ff0000",
-    "light": "#ffffff",
-    "dark": "#ff0000"
+    "primary": "#8aa0f3",
+    "light": "#8aa0f3",
+    "dark": "#8aa0f3"
   },
   "modeToggle": {
     "default": "dark",
@@ -56,12 +56,6 @@
   "appearance": {
     "strict": true,
     "default": "dark"
-  },
-  "background": {
-    "color": {
-      "dark": "#09090b"
-    },
-    "decoration": "gradient"
   },
   "description": "AI Agent Reliability Platform",
   "favicon": "/images/fav.svg"
