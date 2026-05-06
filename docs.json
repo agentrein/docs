@@ -66,9 +66,5 @@
         "href": "https://www.agentrein.com/dashboard"
       }
     ]
-  },
-  "banner": {
-    "dismissible": true,
-    "content": "a"
   }
 }
