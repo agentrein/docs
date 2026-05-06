@@ -60,7 +60,9 @@
   "background": {
     "color": {
       "dark": "#000000"
-    }
+    },
+    "image": "/images/Gemini_Generated_Image_j17wf3j17wf3j17w.png"
   },
-  "description": "AI Agent Reliability Platform"
+  "description": "AI Agent Reliability Platform",
+  "favicon": "/images/fav.svg"
 }
