@@ -2,9 +2,9 @@
   "theme": "almond",
   "name": "AgentRein",
   "colors": {
-    "primary": "#77a8e7",
-    "light": "#77a8e7",
-    "dark": "#77a8e7"
+    "primary": "#50b8cf",
+    "light": "#50b8cf",
+    "dark": "#50b8cf"
   },
   "modeToggle": {
     "default": "dark",
@@ -66,5 +66,9 @@
         "href": "https://www.agentrein.com/dashboard"
       }
     ]
+  },
+  "banner": {
+    "dismissible": true,
+    "content": "a"
   }
 }
