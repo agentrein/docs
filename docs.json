@@ -58,7 +58,6 @@
     "default": "dark"
   },
   "description": "AI Agent Reliability Platform",
-  "favicon": "/images/fav.svg",
   "navbar": {
     "links": [
       {
@@ -66,5 +65,6 @@
         "href": "https://www.agentrein.com/dashboard"
       }
     ]
-  }
+  },
+  "favicon": "/images/svgviewer-output.svg"
 }
