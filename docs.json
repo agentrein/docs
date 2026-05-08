@@ -66,6 +66,6 @@
       }
     ]
   },
-  "favicon": "/images/docs-fav.svg",
-  "logo": "/images/purple-logo.svg"
+  "logo": "/images/purple-logo.svg",
+  "favicon": "/images/purple-logo.svg"
 }
