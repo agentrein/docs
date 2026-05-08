@@ -1,7 +1,7 @@
-<svg width="100%" viewBox="0 0 400 90" role="img" xmlns="http://www.w3.org/2000/svg">
-  <title style="fill:rgb(0, 0, 0);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">AgentRein</title>
-  <g transform="translate(20, 8) scale(3.2)" style="fill:rgb(0, 0, 0);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">
-    <path fill="#5c68cf" fill-rule="evenodd" d="M3 20.5L8.341 6.152c.678-1.676 1.942-2.624 3.621-2.651V3.5h.076c1.68.028 2.943.976 3.62 2.652L21 20.5l-3.307-1.128L13.13 7.115c-.278-.678-.599-.922-1.13-.933c-.532.011-.852.255-1.13.933L6.308 19.372zm11.324-5.464a2.28 2.28 0 0 1-2.293 2.27c-1.266 0-2.292-1.017-2.292-2.27s1.026-2.27 2.292-2.27a2.28 2.28 0 0 1 2.293 2.27" clip-rule="evenodd" style="fill:rgb(92, 104, 207);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<svg width="100%" viewBox="0 0 230 40" role="img" xmlns="http://www.w3.org/2000/svg">
+  <title>AgentRein</title>
+  <g transform="translate(2, 0) scale(1.75)">
+    <path fill="#5c68cf" fill-rule="evenodd" d="M3 20.5L8.341 6.152c.678-1.676 1.942-2.624 3.621-2.651V3.5h.076c1.68.028 2.943.976 3.62 2.652L21 20.5l-3.307-1.128L13.13 7.115c-.278-.678-.599-.922-1.13-.933c-.532.011-.852.255-1.13.933L6.308 19.372zm11.324-5.464a2.28 2.28 0 0 1-2.293 2.27c-1.266 0-2.292-1.017-2.292-2.27s1.026-2.27 2.292-2.27a2.28 2.28 0 0 1 2.293 2.27" clip-rule="evenodd"/>
   </g>
-  <text x="95" y="62" font-family="Inter, sans-serif" font-size="48" font-weight="600" fill="#5c68cf" style="fill:rgb(92, 104, 207);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Inter, sans-serif;font-size:48px;font-weight:600;text-anchor:start;dominant-baseline:auto">AgentRein</text>
+  <text x="42" y="28" font-family="Inter, sans-serif" font-size="22" font-weight="600" fill="#5c68cf">AgentRein</text>
 </svg>
