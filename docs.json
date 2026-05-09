@@ -69,8 +69,11 @@
   "fonts": {
     "family": "Inter"
   },
-  "favicon": "/images/favicon.svg",
   "logo": {
+    "light": "/images/light.svg",
+    "dark": "/images/dark.svg"
+  },
+  "favicon": {
     "light": "/images/light.svg",
     "dark": "/images/dark.svg"
   }
