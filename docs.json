@@ -66,9 +66,9 @@
       }
     ]
   },
-  "favicon": "/images/docs-fav.svg",
   "fonts": {
     "family": "Inter"
   },
-  "logo": "/images/white-logo.svg"
+  "logo": "/images/white-logo.svg",
+  "favicon": "/images/fav.svg"
 }
