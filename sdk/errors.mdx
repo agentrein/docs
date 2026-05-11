@@ -2,9 +2,8 @@
 title: Errors
 description: Error types thrown by the AgentRein SDK.
 ---
-
-## AgentReinUnavailableError
-
+<AccordionGroup>
+<Accordion title="AgentReinUnavailableError" icon="triangle-exclamation" defaultOpen={true}>
 Thrown when the SDK cannot reach the AgentRein backend during authentication. If authentication succeeds but session creation fails, an AxiosError is thrown.
 
 > [!NOTE]
@@ -20,9 +19,9 @@ try {
   }
 }
 ```
+</Accordion>
 
-## ApprovalRejectedError
-
+<Accordion title="ApprovalRejectedError" icon="circle-xmark">
 Thrown when a human rejects a `requiresApproval` action. AgentRein automatically triggers session rollback before throwing.
 ```ts
 import { AgentRein, ApprovalRejectedError } from 'agentrein';
@@ -43,3 +42,5 @@ try {
     }
 }
 ```
+</Accordion>
+</AccordionGroup>

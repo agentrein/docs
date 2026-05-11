@@ -2,6 +2,17 @@
 title: Core Concepts
 description: How AgentRein's transparent proxy enables zero-friction reliability.
 ---
+<Columns cols={3}>
+  <Card title="Recursive Proxy" icon="shuffle">
+    wrap() intercepts every method call no matter how deeply nested, preserving your original TypeScript types completely.
+  </Card>
+  <Card title="Approval Gates" icon="user-check">
+    Pass requiresApproval to wrap() to pause execution until a human reviewer approves from the dashboard.
+  </Card>
+  <Card title="Automatic Rollback" icon="rotate-left">
+    If a reviewer rejects or any action fails, AgentRein reverses every previous action in LIFO order automatically.
+  </Card>
+</Columns>
 
 ## The Recursive Proxy
 
@@ -20,6 +31,9 @@ original TypeScript types.
 For high-risk methods that need human sign-off, pass `requiresApproval` 
 directly to `wrap()`:
 
+<Info>
+  Methods not listed in requiresApproval execute immediately without interruption. Only listed paths trigger the approval gate.
+</Info>
 ```ts
 const agentStripe = agentrein.wrap(stripe, session, {
     connector: 'stripe',

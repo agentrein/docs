@@ -1,4 +1,5 @@
 {
+  "$schema": "https://mintlify.com/docs.json",
   "theme": "maple",
   "name": "AgentRein",
   "colors": {
@@ -45,7 +46,19 @@
           "sdk/hitl",
           "sdk/errors"
         ]
-      }
+      },
+        {
+          "group": "API Reference",
+          "icon": "server",
+          "pages": [
+            "api-reference/authentication",
+            "api-reference/sessions",
+            "api-reference/actions",
+            "api-reference/approvals",
+            "api-reference/rollback",
+            "api-reference/metrics"
+          ]
+        }
     ]
   },
   "footer": {
@@ -64,7 +77,11 @@
         "label": "Dashboard",
         "href": "https://www.agentrein.com/dashboard"
       }
-    ]
+    ],
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/AgentReinAi"
+    }
   },
   "fonts": {
     "family": "Inter"

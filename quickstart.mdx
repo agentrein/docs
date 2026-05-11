@@ -3,16 +3,18 @@ title: Quick Start
 description: Get AgentRein protecting your agent in under 5 minutes.
 ---
 
-## 1. Install the SDK
+<Steps>
+  <Step title="Install the SDK">
 ```bash
 npm install agentrein
 ```
+  </Step>
 
-## 2. Get Your API Key
-
+  <Step title="Get Your API Key">
 Log in to [Dashboard](https://agentrein.com/sessions), go to **Settings**, and copy your API key.
+  </Step>
 
-## 3. Initialize the Client
+  <Step title="Initialize the Client">
 ```ts
 import { AgentRein } from 'agentrein';
 import { Octokit } from '@octokit/rest'; // Developer's own standard SDK
@@ -20,16 +22,18 @@ import { Octokit } from '@octokit/rest'; // Developer's own standard SDK
 const agentrein = new AgentRein({ apiKey: 'YOUR_API_KEY' });
 const octokit = new Octokit({ auth: 'GITHUB_TOKEN' });
 ```
+  </Step>
 
-## 4. Create a Session
+  <Step title="Create a Session">
 ```ts
 const session = await agentrein.newSession({
   agentId: 'onboarding-agent',
   intent: 'Create a GitHub issue and notify the team on Slack',
 });
 ```
+  </Step>
 
-## 5. Wrap Your Existing Clients
+  <Step title="Wrap Your Existing Clients">
 ```ts
 const agentOctokit = agentrein.wrap(octokit, session, { connector: 'github' });
 const agentSlack   = agentrein.wrap(slackClient, session, { connector: 'slack' });
@@ -45,10 +49,11 @@ await agentSlack.chat.postMessage({
     text: `Issue created: ${issue.data.html_url}`,
 });
 ```
+  </Step>
 
-If any call throws, AgentRein automatically rolls back all previous actions in the session.
-
-## 6. Complete the Session
+  <Step title="Complete the Session">
 ```ts
 await agentrein.completeSession(session);
 ```
+  </Step>
+</Steps>

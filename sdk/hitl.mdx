@@ -7,7 +7,9 @@ description: Add approval gates for sensitive operations using wrap().
 
 Approval gates are configured directly on `wrap()` via the 
 `requiresApproval` option — no separate method needed.
-
+<Info>
+  The session is automatically rolled back when a reviewer rejects an action — no manual cleanup required.
+</Info>
 ```ts
 import { AgentRein, ApprovalRejectedError } from 'agentrein';
 
@@ -34,12 +36,14 @@ try {
 
 ## Flow
 
-1. `wrap()` detects the method path is in `requiresApproval`
-2. Logs the action as `PENDING_APPROVAL` to the backend (awaited)
-3. SDK polls `GET /approvals/:id` at `pollIntervalMs`
-4. A reviewer approves or rejects from the dashboard
-5. **Approved** → method executes → action updated to `SUCCESS`
-6. **Rejected** → `ApprovalRejectedError` thrown → session auto-rolled back
+<Steps>
+  <Step title="wrap() detects the method path is in `requiresApproval`" />
+  <Step title="Logs the action as `PENDING_APPROVAL` to the backend (awaited)" />
+  <Step title="SDK polls `GET /approvals/:id` at `pollIntervalMs`" />
+  <Step title="A reviewer approves or rejects from the dashboard" />
+  <Step title="Approved → method executes → action updated to `SUCCESS`" />
+  <Step title="Rejected → `ApprovalRejectedError` thrown → session auto-rolled back" />
+</Steps>
 
 ## requiresApproval path matching
 

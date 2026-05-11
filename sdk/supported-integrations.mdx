@@ -5,6 +5,7 @@ description: Which external SDKs have automatic rollback support in the backend.
 
 ## How Rollback Works
 
+<Tip>
 When you use `wrap()`, AgentRein intercepts every method call and logs it
 to the backend with the action name (e.g. `stripe.invoices.create`) and
 the method response. The backend maintains a **Rollback Registry** — a map
@@ -12,80 +13,85 @@ of action names to compensation strategies.
 
 When rollback is triggered for a session, the backend looks up each action
 in the registry and executes the appropriate undo strategy in LIFO order.
+</Tip>
 
 ## Registry
 
 The following action names have automatic rollback strategies registered
 in the backend:
 
-### GitHub (`connector: 'github'`)
-| Action | Undo Strategy |
-|---|---|
-| `github.issues.create` | Close the issue |
-| `github.issues.update` | Restore `beforeState` |
+<Tabs>
+  <Tab title="GitHub" icon="github">
+    | Action | Undo Strategy |
+    |---|---|
+    | `github.issues.create` | Close the issue |
+    | `github.issues.update` | Restore `beforeState` |
+  </Tab>
+  <Tab title="Slack">
+    | Action | Undo Strategy |
+    |---|---|
+    | `slack.chat.postMessage` | Posts correction reply in thread, then deletes the original message |
+    | `slack.chat.update` | Restore `beforeState` |
+    | `slack.chat.delete` | No undo (logged only) |
+  </Tab>
+  <Tab title="Stripe">
+    | Action | Undo Strategy |
+    |---|---|
+    | `stripe.invoices.create` | Delete the invoice |
+    | `stripe.customers.create` | Delete the customer |
+    | `stripe.refunds.create` | No undo (logged only) |
+  </Tab>
+  <Tab title="HubSpot">
+    | Action | Undo Strategy |
+    |---|---|
+    | `hubspot.contacts.create` | Delete the contact |
+    | `hubspot.contacts.update` | Restore `beforeState` |
+    | `hubspot.deals.create` | Delete the deal |
+    | `hubspot.deals.update` | Restore `beforeState` |
+  </Tab>
+  <Tab title="Salesforce">
+    | Action | Undo Strategy |
+    |---|---|
+    | `salesforce.contacts.create` | Delete the record |
+    | `salesforce.contacts.update` | Restore `beforeState` |
+    | `salesforce.opportunities.create` | Delete the record |
+    | `salesforce.opportunities.update` | Restore `beforeState` |
+  </Tab>
+  <Tab title="Notion">
+    | Action | Undo Strategy |
+    |---|---|
+    | `notion.pages.create` | Move to trash |
+    | `notion.pages.update` | Restore `beforeState` |
+    | `notion.database_items.create` | Move to trash |
+    | `notion.blocks.append` | Delete appended blocks |
+  </Tab>
+  <Tab title="Gmail">
+    | Action | Undo Strategy |
+    |---|---|
+    | `gmail.messages.send` | Send correction reply in thread |
+    | `gmail.messages.trash` | Untrash the message |
+    | `gmail.drafts.create` | Delete the draft |
+    | `gmail.labels.modify` | Reverse the label changes |
+  </Tab>
+  <Tab title="Google Drive">
+    | Action | Undo Strategy |
+    |---|---|
+    | `gdrive.files.create` | Delete the file |
+    | `gdrive.files.update` | Restore `beforeState` |
+    | `gdrive.files.move` | Reverse the move |
+    | `gdrive.files.trash` | Untrash the file |
+  </Tab>
+  <Tab title="Google Sheets">
+    | Action | Undo Strategy |
+    |---|---|
+    | `gsheets.values.append` | Clear the appended range |
+    | `gsheets.values.update` | Restore `beforeState` |
+    | `gsheets.spreadsheets.create` | Delete the spreadsheet |
+    | `gsheets.sheets.add` | Delete the added sheet |
+  </Tab>
+</Tabs>
 
-### Slack (`connector: 'slack'`)
-| Action | Undo Strategy |
-|---|---|
-| `slack.chat.postMessage` | Posts correction reply in thread, then deletes the original message |
-| `slack.chat.update` | Restore `beforeState` |
-| `slack.chat.delete` | No undo (logged only) |
-
-### Stripe (`connector: 'stripe'`)
-| Action | Undo Strategy |
-|---|---|
-| `stripe.invoices.create` | Delete the invoice |
-| `stripe.customers.create` | Delete the customer |
-| `stripe.refunds.create` | No undo (logged only) |
-
-### HubSpot (`connector: 'hubspot'`)
-| Action | Undo Strategy |
-|---|---|
-| `hubspot.contacts.create` | Delete the contact |
-| `hubspot.contacts.update` | Restore `beforeState` |
-| `hubspot.deals.create` | Delete the deal |
-| `hubspot.deals.update` | Restore `beforeState` |
-
-### Salesforce (`connector: 'salesforce'`)
-| Action | Undo Strategy |
-|---|---|
-| `salesforce.contacts.create` | Delete the record |
-| `salesforce.contacts.update` | Restore `beforeState` |
-| `salesforce.opportunities.create` | Delete the record |
-| `salesforce.opportunities.update` | Restore `beforeState` |
-
-### Notion (`connector: 'notion'`)
-| Action | Undo Strategy |
-|---|---|
-| `notion.pages.create` | Move to trash |
-| `notion.pages.update` | Restore `beforeState` |
-| `notion.database_items.create` | Move to trash |
-| `notion.blocks.append` | Delete appended blocks |
-
-### Gmail (`connector: 'gmail'`)
-| Action | Undo Strategy |
-|---|---|
-| `gmail.messages.send` | Send correction reply in thread |
-| `gmail.messages.trash` | Untrash the message |
-| `gmail.drafts.create` | Delete the draft |
-| `gmail.labels.modify` | Reverse the label changes |
-
-### Google Drive (`connector: 'gdrive'`)
-| Action | Undo Strategy |
-|---|---|
-| `gdrive.files.create` | Delete the file |
-| `gdrive.files.update` | Restore `beforeState` |
-| `gdrive.files.move` | Reverse the move |
-| `gdrive.files.trash` | Untrash the file |
-
-### Google Sheets (`connector: 'gsheets'`)
-| Action | Undo Strategy |
-|---|---|
-| `gsheets.values.append` | Clear the appended range |
-| `gsheets.values.update` | Restore `beforeState` |
-| `gsheets.spreadsheets.create` | Delete the spreadsheet |
-| `gsheets.sheets.add` | Delete the added sheet |
-
+<Warning>
 ## Unsupported Services
 
 For services not in the registry, `wrap()` will still log all actions and 
@@ -94,3 +100,4 @@ marked `ROLLBACK_FAILED` since no undo strategy exists yet.
 
 To request support for a new connector, open an issue at 
 [github.com/AgentReinAi](https://github.com/AgentReinAi).
+</Warning>

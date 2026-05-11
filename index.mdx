@@ -9,6 +9,18 @@ AI agents execute sequences of real API calls — creating GitHub issues, sendin
 
 AgentRein solves this by acting as a safety wrapper around your existing code. You keep using the same SDKs you already know. AgentRein wraps them and takes care of the rest—automatically tracking side-effects and mapping them to our backend rollback registry.
 
+<Columns cols={3}>
+  <Card title="Automatic Rollback" icon="rotate-left">
+    When something fails midway, AgentRein reverses every action in the session in correct LIFO order — no manual cleanup required.
+  </Card>
+  <Card title="Approval Gates" icon="user-check">
+    Pause execution on sensitive operations and wait for a human reviewer to approve or reject from the dashboard.
+  </Card>
+  <Card title="Bring Your Own Tools" icon="plug">
+    No custom connector classes to install. Wrap your existing Stripe, Octokit, or Slack clients directly — zero code changes.
+  </Card>
+</Columns>
+
 ## Bring Your Own Tools
 
 There are no custom AgentRein connector classes to install or replace. You bring your own standard SDKs (like `Stripe`, `Octokit`, or `@slack/web-api`), and we provide the safety net. Zero-friction reliability with no code changes.
@@ -23,5 +35,13 @@ const agentOctokit = agentrein.wrap(octokit, session, { connector: 'github' });
 // Use exactly as before, but natively protected
 const issue = await agentOctokit.issues.create({ owner, repo, title });
 ```
+<Columns cols={2}>
+  <Card title="Quick Start" icon="bolt" href="/quickstart">
+    Get AgentRein protecting your agent in under 5 minutes.
+  </Card>
+  <Card title="Core Concepts" icon="layer-group" href="/core-concepts">
+    Understand the Recursive Proxy, approval gates, and rollback model.
+  </Card>
+</Columns>
 
 If any subsequent action fails, AgentRein automatically reverses every other action in the session in the correct Last-In-First-Out order.
