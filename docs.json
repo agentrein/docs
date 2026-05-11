@@ -46,19 +46,7 @@
           "sdk/hitl",
           "sdk/errors"
         ]
-      },
-        {
-          "group": "API Reference",
-          "icon": "server",
-          "pages": [
-            "api-reference/authentication",
-            "api-reference/sessions",
-            "api-reference/actions",
-            "api-reference/approvals",
-            "api-reference/rollback",
-            "api-reference/metrics"
-          ]
-        }
+      }
     ]
   },
   "footer": {
