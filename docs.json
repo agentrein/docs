@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "maple",
+  "theme": "palm",
   "name": "AgentRein",
   "colors": {
     "primary": "#ffffff",
@@ -80,6 +80,9 @@
     "dark": "/images/dark.svg"
   },
   "background": {
-    "image": "/images/hero.webp"
+    "image": "/images/hero.webp",
+    "color": {
+      "dark": "#09090b"
+    }
   }
 }
