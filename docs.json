@@ -80,6 +80,8 @@
     "dark": "/images/dark.svg"
   },
   "background": {
-    "color": "#09090b"
+    "color": {
+      "dark": "#09090b"
+    }
   }
 }
