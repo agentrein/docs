@@ -5,7 +5,7 @@
   "colors": {
     "primary": "#ffffff",
     "light": "#000000",
-    "dark": "#000000"
+    "dark": "#ffffff"
   },
   "modeToggle": {
     "default": "dark",
