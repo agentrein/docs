@@ -165,9 +165,9 @@ in the backend:
   <Tab title="Slack">
     | Action | Undo Strategy |
     |---|---|
-    | `slack.chat.postMessage` | Posts correction reply in thread, then deletes the original message |
+    | `slack.chat.postMessage` | Updates the message to a Tombstone (⚠️ Reverted by AgentRein: [reason]) and clears all blocks/buttons |
     | `slack.chat.update` | Restore `beforeState` |
-    | `slack.chat.delete` | No undo (logged only) |
+    | `slack.chat.delete` | Re-posts the original message content from beforeState with a restoration notice |
   </Tab>
   <Tab title="Stripe">
     | Action | Undo Strategy |
@@ -211,7 +211,7 @@ in the backend:
   <Tab title="Google Drive">
     | Action | Undo Strategy |
     |---|---|
-    | `gdrive.files.create` | Delete the file |
+    | `gdrive.files.create` | Move the file to trash (soft delete — recoverable for 30 days) |
     | `gdrive.files.update` | Restore `beforeState` |
     | `gdrive.files.move` | Reverse the move |
     | `gdrive.files.trash` | Untrash the file |
@@ -221,7 +221,7 @@ in the backend:
     |---|---|
     | `gsheets.values.append` | Clear the appended range |
     | `gsheets.values.update` | Restore `beforeState` |
-    | `gsheets.spreadsheets.create` | Delete the spreadsheet |
+    | `gsheets.spreadsheets.create` | Move the spreadsheet to trash (soft delete — recoverable for 30 days) |
     | `gsheets.sheets.add` | Delete the added sheet |
   </Tab>
 </Tabs>
