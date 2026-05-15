@@ -3,9 +3,9 @@
   "theme": "maple",
   "name": "AgentRein",
   "colors": {
-    "primary": "#5c68ce",
-    "light": "#5c68ce",
-    "dark": "#5c68ce"
+    "primary": "#edeffb",
+    "light": "#edeffb",
+    "dark": "#edeffb"
   },
   "modeToggle": {
     "default": "dark",
