@@ -1,6 +1,7 @@
 ---
-title: Introduction
-description: AgentRein gives your AI agents automatic rollback, approval gates, and drift detection.
+title: "Introduction"
+description: "AgentRein gives your AI agents automatic rollback, approval gates, and drift detection."
+mode: "wide"
 ---
 
 ## Zero-Friction Reliability
@@ -13,9 +14,11 @@ AgentRein solves this by acting as a safety wrapper around your existing code. Y
   <Card title="Automatic Rollback" icon="rotate-left">
     When something fails midway, AgentRein reverses every action in the session in correct LIFO order — no manual cleanup required.
   </Card>
+
   <Card title="Approval Gates" icon="user-check">
     Pause execution on sensitive operations and wait for a human reviewer to approve or reject from the dashboard.
   </Card>
+
   <Card title="Bring Your Own Tools" icon="plug">
     No custom connector classes to install. Wrap your existing Stripe, Octokit, or Slack clients directly — zero code changes.
   </Card>
@@ -35,10 +38,12 @@ const agentOctokit = agentrein.wrap(octokit, session, { connector: 'github' });
 // Use exactly as before, but natively protected
 const issue = await agentOctokit.issues.create({ owner, repo, title });
 ```
+
 <Columns cols={2}>
   <Card title="Quick Start" icon="bolt" href="/quickstart">
     Get AgentRein protecting your agent in under 5 minutes.
   </Card>
+
   <Card title="Core Concepts" icon="layer-group" href="/core-concepts">
     Understand the Recursive Proxy, approval gates, and rollback model.
   </Card>
