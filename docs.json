@@ -80,7 +80,6 @@
     "dark": "/images/dark.svg"
   },
   "background": {
-    "image": "/images/hero.webp",
     "color": {
       "dark": "#09090b"
     }
