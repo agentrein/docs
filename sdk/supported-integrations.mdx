@@ -3,6 +3,141 @@ title: Supported Integrations
 description: Which external SDKs have automatic rollback support in the backend.
 ---
 
+## Credentials
+
+Add connector credentials in **Dashboard → Integrations**. Each credential
+has a Key (the token name below) and a Value (Plain Text or JSON).
+
+<Tabs>
+  <Tab title="GitHub" icon="github">
+    **Key:** `GITHUB_TOKEN`
+    **Type:** Plain Text
+
+    Get your token at: [GitHub → Settings → Developer settings → Personal access tokens](https://github.com/settings/tokens)
+  </Tab>
+
+  <Tab title="Slack">
+    **Key:** `SLACK_TOKEN`
+    **Type:** Plain Text
+
+    Get your token at: [Slack API → Your Apps → OAuth & Permissions → Bot Token](https://api.slack.com/apps)
+  </Tab>
+
+  <Tab title="Stripe">
+    **Key:** `STRIPE_TOKEN`
+    **Type:** Plain Text
+
+    Get your key at: [Stripe Dashboard → Developers → API keys → Secret key](https://dashboard.stripe.com/apikeys)
+  </Tab>
+
+  <Tab title="HubSpot">
+    **Key:** `HUBSPOT_TOKEN`
+    **Type:** Plain Text
+
+    Get your token at: [HubSpot → Settings → Integrations → Private Apps](https://app.hubspot.com/private-apps)
+  </Tab>
+
+  <Tab title="Salesforce">
+    **Key:** `SALESFORCE_TOKEN`
+    **Type:** Plain Text
+
+    Get your token at: [Salesforce → Settings → Personal → Reset My Security Token](https://help.salesforce.com/s/articleView?id=sf.user_security_token.htm)
+  </Tab>
+
+  <Tab title="Notion">
+    **Key:** `NOTION_TOKEN`
+    **Type:** Plain Text
+
+    Get your token at: [Notion → Settings → Connections → Develop or manage integrations](https://www.notion.so/my-integrations)
+  </Tab>
+
+  <Tab title="Gmail">
+    **Key:** `GMAIL_TOKEN`
+    **Type:** JSON
+
+    | Field           | Description                    |
+    | --------------- | ------------------------------ |
+    | `clientId`      | Google OAuth client ID         |
+    | `clientSecret`  | Google OAuth client secret     |
+    | `refreshToken`  | OAuth refresh token (Gmail scope) |
+
+    **Required scope:** `https://www.googleapis.com/auth/gmail.modify`
+
+    <Steps>
+      <Step title="Create OAuth credentials">
+        Go to [Google Cloud Console → APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials) and create an OAuth 2.0 Client ID.
+      </Step>
+      <Step title="Enable Gmail API">
+        Enable the [Gmail API](https://console.cloud.google.com/apis/library/gmail.googleapis.com) for your project.
+      </Step>
+      <Step title="Generate refresh token">
+        Use [OAuth Playground](https://developers.google.com/oauthplayground) to authorize the Gmail scope and get a refresh token.
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Google Drive">
+    **Key:** `GDRIVE_TOKEN`
+    **Type:** JSON
+
+    | Field           | Description                    |
+    | --------------- | ------------------------------ |
+    | `clientId`      | Google OAuth client ID         |
+    | `clientSecret`  | Google OAuth client secret     |
+    | `refreshToken`  | OAuth refresh token (Drive scope) |
+
+    **Required scope:** `https://www.googleapis.com/auth/drive`
+
+    <Steps>
+      <Step title="Create OAuth credentials">
+        Go to [Google Cloud Console → APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials) and create an OAuth 2.0 Client ID.
+      </Step>
+      <Step title="Enable Drive API">
+        Enable the [Google Drive API](https://console.cloud.google.com/apis/library/drive.googleapis.com) for your project.
+      </Step>
+      <Step title="Generate refresh token">
+        Use [OAuth Playground](https://developers.google.com/oauthplayground) to authorize the Drive scope and get a refresh token.
+      </Step>
+    </Steps>
+
+    <Note>
+      Gmail and Google Drive can share the same `clientId` and `clientSecret`
+      but require separate refresh tokens unless both scopes were authorized together.
+    </Note>
+  </Tab>
+
+  <Tab title="Google Sheets">
+    **Key:** `GSHEETS_TOKEN`
+    **Type:** JSON
+
+    | Field           | Description                    |
+    | --------------- | ------------------------------ |
+    | `clientId`      | Google OAuth client ID         |
+    | `clientSecret`  | Google OAuth client secret     |
+    | `refreshToken`  | OAuth refresh token (Sheets scope) |
+
+    **Required scope:** `https://www.googleapis.com/auth/spreadsheets`
+
+    <Steps>
+      <Step title="Create OAuth credentials">
+        Go to [Google Cloud Console → APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials) and create an OAuth 2.0 Client ID.
+      </Step>
+      <Step title="Enable Sheets API">
+        Enable the [Google Sheets API](https://console.cloud.google.com/apis/library/sheets.googleapis.com) for your project.
+      </Step>
+      <Step title="Generate refresh token">
+        Use [OAuth Playground](https://developers.google.com/oauthplayground) to authorize the Sheets scope and get a refresh token.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+<Tip>
+  The tab order here matches the dashboard. You can add any key-value pair not
+  listed above — AgentRein stores it encrypted and passes it to your connector
+  at runtime.
+</Tip>
+
 ## How Rollback Works
 
 <Tip>
