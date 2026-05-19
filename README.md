@@ -3,7 +3,7 @@
 This directory contains the [Mintlify](https://mintlify.com) documentation for AgentRein. The `.mdx` files here map directly to the live site.
 
 ## Live Docs
-Read the published documentation at [agentrein.mintlify.app](https://agentrein.com/docs).
+Read the published documentation at [agentrein.com/docs](https://agentrein.com/docs).
 
 ## Running Locally
 
