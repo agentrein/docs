@@ -226,6 +226,36 @@ in the backend:
   </Tab>
 </Tabs>
 
+## Validating Credentials Before Execution
+
+Before running your agent, you can verify that all required connector credentials
+are configured in the dashboard using `validateConfig()`:
+
+```ts
+const result = await agentrein.validateConfig(['github', 'slack']);
+
+if (!result.valid) {
+  console.error('Missing credentials:', result.missing);
+  // result.suggestions → ['Configure GitHub credentials at Dashboard → Settings → Connectors']
+  process.exit(1);
+}
+```
+
+### Return Value
+
+| Field | Type | Description |
+|---|---|---|
+| `valid` | `boolean` | `true` only if ALL requested connectors have credentials configured |
+| `configured` | `string[]` | Connectors that have credentials stored |
+| `missing` | `string[]` | Connectors that do not have credentials stored |
+| `suggestions` | `string[]` | Human-readable setup instructions for each missing connector |
+
+<Warning>
+Rollback will fail with `ROLLBACK_FAILED` if connector credentials are not 
+configured before executing actions. Always call `validateConfig()` during 
+your agent's startup to catch this early.
+</Warning>
+
 <Warning>
 ## Unsupported Services
 

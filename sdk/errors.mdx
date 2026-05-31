@@ -43,4 +43,54 @@ try {
 }
 ```
 </Accordion>
+
+<Accordion title="ApprovalTimeoutError" icon="clock">
+Thrown when a `requiresApproval` action is not reviewed within the `timeoutMs` window.
+Unlike `ApprovalRejectedError`, no automatic rollback is triggered — you must decide whether to roll back manually.
+
+```ts
+import { AgentRein, ApprovalTimeoutError, ApprovalRejectedError } from 'agentrein';
+
+try {
+  await agentStripe.subscriptions.cancel({ id: 'sub_123' });
+} catch (err) {
+  if (err instanceof ApprovalTimeoutError) {
+    // err.approvalId — the ID of the approval request
+    // err.timeoutMs  — the timeout duration that was exceeded
+    console.log(`Approval ${err.approvalId} timed out after ${err.timeoutMs}ms`);
+    await agentrein.rollbackSession(session); // optional: roll back manually
+  }
+  if (err instanceof ApprovalRejectedError) {
+    // session already rolled back automatically
+  }
+}
+```
+</Accordion>
+
+<Accordion title="WrapOptionsValidationError" icon="circle-exclamation">
+Thrown synchronously when invalid options are passed to `wrap()`.
+Common causes: `pollIntervalMs` below 1000ms or `timeoutMs` below 5000ms.
+
+```ts
+import { AgentRein, WrapOptionsValidationError } from 'agentrein';
+
+try {
+  const agentOctokit = agentrein.wrap(octokit, session, {
+    connector: 'github',
+    pollIntervalMs: 500,   // ❌ too low — minimum is 1000
+    timeoutMs: 3000,       // ❌ too low — minimum is 5000
+  });
+} catch (err) {
+  if (err instanceof WrapOptionsValidationError) {
+    console.error('Invalid wrap options:', err.message);
+  }
+}
+```
+
+**Valid minimums:**
+| Option | Minimum | Default |
+|---|---|---|
+| `pollIntervalMs` | `1000` | `2000` |
+| `timeoutMs` | `5000` | `30000` |
+</Accordion>
 </AccordionGroup>

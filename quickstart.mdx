@@ -58,3 +58,24 @@ await agentrein.completeSession(session);
 ```
   </Step>
 </Steps>
+
+## Plan Tiers & API Keys
+
+AgentRein has four plan tiers: **FREE**, **PRO**, **TEAM**, and **ENTERPRISE**.
+
+Your API key works across all plans, but certain features require a minimum plan:
+
+| Feature | FREE | PRO | TEAM |
+|---|---|---|---|
+| Session Rollback | ✓ | ✓ | ✓ |
+| API Key Management | ✓ | ✓ | ✓ |
+| Connector Credentials | ✗ | ✓ | ✓ |
+| Approval Gates (HITL) | ✗ | ✓ | ✓ |
+| Intent Drift Detection | ✗ | ✗ | ✓ |
+
+<Note>
+If you call a PRO or TEAM feature on a FREE plan, the backend returns a `403` 
+with a clear error message. Upgrade at [Dashboard → Settings → Billing](https://agentrein.com/dashboard/settings/billing).
+</Note>
+
+To get your API key: **Dashboard → Settings → API Keys → Create New Key**.
