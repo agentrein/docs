@@ -79,3 +79,24 @@ with a clear error message. Upgrade at [Dashboard → Settings → Billing](http
 </Note>
 
 To get your API key: **Dashboard → API Keys → Create New Key**.
+
+---
+
+## Testing & Sandbox
+
+To test your agent without executing real actions, create a **Sandbox API key**
+in **Dashboard → Settings → API Keys**. Sandbox keys have the prefix `ar_test_`
+and simulate all connector calls — nothing is written to GitHub, Stripe, or Slack.
+
+Switch between sandbox and production by changing one environment variable:
+
+```env
+# Development
+AGENTREIN_API_KEY=ar_test_your_key_here
+
+# Production
+AGENTREIN_API_KEY=ar_live_your_key_here
+```
+
+See [Sandbox Mode](/sdk/installation#sandbox-mode) for full details.
+

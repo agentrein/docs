@@ -31,8 +31,61 @@ const agentrein = new AgentRein({
 | `apiKey` | `string` | Yes | — | Your organization API key from the dashboard |
 | `serverUrl` | `string` | No | `https://api.agentrein.com` | AgentRein backend URL |
 | `failureMode` | `'open' \| 'closed'` | No | `'open'` | `open` — SDK continues if backend is unreachable. `closed` — throws `AgentReinUnavailableError` |
+| `sandbox` | `boolean` | No | `false` | When `true`, all actions are simulated — nothing is executed on real connectors. Use with `ar_test_` keys during development. |
 
 ## Environment Variable
 ```bash
 AGENTREIN_API_KEY=ag_live_your_key_here
 ```
+
+---
+
+## Sandbox Mode
+
+Use sandbox mode during development to test your agent logic without executing
+real actions on GitHub, Stripe, Slack, or any other connector.
+
+### Setup
+
+1. Go to **Dashboard → Settings → API Keys** and create a new key with **Sandbox** enabled.
+   Your key will have the prefix `ar_test_`.
+
+2. Set your environment variable:
+```env
+AGENTREIN_API_KEY=ar_test_your_key_here
+```
+
+3. Use the SDK exactly as you would in production — no code changes needed:
+```ts
+const agentrein = new AgentRein({
+  apiKey: process.env.AGENTREIN_API_KEY, // ar_test_ key
+});
+
+const session = await agentrein.newSession({ agentId: 'my-agent' });
+const agentOctokit = agentrein.wrap(octokit, session, { connector: 'github' });
+
+// This will NOT create a real GitHub issue
+const issue = await agentOctokit.issues.create({
+  owner: 'my-org',
+  repo: 'my-repo',
+  title: 'Test issue',
+});
+
+console.log(issue.id);        // sim_id_1234567890
+console.log(issue.html_url);  // https://sandbox.agentrein.com
+
+await agentrein.completeSession(session);
+```
+
+<Note>
+Sandbox sessions appear in your dashboard under the **Sandbox** filter tab,
+clearly marked with a "Simulated" badge. Switch to your `ar_live_` key
+when you are ready for production — no other code changes needed.
+</Note>
+
+<Warning>
+`rollbackSession()` in sandbox mode marks all actions as `ROLLED_BACK` instantly
+without calling any real connector. This lets you verify your rollback handling
+logic without side effects.
+</Warning>
+
