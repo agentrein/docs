@@ -75,8 +75,8 @@
     "family": "Inter"
   },
   "logo": {
-    "light": "/images/dark.svg",
-    "dark": "/images/dark.svg"
+    "light": "/images/logo.svg",
+    "dark": "/images/logo.svg"
   },
   "favicon": {
     "light": "/images/light.svg",
