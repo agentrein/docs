@@ -1,16 +1,18 @@
 ---
 title: "Core Concepts"
 description: "How AgentRein's transparent proxy enables zero-friction reliability."
-mode: "wide"
+mode: "default"
 ---
 
 <Columns cols={3}>
   <Card title="Recursive Proxy" icon="shuffle">
     wrap() intercepts every method call no matter how deeply nested, preserving your original TypeScript types completely.
   </Card>
+
   <Card title="Approval Gates" icon="user-check">
     Pass requiresApproval to wrap() to pause execution until a human reviewer approves from the dashboard.
   </Card>
+
   <Card title="Automatic Rollback" icon="rotate-left">
     If a reviewer rejects or any action fails, AgentRein reverses every previous action in LIFO order automatically.
   </Card>
@@ -18,24 +20,18 @@ mode: "wide"
 
 ## The Recursive Proxy
 
-The core of AgentRein SDK's power comes from the `wrap()` method. Rather 
-than forcing you to learn a new syntax, `wrap()` uses a Recursive JavaScript 
-Proxy to intercept your existing client's actions.
+The core of AgentRein SDK's power comes from the `wrap()` method. Rather than forcing you to learn a new syntax, `wrap()` uses a Recursive JavaScript Proxy to intercept your existing client's actions.
 
-When you call `agentrein.wrap(client, session, { connector })`, it intercepts 
-every method call, no matter how deeply nested (e.g., `octokit.rest.issues.create`). 
-It tracks the action, logs it to the backend, executes the original function, 
-and registers it for potential rollback — while completely preserving your 
-original TypeScript types.
+When you call `agentrein.wrap(client, session, { connector })`, it intercepts every method call, no matter how deeply nested (e.g., `octokit.rest.issues.create`). It tracks the action, logs it to the backend, executes the original function, and registers it for potential rollback — while completely preserving your original TypeScript types.
 
 ## Approval Gates
 
-For high-risk methods that need human sign-off, pass `requiresApproval` 
-directly to `wrap()`:
+For high-risk methods that need human sign-off, pass `requiresApproval` directly to `wrap()`:
 
 <Info>
   Methods not listed in requiresApproval execute immediately without interruption. Only listed paths trigger the approval gate.
 </Info>
+
 ```ts
 const agentStripe = agentrein.wrap(stripe, session, {
     connector: 'stripe',
@@ -49,8 +45,7 @@ await agentStripe.invoices.create({ customer: 'cus_123' });
 await agentStripe.subscriptions.cancel({ id: 'sub_123' });
 ```
 
-If a reviewer rejects the action, `ApprovalRejectedError` is thrown and 
-the session is automatically rolled back.
+If a reviewer rejects the action, `ApprovalRejectedError` is thrown and the session is automatically rolled back.
 
 ## How Drift Detection Triggers Approval
 
