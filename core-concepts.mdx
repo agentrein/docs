@@ -51,3 +51,17 @@ await agentStripe.subscriptions.cancel({ id: 'sub_123' });
 
 If a reviewer rejects the action, `ApprovalRejectedError` is thrown and 
 the session is automatically rolled back.
+
+## How Drift Detection Triggers Approval
+
+After a successful action in a session with an intent, AgentRein uses an LLM to compare the result with that intent. A result is `VERIFIED` when it matches, `DRIFT_DETECTED` when there is a meaningful mismatch (score `0.85` or higher), or `UNVERIFIED` when the verification call itself fails. `UNVERIFIED` is an infrastructure warning, not a judgment about the agent, and never creates an approval.
+
+Drift on a connector outside the high-risk list is logged only and remains visible through `GET /sessions/:id/intent`; see the [Quickstart plan tiers](/quickstart#plan-tiers--api-keys) for Intent Drift Detection availability. Drift on a high-risk connector, or an action gated by a `REQUIRE_APPROVAL` [Policy](/sdk/policies), creates an approval request, sends configured notifications, and pauses the action for review.
+
+These backend-created approvals follow the expiry behavior below.
+
+## Approval Expiry
+
+Approvals created through `wrap(..., { requiresApproval, timeoutMs })` are tracked by the SDK. The SDK polls for the decision and raises its own timeout error; the backend does not auto-resolve these approvals. See the [HITL guide](/sdk/hitl) and [error reference](/sdk/errors).
+
+Approvals created automatically by AgentRein policies (`REQUIRE_APPROVAL`) or high-risk outcome-drift checks have no client polling them. After 24 hours without a response, AgentRein rejects the approval, marks the action failed, and rolls back the session automatically—no manual cleanup required.
