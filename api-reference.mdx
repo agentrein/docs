@@ -1,8 +1,39 @@
 ---
 title: "API Reference"
-description: "SDK Methods overview"
+description: "SDK methods and REST API reference"
 mode: "wide"
 ---
+
+AgentRein provides two types of API reference:
+
+- **SDK methods** for using AgentRein from your application.
+- **REST API** for managing AgentRein resources over HTTP. See the [REST API specification](https://agentrein.com/docs/api-reference/openapi.json).
+
+## Shared REST response convention
+
+Successful REST API responses use the following envelope. Errors use RFC-7807 problem-details.
+
+<ResponseField name="response" type="object">
+
+  <ResponseField name="data" type="object">
+
+  The endpoint result.
+
+  </ResponseField>
+
+  <ResponseField name="error" type="null">
+
+  `null` for a successful response.
+
+  </ResponseField>
+
+  <ResponseField name="timestamp" type="string">
+
+  The time the response was generated.
+
+  </ResponseField>
+
+</ResponseField>
 
 ## `wrap<T>`
 

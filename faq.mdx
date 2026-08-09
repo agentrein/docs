@@ -1,0 +1,44 @@
+---
+title: "FAQ & Troubleshooting"
+description: "Common integration states and how to handle them."
+---
+
+<AccordionGroup>
+
+<Accordion title="Why is an action marked ROLLBACK_FAILED?">
+
+`ROLLBACK_FAILED` can occur when connector credentials were not configured before actions were executed. Run `validateConfig()` during agent startup to identify missing connector credentials before execution. See [Supported Integrations](/sdk/supported-integrations#validating-credentials-before-execution) for the complete setup guidance.
+
+</Accordion>
+
+<Accordion title="What does UNVERIFIED mean?">
+
+`UNVERIFIED` means the outcome-verification call could not be completed. It is an infrastructure warning rather than a judgment about the agent, and it never creates an approval. Read [Core Concepts](/core-concepts#how-drift-detection-triggers-approval) for the other outcome states.
+
+</Accordion>
+
+<Accordion title="What happens when a reviewer rejects an action?">
+
+AgentRein throws `ApprovalRejectedError` when a reviewer rejects a `requiresApproval` action. The session rollback is triggered automatically before the error is thrown. See the [error reference](/sdk/errors#approvalrejectederror) for handling guidance.
+
+</Accordion>
+
+<Accordion title="What happens when an approval expires?">
+
+Approvals created automatically by policies or high-risk outcome-drift checks are rejected after 24 hours without a response. AgentRein marks the action as failed and automatically rolls back the session. See [Approval Expiry](/core-concepts#approval-expiry) for the distinction from SDK-managed approval timeouts.
+
+</Accordion>
+
+<Accordion title="Should I use a sandbox or production API key?">
+
+Use a sandbox key with the `ar_test_` prefix to test without writing to GitHub, Stripe, or Slack. Use an `ar_live_` key for production. See [Testing & Sandbox](/quickstart#testing--sandbox) for the setup details.
+
+</Accordion>
+
+<Accordion title="Why did I receive a 403 response?">
+
+A `403` can mean the feature you called requires a higher plan than your current one. The backend returns a clear error message for insufficient-plan access. See [Plan Tiers & API Keys](/quickstart#plan-tiers--api-keys) for feature availability and upgrade guidance.
+
+</Accordion>
+
+</AccordionGroup>

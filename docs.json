@@ -29,7 +29,9 @@
         "pages": [
           "index",
           "quickstart",
-          "core-concepts"
+          "core-concepts",
+          "changelog",
+          "faq"
         ]
       },
       {
