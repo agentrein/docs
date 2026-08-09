@@ -63,5 +63,5 @@ the AgentRein backend rollback registry. The supported prefixes are:
 | `gdrive` | `googleapis` |
 | `gsheets` | `googleapis` |
 
-For any service not in this list, use `call()` with a custom `rollback`
-function instead. See [Execution Methods](/sdk/call) for details.
+For services not in this list, `wrap()` still logs actions, but no built-in
+rollback strategy is available. See [Execution Methods](/sdk/call) for details.

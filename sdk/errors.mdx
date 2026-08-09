@@ -46,7 +46,8 @@ try {
 
 <Accordion title="ApprovalTimeoutError" icon="clock">
 Thrown when a `requiresApproval` action is not reviewed within the `timeoutMs` window.
-Unlike `ApprovalRejectedError`, no automatic rollback is triggered — you must decide whether to roll back manually.
+The SDK logs the timed-out action as failed, which triggers AgentRein's normal
+session rollback flow.
 
 ```ts
 import { AgentRein, ApprovalTimeoutError, ApprovalRejectedError } from 'agentrein';
@@ -58,7 +59,7 @@ try {
     // err.approvalId — the ID of the approval request
     // err.timeoutMs  — the timeout duration that was exceeded
     console.log(`Approval ${err.approvalId} timed out after ${err.timeoutMs}ms`);
-    await agentrein.rollbackSession(session); // optional: roll back manually
+    // AgentRein has triggered the session rollback flow
   }
   if (err instanceof ApprovalRejectedError) {
     // session already rolled back automatically
@@ -91,6 +92,6 @@ try {
 | Option | Minimum | Default |
 |---|---|---|
 | `pollIntervalMs` | `1000` | `2000` |
-| `timeoutMs` | `5000` | `30000` |
+| `timeoutMs` | `5000` | `86400000` |
 </Accordion>
 </AccordionGroup>

@@ -12,7 +12,7 @@ npm install agentrein
 
 The SDK ships as a dual CJS/ESM package. Use the following import pattern:
 ```ts
-import { AgentRein, createUndoConfig } from 'agentrein';
+import { AgentRein } from 'agentrein';
 ```
 
 ## Initialize
@@ -31,7 +31,6 @@ const agentrein = new AgentRein({
 | `apiKey` | `string` | Yes | — | Your organization API key from the dashboard |
 | `serverUrl` | `string` | No | `https://api.agentrein.com` | AgentRein backend URL |
 | `failureMode` | `'open' \| 'closed'` | No | `'open'` | `open` — SDK continues if backend is unreachable. `closed` — throws `AgentReinUnavailableError` |
-| `sandbox` | `boolean` | No | `false` | When `true`, all actions are simulated — nothing is executed on real connectors. Use with `ar_test_` keys during development. |
 
 ## Environment Variable
 ```bash
@@ -88,4 +87,3 @@ when you are ready for production — no other code changes needed.
 without calling any real connector. This lets you verify your rollback handling
 logic without side effects.
 </Warning>
-

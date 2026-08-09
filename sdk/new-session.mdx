@@ -23,6 +23,7 @@ interface Session {
   agentId: string;
   intent: string | null;
   status: string;
+  isSandbox: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -37,5 +38,5 @@ const session = await agentrein.newSession({
 ```
 
 <Warning>
-`newSession()` must always be awaited and will throw `AgentReinUnavailableError` if authentication with the AgentRein server fails (e.g. invalid API key, server down during token exchange). If auth succeeds but session creation fails due to a network error, an AxiosError is thrown. A session ID is required for all subsequent `call()` and `completeSession()` calls.
+`newSession()` must always be awaited and will throw `AgentReinUnavailableError` if authentication with the AgentRein server fails (e.g. invalid API key, server down during token exchange). If auth succeeds but session creation fails due to a network error, an AxiosError is thrown. A session is required for subsequent `wrap()` and `completeSession()` calls.
 </Warning>

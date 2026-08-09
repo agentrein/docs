@@ -10,11 +10,11 @@ Wrap a standard SDK client to enable automatic logging, interception, and rollba
 
 **Signature:**  
 ```ts
-wrap<T extends object>(client: T, session: string | Session, options: WrapOptions): T
+wrap<T extends object>(client: T, session: Session, options: WrapOptions): T
 ```
 
 - `client`: The standard SDK instance (e.g., `octokit`).
-- `session`: The active agent session ID or object.
+- `session`: The active agent session object.
 - `options`: A `WrapOptions` object including the `connector` identifier.
 
 **Returns:**  
@@ -25,6 +25,7 @@ Where `WrapOptions` is:
 {
     connector: string;
     requiresApproval?: string[];
+    retryable?: string[];
     pollIntervalMs?: number;
     timeoutMs?: number;
 }
