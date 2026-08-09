@@ -28,7 +28,6 @@
         "groups": [
           {
             "group": "Getting Started",
-            "icon": "rocket",
             "pages": [
               "index",
               "quickstart",
@@ -38,7 +37,6 @@
           },
           {
             "group": "SDK Reference",
-            "icon": "code",
             "pages": [
               "sdk/installation",
               "sdk/new-session",
