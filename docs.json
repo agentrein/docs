@@ -3,9 +3,9 @@
   "theme": "mint",
   "name": "AgentRein",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#09090B",
+    "light": "#FAFAFA",
+    "dark": "#09090B"
   },
   "modeToggle": {
     "default": "dark",
@@ -85,5 +85,11 @@
   },
   "icons": {
     "library": "fontawesome"
+  },
+  "background": {
+    "color": {
+      "light": "#FFFFFF",
+      "dark": "#0E0E10"
+    }
   }
 }
