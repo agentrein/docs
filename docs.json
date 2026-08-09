@@ -56,7 +56,7 @@
     }
   },
   "appearance": {
-    "strict": true,
+    "strict": false,
     "default": "dark"
   },
   "description": "AI Agent Reliability Platform",
