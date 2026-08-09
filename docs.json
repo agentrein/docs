@@ -5,7 +5,7 @@
   "colors": {
     "primary": "#ffffff",
     "light": "#ffffff",
-    "dark": "#ffffff"
+    "dark": "#0e0e10"
   },
   "modeToggle": {
     "default": "dark",
@@ -85,7 +85,8 @@
   },
   "background": {
     "color": {
-      "dark": "#09090b"
+      "dark": "#09090b",
+      "light": "#0e0e10"
     }
   },
   "icons": {
