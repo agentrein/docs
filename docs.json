@@ -52,19 +52,19 @@
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/AgentReinAi"
+      "github": "https://github.com/agentrein"
     }
   },
   "appearance": {
     "strict": false,
-    "default": "dark"
+    "default": "system"
   },
   "description": "AI Agent Reliability Platform",
   "navbar": {
     "links": [
       {
-        "label": "Dashboard",
-        "href": "https://www.agentrein.com/dashboard"
+        "href": "https://github.com/agentrein",
+        "label": "GitHub"
       }
     ],
     "primary": {
@@ -87,5 +87,8 @@
     "color": {
       "dark": "#09090b"
     }
+  },
+  "icons": {
+    "library": "fontawesome"
   }
 }
