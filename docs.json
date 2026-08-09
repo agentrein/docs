@@ -22,32 +22,47 @@
     ]
   },
   "navigation": {
-    "groups": [
+    "tabs": [
       {
-        "group": "Getting Started",
-        "icon": "rocket",
-        "pages": [
-          "index",
-          "quickstart",
-          "core-concepts",
-          "changelog",
-          "faq"
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "icon": "rocket",
+            "pages": [
+              "index",
+              "quickstart",
+              "core-concepts",
+              "faq"
+            ]
+          },
+          {
+            "group": "SDK Reference",
+            "icon": "code",
+            "pages": [
+              "sdk/installation",
+              "sdk/new-session",
+              "sdk/call",
+              "sdk/undo-config",
+              "sdk/connectors",
+              "sdk/supported-integrations",
+              "sdk/policies",
+              "sdk/hitl",
+              "sdk/errors"
+            ]
+          }
         ]
       },
       {
-        "group": "SDK Reference",
-        "icon": "code",
+        "tab": "API Reference",
         "pages": [
-          "sdk/installation",
-          "sdk/new-session",
-          "sdk/call",
-          "api-reference",
-          "sdk/undo-config",
-          "sdk/connectors",
-          "sdk/supported-integrations",
-          "sdk/policies",
-          "sdk/hitl",
-          "sdk/errors"
+          "api-reference"
+        ]
+      },
+      {
+        "tab": "Changelog",
+        "pages": [
+          "changelog"
         ]
       }
     ]
