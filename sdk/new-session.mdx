@@ -1,9 +1,10 @@
 ---
-title: newSession()
-description: Create a new agent session before executing actions.
+title: "New Session"
+description: "Create a new agent session before executing actions."
 ---
 
 ## Signature
+
 ```ts
 agentrein.newSession(options?: SessionOptions | string): Promise<Session>
 ```
@@ -11,11 +12,12 @@ agentrein.newSession(options?: SessionOptions | string): Promise<Session>
 ## Parameters
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `options.agentId` | `string` | No | Developer-defined identifier for the agent. Defaults to a random UUID. |
 | `options.intent` | `string` | No | Natural language description of what this session is trying to accomplish. Used by drift detection. |
 
 ## Returns
+
 ```ts
 interface Session {
   id: string;
@@ -30,6 +32,7 @@ interface Session {
 ```
 
 ## Example
+
 ```ts
 const session = await agentrein.newSession({
   agentId: 'billing-agent',
@@ -38,5 +41,5 @@ const session = await agentrein.newSession({
 ```
 
 <Warning>
-`newSession()` must always be awaited and will throw `AgentReinUnavailableError` if authentication with the AgentRein server fails (e.g. invalid API key, server down during token exchange). If auth succeeds but session creation fails due to a network error, an AxiosError is thrown. A session is required for subsequent `wrap()` and `completeSession()` calls.
+  `newSession()` must always be awaited and will throw `AgentReinUnavailableError` if authentication with the AgentRein server fails (e.g. invalid API key, server down during token exchange). If auth succeeds but session creation fails due to a network error, an AxiosError is thrown. A session is required for subsequent `wrap()` and `completeSession()` calls.
 </Warning>

@@ -1,16 +1,13 @@
 ---
-title: UndoConfig
-description: Custom rollback instructions stored alongside actions.
+title: "Undo Config"
+description: "Custom rollback instructions stored alongside actions."
 ---
 
 ## Overview
 
-UndoConfig is a backend concept — it is stored alongside actions 
-automatically when the backend's rollback registry handles an action.
-You do not pass UndoConfig through the SDK.
+UndoConfig is a backend concept — it is stored alongside actions automatically when the backend's rollback registry handles an action. You do not pass UndoConfig through the SDK.
 
-For services not in the built-in rollback registry, the backend handles 
-compensation via the `undoConfig` field stored on each action.
+For services not in the built-in rollback registry, the backend handles compensation via the `undoConfig` field stored on each action.
 
 ## Types
 
@@ -26,5 +23,4 @@ Sends a `POST` request to `url` with optional `body`.
 
 Marks the action as intentionally non-reversible. No rollback is attempted.
 
-> For custom integrations, see [Supported Integrations](/sdk/supported-integrations) 
-> to check if your service has a built-in undo strategy.
+> For custom integrations, see [Supported Integrations](/sdk/supported-integrations) to check if your service has a built-in undo strategy.
