@@ -1,61 +1,56 @@
 ---
 title: "Quick Start"
 description: "Get AgentRein protecting your agent in under 5 minutes."
-mode: "wide"
+mode: "default"
 ---
 
 <Steps>
   <Step title="Install the SDK">
-```bash
-npm install agentrein
-```
+    ```bash
+    npm install agentrein
+    ```
   </Step>
-
   <Step title="Get Your API Key">
-Log in to [Dashboard](https://agentrein.com/dashboard), go to **Settings**, and copy your API key.
+    Log in to [Dashboard](https://agentrein.com/dashboard), go to **Settings**, and copy your API key.
   </Step>
-
   <Step title="Initialize the Client">
-```ts
-import { AgentRein } from 'agentrein';
-import { Octokit } from '@octokit/rest'; // Developer's own standard SDK
-
-const agentrein = new AgentRein({ apiKey: 'YOUR_API_KEY' });
-const octokit = new Octokit({ auth: 'GITHUB_TOKEN' });
-```
+    ```ts
+    import { AgentRein } from 'agentrein';
+    import { Octokit } from '@octokit/rest'; // Developer's own standard SDK
+    
+    const agentrein = new AgentRein({ apiKey: 'YOUR_API_KEY' });
+    const octokit = new Octokit({ auth: 'GITHUB_TOKEN' });
+    ```
   </Step>
-
   <Step title="Create a Session">
-```ts
-const session = await agentrein.newSession({
-  agentId: 'onboarding-agent',
-  intent: 'Create a GitHub issue and notify the team on Slack',
-});
-```
+    ```ts
+    const session = await agentrein.newSession({
+      agentId: 'onboarding-agent',
+      intent: 'Create a GitHub issue and notify the team on Slack',
+    });
+    ```
   </Step>
-
   <Step title="Wrap Your Existing Clients">
-```ts
-const agentOctokit = agentrein.wrap(octokit, session, { connector: 'github' });
-const agentSlack   = agentrein.wrap(slackClient, session, { connector: 'slack' });
-
-const issue = await agentOctokit.issues.create({
-    owner: 'my-org',
-    repo: 'my-repo',
-    title: 'Onboarding task',
-});
-
-await agentSlack.chat.postMessage({
-    channel: '#onboarding',
-    text: `Issue created: ${issue.data.html_url}`,
-});
-```
+    ```ts
+    const agentOctokit = agentrein.wrap(octokit, session, { connector: 'github' });
+    const agentSlack   = agentrein.wrap(slackClient, session, { connector: 'slack' });
+    
+    const issue = await agentOctokit.issues.create({
+        owner: 'my-org',
+        repo: 'my-repo',
+        title: 'Onboarding task',
+    });
+    
+    await agentSlack.chat.postMessage({
+        channel: '#onboarding',
+        text: `Issue created: ${issue.data.html_url}`,
+    });
+    ```
   </Step>
-
   <Step title="Complete the Session">
-```ts
-await agentrein.completeSession(session);
-```
+    ```ts
+    await agentrein.completeSession(session);
+    ```
   </Step>
 </Steps>
 
@@ -66,7 +61,7 @@ AgentRein has four plan tiers: **FREE**, **PRO**, **TEAM**, and **ENTERPRISE**.
 Your API key works across all plans, but certain features require a minimum plan:
 
 | Feature | FREE | PRO | TEAM |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Session Rollback | ✓ | ✓ | ✓ |
 | API Key Management | ✓ | ✓ | ✓ |
 | Connector Credentials | ✓ | ✓ | ✓ |
@@ -74,8 +69,7 @@ Your API key works across all plans, but certain features require a minimum plan
 | Intent Drift Detection | ✗ | ✗ | ✓ |
 
 <Note>
-If you call a PRO or TEAM feature on a FREE plan, the backend returns a `403` 
-with a clear error message. Upgrade at [Dashboard → Settings → Billing](https://agentrein.com/dashboard/settings/billing).
+  If you call a PRO or TEAM feature on a FREE plan, the backend returns a `403` with a clear error message. Upgrade at [Dashboard → Settings → Billing](https://agentrein.com/dashboard/settings/billing).
 </Note>
 
 To get your API key: **Dashboard → API Keys → Create New Key**.
@@ -84,9 +78,7 @@ To get your API key: **Dashboard → API Keys → Create New Key**.
 
 ## Testing & Sandbox
 
-To test your agent without executing real actions, create a **Sandbox API key**
-in **Dashboard → Settings → API Keys**. Sandbox keys have the prefix `ar_test_`
-and simulate all connector calls — nothing is written to GitHub, Stripe, or Slack.
+To test your agent without executing real actions, create a **Sandbox API key** in **Dashboard → Settings → API Keys**. Sandbox keys have the prefix `ar_test_` and simulate all connector calls — nothing is written to GitHub, Stripe, or Slack.
 
 Switch between sandbox and production by changing one environment variable:
 
@@ -99,4 +91,3 @@ AGENTREIN_API_KEY=ar_live_your_key_here
 ```
 
 See [Sandbox Mode](/sdk/installation#sandbox-mode) for full details.
-
