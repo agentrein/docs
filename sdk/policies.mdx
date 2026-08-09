@@ -1,0 +1,165 @@
+---
+title: Policies
+description: Configure organization-level rules to allow, gate, or block actions.
+---
+
+## Overview
+
+Policies give your organization fine-grained control over which actions run,
+which require review, and which are blocked outright. They complement the
+built-in high-risk connector defaults and are managed through the authenticated
+dashboard REST API, not through an SDK method.
+
+## API
+
+All endpoints require dashboard authentication. Successful responses use this
+envelope:
+
+```ts theme={null}
+{
+  data: /* endpoint result */,
+  error: null,
+  timestamp: "2026-08-09T12:00:00.000Z"
+}
+```
+
+A policy returned by the API has this shape:
+
+```ts theme={null}
+{
+  id: "clx...",
+  organizationId: "org_...",
+  apiNamePattern: "stripe.refunds.*",
+  condition: {
+    field: "amount",
+    operator: "gt",
+    value: 10000
+  },
+  action: "REQUIRE_APPROVAL",
+  enabled: true,
+  createdAt: "2026-08-09T12:00:00.000Z",
+  updatedAt: "2026-08-09T12:00:00.000Z"
+}
+```
+
+### List policies
+
+```ts theme={null}
+GET /policies
+
+// 200
+{ data: Policy[], error: null, timestamp: string }
+```
+
+### Create a policy
+
+```ts theme={null}
+POST /policies
+Content-Type: application/json
+
+{
+  "apiNamePattern": "stripe.refunds.*",
+  "condition": {
+    "field": "amount",
+    "operator": "gt",
+    "value": 10000
+  },
+  "action": "REQUIRE_APPROVAL",
+  "enabled": true
+}
+
+// 201
+{ data: Policy, error: null, timestamp: string }
+```
+
+`apiNamePattern` and `action` are required. `condition` is optional, and
+`enabled` defaults to `true`.
+
+### Update a policy
+
+```ts theme={null}
+PATCH /policies/:id
+Content-Type: application/json
+
+{
+  "action": "BLOCK",
+  "enabled": true
+}
+
+// 200
+{ data: Policy, error: null, timestamp: string }
+```
+
+Send any subset of `apiNamePattern`, `condition`, `action`, and `enabled`.
+Set `condition` to `null` to remove it.
+
+### Delete a policy
+
+```ts theme={null}
+DELETE /policies/:id
+
+// 200
+{ data: { id: "clx...", deleted: true }, error: null, timestamp: string }
+```
+
+## API name matching
+
+`apiNamePattern` supports exact names, wildcard suffixes, and a full wildcard:
+
+| Pattern | Matches |
+| --- | --- |
+| `stripe.refunds.create` | Only `stripe.refunds.create` |
+| `stripe.refunds.*` | Any action whose name starts with `stripe.refunds.` |
+| `*` | Every action |
+
+## Payload conditions
+
+Add an optional `condition` to apply a policy only when a payload field matches.
+Use dot-separated field paths, such as `customer.tier`.
+
+| Operator | Meaning |
+| --- | --- |
+| `eq` | Equal to |
+| `neq` | Not equal to |
+| `gt` | Greater than |
+| `gte` | Greater than or equal to |
+| `lt` | Less than |
+| `lte` | Less than or equal to |
+| `contains` | Contains the supplied value |
+
+For example, block only large Stripe refunds:
+
+```ts theme={null}
+POST /policies
+
+{
+  "apiNamePattern": "stripe.refunds.create",
+  "condition": {
+    "field": "amount",
+    "operator": "gt",
+    "value": 10000
+  },
+  "action": "BLOCK"
+}
+```
+
+A policy without a condition matches on `apiNamePattern` alone. Malformed
+conditions fail safe and do not match.
+
+## Evaluation and approval behavior
+
+When more than one enabled policy matches, the most restrictive result wins:
+`BLOCK` takes precedence over `REQUIRE_APPROVAL`, which takes precedence over
+`ALLOW`. If no policy matches, AgentRein falls back to its built-in
+high-risk-connector check.
+
+`BLOCK` rejects the action with HTTP `403` before it executes. `ALLOW` executes
+normally. `REQUIRE_APPROVAL` pauses the action and creates an approval request;
+configured notification channels are notified. If no reviewer responds within
+24 hours, AgentRein rejects the approval, marks the action failed, and rolls
+back the session.
+
+<Tip>
+  For approval-gate behavior and rollback guarantees, see [Approval Gates](/core-concepts)
+  and [Human-in-the-Loop](/sdk/hitl).
+</Tip>

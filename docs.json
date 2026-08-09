@@ -43,6 +43,7 @@
           "sdk/undo-config",
           "sdk/connectors",
           "sdk/supported-integrations",
+          "sdk/policies",
           "sdk/hitl",
           "sdk/errors"
         ]
