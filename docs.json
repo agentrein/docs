@@ -104,7 +104,7 @@
     }
   },
   "logo": {
-    "light": "/images/Light-docs.svg",
+    "light": "/images/Dark-docs.svg",
     "dark": "/images/Light-docs.svg"
   }
 }
