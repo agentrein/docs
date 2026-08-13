@@ -102,9 +102,5 @@
       "light": "#FFFFFF",
       "dark": "#0E0E10"
     }
-  },
-  "logo": {
-    "light": "/images/docs.svg",
-    "dark": "/images/docs.svg"
   }
 }
