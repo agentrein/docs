@@ -6,51 +6,100 @@ mode: "default"
 
 <Steps>
   <Step title="Install the SDK">
-    ```bash
+    <CodeGroup>
+```bash TypeScript
     npm install agentrein
-    ```
+```
+
+```bash Python
+    pip install agentrein
+```
+    </CodeGroup>
   </Step>
   <Step title="Get Your API Key">
     Log in to [Dashboard](https://agentrein.com/dashboard), go to **Settings**, and copy your API key.
   </Step>
   <Step title="Initialize the Client">
-    ```ts
+    <CodeGroup>
+```ts TypeScript
     import { AgentRein } from 'agentrein';
     import { Octokit } from '@octokit/rest'; // Developer's own standard SDK
-    
+
     const agentrein = new AgentRein({ apiKey: 'YOUR_API_KEY' });
     const octokit = new Octokit({ auth: 'GITHUB_TOKEN' });
-    ```
+```
+
+```python Python
+    from agentrein import AgentRein
+    from github import Github  # Developer's own standard SDK
+
+    agentrein = AgentRein(api_key="YOUR_API_KEY")
+    gh = Github("GITHUB_TOKEN")
+    repo = gh.get_repo("my-org/my-repo")
+```
+    </CodeGroup>
   </Step>
   <Step title="Create a Session">
-    ```ts
+    <CodeGroup>
+```ts TypeScript
     const session = await agentrein.newSession({
       agentId: 'onboarding-agent',
       intent: 'Create a GitHub issue and notify the team on Slack',
     });
-    ```
+```
+
+```python Python
+    session = agentrein.new_session(
+        agent_id="onboarding-agent",
+        intent="Create a GitHub issue and notify the team on Slack",
+    )
+```
+    </CodeGroup>
   </Step>
   <Step title="Wrap Your Existing Clients">
-    ```ts
+    <CodeGroup>
+```ts TypeScript
     const agentOctokit = agentrein.wrap(octokit, session, { connector: 'github' });
     const agentSlack   = agentrein.wrap(slackClient, session, { connector: 'slack' });
-    
+
     const issue = await agentOctokit.issues.create({
         owner: 'my-org',
         repo: 'my-repo',
         title: 'Onboarding task',
     });
-    
+
     await agentSlack.chat.postMessage({
         channel: '#onboarding',
         text: `Issue created: ${issue.data.html_url}`,
     });
-    ```
+```
+
+```python Python
+    agent_repo   = agentrein.wrap(repo, session, connector="github")
+    agent_slack  = agentrein.wrap(slack_client, session, connector="slack")
+
+    issue = agent_repo.create_issue(title="Onboarding task")
+
+    agent_slack.chat_postMessage(
+        channel="#onboarding",
+        text=f"Issue created: {issue.html_url}",
+    )
+```
+    </CodeGroup>
+    <Info>
+    The Python example wraps `repo` (the object returned by `gh.get_repo(...)`) directly rather than the top-level `gh` client — see [Connectors](/sdk/connectors) for why this matters.
+    </Info>
   </Step>
   <Step title="Complete the Session">
-    ```ts
+    <CodeGroup>
+```ts TypeScript
     await agentrein.completeSession(session);
-    ```
+```
+
+```python Python
+    agentrein.complete_session(session)
+```
+    </CodeGroup>
   </Step>
 </Steps>
 

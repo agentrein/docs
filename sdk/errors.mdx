@@ -2,13 +2,19 @@
 title: Errors
 description: Error types thrown by the AgentRein SDK.
 ---
+
+<Info>
+The Python SDK additionally provides a common `AgentReinError` base class that all other SDK errors inherit from (the TypeScript SDK has no equivalent base class) — catch `AgentReinError` in Python if you want to handle any SDK error generically.
+</Info>
+
 <AccordionGroup>
 <Accordion title="AgentReinUnavailableError" icon="triangle-exclamation" defaultOpen={true}>
-Thrown when the SDK cannot reach the AgentRein backend during authentication. If authentication succeeds but session creation fails, an AxiosError is thrown.
+Thrown/raised when the SDK cannot reach the AgentRein backend during authentication. If authentication succeeds but session creation fails, an `AxiosError` (TS) or `httpx.HTTPError` (Python) is thrown/raised.
 
-> [!NOTE]
-> Developers should catch both error types when using `failureMode: 'closed'`.
-```ts
+> Developers should catch both error types when using `failureMode`/`failure_mode: 'closed'`.
+
+<CodeGroup>
+```ts TypeScript
 import { AgentReinUnavailableError } from 'agentrein';
 
 try {
@@ -19,11 +25,24 @@ try {
   }
 }
 ```
+
+```python Python
+from agentrein import AgentReinUnavailableError
+
+try:
+    session = agentrein.new_session(agent_id="my-agent")
+except AgentReinUnavailableError:
+    # backend is down
+    pass
+```
+</CodeGroup>
 </Accordion>
 
 <Accordion title="ApprovalRejectedError" icon="circle-xmark">
-Thrown when a human rejects a `requiresApproval` action. AgentRein automatically triggers session rollback before throwing.
-```ts
+Thrown/raised when a human rejects a `requiresApproval`/`requires_approval` action. AgentRein automatically triggers session rollback before throwing/raising.
+
+<CodeGroup>
+```ts TypeScript
 import { AgentRein, ApprovalRejectedError } from 'agentrein';
 
 const agentStripe = agentrein.wrap(stripe, session, {
@@ -42,14 +61,34 @@ try {
     }
 }
 ```
+
+```python Python
+from agentrein import AgentRein, ApprovalRejectedError
+
+agent_stripe = agentrein.wrap(
+    stripe_client, session,
+    connector="stripe",
+    requires_approval=["subscriptions.cancel"],
+)
+
+try:
+    agent_stripe.subscriptions.cancel(id="sub_123")
+except ApprovalRejectedError as err:
+    # err.reason — the reason string provided by the human reviewer
+    # str(err) — "Approval <id> was rejected: <reason>"
+    print(f"Rejected: {err.reason}")
+    # session has already been rolled back
+```
+</CodeGroup>
 </Accordion>
 
 <Accordion title="ApprovalTimeoutError" icon="clock">
-Thrown when a `requiresApproval` action is not reviewed within the `timeoutMs` window.
+Thrown/raised when a `requiresApproval`/`requires_approval` action is not reviewed within the timeout window.
 The SDK logs the timed-out action as failed, which triggers AgentRein's normal
 session rollback flow.
 
-```ts
+<CodeGroup>
+```ts TypeScript
 import { AgentRein, ApprovalTimeoutError, ApprovalRejectedError } from 'agentrein';
 
 try {
@@ -66,20 +105,37 @@ try {
   }
 }
 ```
+
+```python Python
+from agentrein import AgentRein, ApprovalTimeoutError, ApprovalRejectedError
+
+try:
+    agent_stripe.subscriptions.cancel(id="sub_123")
+except ApprovalTimeoutError as err:
+    # err.approval_id — the ID of the approval request
+    # err.timeout_ms  — the timeout duration that was exceeded
+    print(f"Approval {err.approval_id} timed out after {err.timeout_ms}ms")
+    # AgentRein has triggered the session rollback flow
+except ApprovalRejectedError:
+    # session already rolled back automatically
+    pass
+```
+</CodeGroup>
 </Accordion>
 
 <Accordion title="WrapOptionsValidationError" icon="circle-exclamation">
-Thrown synchronously when invalid options are passed to `wrap()`.
-Common causes: `pollIntervalMs` below 1000ms or `timeoutMs` below 5000ms.
+Thrown/raised synchronously when invalid options are passed to `wrap()`.
+Common causes: `pollIntervalMs`/`poll_interval_ms` below 1000ms or `timeoutMs`/`timeout_ms` below 5000ms.
 
-```ts
+<CodeGroup>
+```ts TypeScript
 import { AgentRein, WrapOptionsValidationError } from 'agentrein';
 
 try {
   const agentOctokit = agentrein.wrap(octokit, session, {
     connector: 'github',
-    pollIntervalMs: 500,   // ❌ too low — minimum is 1000
-    timeoutMs: 3000,       // ❌ too low — minimum is 5000
+    pollIntervalMs: 500,   // too low — minimum is 1000
+    timeoutMs: 3000,       // too low — minimum is 5000
   });
 } catch (err) {
   if (err instanceof WrapOptionsValidationError) {
@@ -88,10 +144,25 @@ try {
 }
 ```
 
+```python Python
+from agentrein import AgentRein, WrapOptionsValidationError
+
+try:
+    agent_repo = agentrein.wrap(
+        repo, session,
+        connector="github",
+        poll_interval_ms=500,   # too low — minimum is 1000
+        timeout_ms=3000,        # too low — minimum is 5000
+    )
+except WrapOptionsValidationError as err:
+    print(f"Invalid wrap options: {err}")
+```
+</CodeGroup>
+
 **Valid minimums:**
 | Option | Minimum | Default |
 |---|---|---|
-| `pollIntervalMs` | `1000` | `2000` |
-| `timeoutMs` | `5000` | `86400000` |
+| `pollIntervalMs` / `poll_interval_ms` | `1000` | `2000` |
+| `timeoutMs` / `timeout_ms` | `5000` | `86400000` |
 </Accordion>
 </AccordionGroup>

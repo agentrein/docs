@@ -6,10 +6,12 @@ description: How AgentRein intercepts your existing API clients.
 ## Bring Your Own Client
 
 AgentRein's SDK contains zero connector logic. There are no Stripe, GitHub,
-or Slack classes to import from `agentrein`. Instead, you install and 
-initialize your own standard SDK clients as you normally would, then pass 
+or Slack classes to import from `agentrein`. Instead, you install and
+initialize your own standard SDK clients as you normally would, then pass
 them to `wrap()`.
-```ts
+
+<CodeGroup>
+```ts TypeScript
 import { AgentRein } from 'agentrein';
 import { Octokit } from '@octokit/rest';
 import { WebClient } from '@slack/web-api';
@@ -34,34 +36,68 @@ await agentSlack.chat.postMessage({ channel: '#ops', text: 'Issue created' });
 await agentStripe.invoices.create({ customer: 'cus_123' });
 ```
 
+```python Python
+import os
+from agentrein import AgentRein
+from github import Github
+from slack_sdk import WebClient
+import stripe
+
+agentrein = AgentRein(api_key=os.environ["AGENTREIN_API_KEY"])
+
+# Your own clients — initialized with your own credentials
+gh = Github(os.environ["GITHUB_TOKEN"])
+repo = gh.get_repo("my-org/my-repo")
+slack = WebClient(token=os.environ["SLACK_TOKEN"])
+stripe.api_key = os.environ["STRIPE_KEY"]
+
+session = agentrein.new_session(agent_id="my-agent", intent="...")
+
+# Wrap once — use exactly as before
+agent_repo  = agentrein.wrap(repo,  session, connector="github")
+agent_slack = agentrein.wrap(slack, session, connector="slack")
+
+agent_repo.create_issue(title="Task")
+agent_slack.chat_postMessage(channel="#ops", text="Issue created")
+```
+</CodeGroup>
+
 ## How the Proxy Works
 
-`wrap()` returns a Proxy that is transparent to your code — TypeScript types,
+`wrap()` returns a proxy that is transparent to your code — types,
 autocompletion, and runtime behavior are all preserved. When you call any
 method on the wrapped client:
 
-1. The Proxy captures the method path and arguments
+1. The proxy captures the method path and arguments
 2. Your original SDK method executes normally
-3. AgentRein logs the action to the backend asynchronously (fire-and-forget)
+3. AgentRein logs the action to the backend
 4. If the call throws, AgentRein triggers a LIFO rollback of all previous
    actions in the session
+
+<Info>
+In TypeScript, step 3 is fire-and-forget (non-blocking). In Python (v1, synchronous), this logging call completes before `wrap()` returns.
+</Info>
+
+<Warning>
+**Python-specific:** wrap the specific object whose methods you're about to call directly, not a top-level client several calls away. Many Python SDKs (unlike their JS counterparts) return a new, unwrapped object from factory/getter methods (`get_repo()`, `get_channel()`, etc.) — calls made on an object returned by a wrapped method are not automatically tracked. If your workflow needs to track a multi-step chain, wrap the specific resource object right before you start calling logged methods on it (see the GitHub example above, which wraps `repo`, not `gh`).
+</Warning>
 
 ## Connector Prefix
 
 The `connector` string you pass to `wrap()` must match the prefix used in
 the AgentRein backend rollback registry. The supported prefixes are:
 
-| Prefix | External SDK |
-|---|---|
-| `github` | `@octokit/rest` |
-| `slack` | `@slack/web-api` |
-| `stripe` | `stripe` |
-| `hubspot` | axios (REST) |
-| `salesforce` | axios (REST) |
-| `notion` | axios (REST) |
-| `gmail` | `googleapis` |
-| `gdrive` | `googleapis` |
-| `gsheets` | `googleapis` |
+| Prefix | External SDK (TypeScript) | External SDK (Python) |
+|---|---|---|
+| `github` | `@octokit/rest` | `PyGithub` |
+| `slack` | `@slack/web-api` | `slack_sdk` |
+| `stripe` | `stripe` | `stripe` |
+| `hubspot` | axios (REST) | `httpx`/`requests` (REST) |
+| `salesforce` | axios (REST) | `simple-salesforce` |
+| `notion` | axios (REST) | `httpx`/`requests` (REST) |
+| `gmail` | `googleapis` | `google-api-python-client` |
+| `gdrive` | `googleapis` | `google-api-python-client` |
+| `gsheets` | `googleapis` | `google-api-python-client` |
 
 For services not in this list, `wrap()` still logs actions, but no built-in
 rollback strategy is available. See [Execution Methods](/sdk/call) for details.

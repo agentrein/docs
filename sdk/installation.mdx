@@ -4,19 +4,35 @@ description: Install the AgentRein SDK and configure your API key.
 ---
 
 ## Install
-```bash
+
+<CodeGroup>
+```bash TypeScript
 npm install agentrein
 ```
 
+```bash Python
+pip install agentrein
+```
+</CodeGroup>
+
 ## Import
 
-The SDK ships as a dual CJS/ESM package. Use the following import pattern:
-```ts
+The TypeScript SDK ships as a dual CJS/ESM package.
+
+<CodeGroup>
+```ts TypeScript
 import { AgentRein } from 'agentrein';
 ```
 
+```python Python
+from agentrein import AgentRein
+```
+</CodeGroup>
+
 ## Initialize
-```ts
+
+<CodeGroup>
+```ts TypeScript
 const agentrein = new AgentRein({
   apiKey: process.env.AGENTREIN_API_KEY,
   serverUrl: 'https://api.agentrein.com', // optional, this is the default
@@ -24,15 +40,28 @@ const agentrein = new AgentRein({
 });
 ```
 
+```python Python
+import os
+from agentrein import AgentRein
+
+agentrein = AgentRein(
+    api_key=os.environ["AGENTREIN_API_KEY"],
+    server_url="https://api.agentrein.com",  # optional, this is the default
+    failure_mode="open",                      # optional, "open" | "closed"
+)
+```
+</CodeGroup>
+
 ### Options
 
 | Parameter | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `apiKey` | `string` | Yes | — | Your organization API key from the dashboard |
-| `serverUrl` | `string` | No | `https://api.agentrein.com` | AgentRein backend URL |
-| `failureMode` | `'open' \| 'closed'` | No | `'open'` | `open` — SDK continues if backend is unreachable. `closed` — throws `AgentReinUnavailableError` |
+| `apiKey` (Python: `api_key`) | `string` / `str` | Yes | — | Your organization API key from the dashboard |
+| `serverUrl` (Python: `server_url`) | `string` / `str` | No | `https://api.agentrein.com` | AgentRein backend URL |
+| `failureMode` (Python: `failure_mode`) | `'open' \| 'closed'` | No | `'open'` | `open` — SDK continues if backend is unreachable. `closed` — throws/raises `AgentReinUnavailableError` |
 
 ## Environment Variable
+
 ```bash
 AGENTREIN_API_KEY=ar_live_your_key_here
 ```
@@ -55,7 +84,9 @@ AGENTREIN_API_KEY=ar_test_your_key_here
 ```
 
 3. Use the SDK exactly as you would in production — no code changes needed:
-```ts
+
+<CodeGroup>
+```ts TypeScript
 const agentrein = new AgentRein({
   apiKey: process.env.AGENTREIN_API_KEY, // ar_test_ key
 });
@@ -76,6 +107,29 @@ console.log(issue.html_url);  // https://sandbox.agentrein.com
 await agentrein.completeSession(session);
 ```
 
+```python Python
+import os
+from agentrein import AgentRein
+from github import Github
+
+agentrein = AgentRein(api_key=os.environ["AGENTREIN_API_KEY"])  # ar_test_ key
+
+gh = Github(os.environ["GITHUB_TOKEN"])
+repo = gh.get_repo("my-org/my-repo")
+
+session = agentrein.new_session(agent_id="my-agent")
+agent_repo = agentrein.wrap(repo, session, connector="github")
+
+# This will NOT create a real GitHub issue
+issue = agent_repo.create_issue(title="Test issue")
+
+print(issue.id)         # sim_id_1234567890
+print(issue.html_url)   # https://sandbox.agentrein.com
+
+agentrein.complete_session(session)
+```
+</CodeGroup>
+
 <Note>
 Sandbox sessions appear in your dashboard under the **Sandbox** filter tab,
 clearly marked with a "Simulated" badge. Switch to your `ar_live_` key
@@ -83,7 +137,11 @@ when you are ready for production — no other code changes needed.
 </Note>
 
 <Warning>
-`rollbackSession()` in sandbox mode marks all actions as `ROLLED_BACK` instantly
+`rollbackSession()` (Python: `rollback_session()`) in sandbox mode marks all actions as `ROLLED_BACK` instantly
 without calling any real connector. This lets you verify your rollback handling
 logic without side effects.
 </Warning>
+
+<Info>
+The Python SDK (v1) is synchronous and supports sync connector clients only (Stripe, PyGithub, `slack_sdk`, `simple-salesforce`, and similar) — there is no `await` anywhere in the Python SDK.
+</Info>

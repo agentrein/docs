@@ -5,12 +5,14 @@ description: Add approval gates for sensitive operations using wrap().
 
 ## Overview
 
-Approval gates are configured directly on `wrap()` via the 
-`requiresApproval` option — no separate method needed.
+Approval gates are configured directly on `wrap()` via the
+`requiresApproval` (Python: `requires_approval`) option — no separate method needed.
 <Info>
   The session is automatically rolled back when a reviewer rejects an action — no manual cleanup required.
 </Info>
-```ts
+
+<CodeGroup>
+```ts TypeScript
 import { AgentRein, ApprovalRejectedError } from 'agentrein';
 
 const agentrein = new AgentRein({ apiKey: process.env.AGENTREIN_API_KEY });
@@ -34,24 +36,51 @@ try {
 }
 ```
 
+```python Python
+from agentrein import AgentRein, ApprovalRejectedError
+
+agentrein = AgentRein(api_key=os.environ["AGENTREIN_API_KEY"])
+session = agentrein.new_session(agent_id="billing-agent")
+
+agent_stripe = agentrein.wrap(
+    stripe_client, session,
+    connector="stripe",
+    requires_approval=["subscriptions.cancel"],
+    poll_interval_ms=2000,
+    timeout_ms=300000,
+)
+
+try:
+    # This call pauses until approved from the dashboard
+    agent_stripe.subscriptions.cancel(id="sub_123")
+except ApprovalRejectedError as err:
+    print(f"Rejected: {err.reason}")
+    # all previous session actions were already rolled back automatically
+```
+</CodeGroup>
+
 ## Flow
 
 <Steps>
-  <Step title="wrap() detects the method path is in `requiresApproval`" />
-  <Step title="Logs the action as `PENDING_APPROVAL` to the backend (awaited)" />
-  <Step title="SDK polls `GET /approvals/:id` at `pollIntervalMs`" />
+  <Step title="wrap() detects the method path is in requiresApproval / requires_approval" />
+  <Step title="Logs the action as PENDING_APPROVAL to the backend (awaited in TS, synchronous in Python)" />
+  <Step title="SDK polls GET /approvals/:id at the configured poll interval" />
   <Step title="A reviewer approves or rejects from the dashboard" />
-  <Step title="Approved → method executes → action updated to `SUCCESS`" />
-  <Step title="Rejected → `ApprovalRejectedError` thrown → session auto-rolled back" />
+  <Step title="Approved → method executes → action updated to SUCCESS" />
+  <Step title="Rejected → ApprovalRejectedError thrown/raised → session auto-rolled back" />
 </Steps>
 
-## requiresApproval path matching
+## Path matching
 
-The strings in `requiresApproval` match the method path after the connector 
-prefix. For `agentrein.wrap(stripe, session, { connector: 'stripe' })`:
+The strings in `requiresApproval`/`requires_approval` match the method path
+after the connector prefix. For `wrap(stripe, session, { connector: 'stripe' })`:
 
-| Method called | Path to match |
-|---|---|
-| `agentStripe.subscriptions.cancel(...)` | `'subscriptions.cancel'` |
-| `agentStripe.invoices.del(...)` | `'invoices.del'` |
-| `agentStripe.customers.del(...)` | `'customers.del'` |
+| Method called (TypeScript) | Method called (Python) | Path to match |
+|---|---|---|
+| `agentStripe.subscriptions.cancel(...)` | `agent_stripe.subscriptions.cancel(...)` | `'subscriptions.cancel'` |
+| `agentStripe.invoices.del(...)` | `agent_stripe.invoices.delete(...)` | `'invoices.del'` (TS) / `'invoices.delete'` (Python) |
+| `agentStripe.customers.del(...)` | `agent_stripe.customers.delete(...)` | `'customers.del'` (TS) / `'customers.delete'` (Python) |
+
+<Info>
+Method names differ slightly between the Stripe Node SDK (`del`) and the Stripe Python SDK (`delete`) — match the string to whatever your connector's actual method is named.
+</Info>

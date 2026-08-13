@@ -5,20 +5,31 @@ description: "Create a new agent session before executing actions."
 
 ## Signature
 
-```ts
+<CodeGroup>
+```ts TypeScript
 agentrein.newSession(options?: SessionOptions | string): Promise<Session>
 ```
+
+```python Python
+agentrein.new_session(agent_id: str | None = None, intent: str | None = None) -> Session
+```
+</CodeGroup>
+
+<Info>
+The Python signature takes `agent_id` and `intent` directly as arguments — there is no options-object/string overload like the TypeScript version, and no `await` since Python v1 is synchronous.
+</Info>
 
 ## Parameters
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `options.agentId` | `string` | No | Developer-defined identifier for the agent. Defaults to a random UUID. |
-| `options.intent` | `string` | No | Natural language description of what this session is trying to accomplish. Used by drift detection. |
+| `agentId` (Python: `agent_id`) | `string` / `str` | No | Developer-defined identifier for the agent. Defaults to a random UUID. |
+| `intent` | `string` / `str` | No | Natural language description of what this session is trying to accomplish. Used by drift detection. |
 
 ## Returns
 
-```ts
+<CodeGroup>
+```ts TypeScript
 interface Session {
   id: string;
   organizationId: string;
@@ -31,15 +42,38 @@ interface Session {
 }
 ```
 
+```python Python
+@dataclass
+class Session:
+    id: str
+    organization_id: str
+    agent_id: str
+    intent: str | None
+    status: str
+    is_sandbox: bool
+    created_at: str
+    updated_at: str
+```
+</CodeGroup>
+
 ## Example
 
-```ts
+<CodeGroup>
+```ts TypeScript
 const session = await agentrein.newSession({
   agentId: 'billing-agent',
   intent: 'Create an invoice for customer cus_xxx and notify them on Slack',
 });
 ```
 
+```python Python
+session = agentrein.new_session(
+    agent_id="billing-agent",
+    intent="Create an invoice for customer cus_xxx and notify them on Slack",
+)
+```
+</CodeGroup>
+
 <Warning>
-  `newSession()` must always be awaited and will throw `AgentReinUnavailableError` if authentication with the AgentRein server fails (e.g. invalid API key, server down during token exchange). If auth succeeds but session creation fails due to a network error, an AxiosError is thrown. A session is required for subsequent `wrap()` and `completeSession()` calls.
+  `newSession()` / `new_session()` must always be awaited (TypeScript) and will throw/raise `AgentReinUnavailableError` if authentication with the AgentRein server fails (e.g. invalid API key, server down during token exchange). If auth succeeds but session creation fails due to a network error, an `AxiosError` (TypeScript) or `httpx.HTTPError` (Python) is thrown/raised. A session is required for subsequent `wrap()` and `completeSession()`/`complete_session()` calls.
 </Warning>

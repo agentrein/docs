@@ -5,10 +5,11 @@ description: How AgentRein intercepts and protects your API calls.
 
 ## wrap()
 
-The single execution primitive in AgentRein. Pass any API client and 
-AgentRein intercepts every method call automatically.
+The single execution primitive in AgentRein. Pass any API client (or a specific
+sub-resource object) and AgentRein intercepts every method call automatically.
 
-```ts
+<CodeGroup>
+```ts TypeScript
 import { AgentRein } from 'agentrein';
 import { Octokit } from '@octokit/rest';
 
@@ -21,12 +22,28 @@ const agentOctokit = agentrein.wrap(octokit, session, { connector: 'github' });
 await agentOctokit.issues.create({ owner: 'my-org', repo: 'my-repo', title: 'Task' });
 ```
 
+```python Python
+from agentrein import AgentRein
+from github import Github
+
+agentrein = AgentRein(api_key="...")
+gh = Github(auth="...")
+repo = gh.get_repo("my-org/my-repo")
+
+agent_repo = agentrein.wrap(repo, session, connector="github")
+
+# Use exactly as before — rollback is automatic on any failure
+agent_repo.create_issue(title="Task")
+```
+</CodeGroup>
+
 ## Approval Gates with wrap()
 
-Pass `requiresApproval` with a list of method paths that need human 
-sign-off before executing.
+Pass `requiresApproval` (Python: `requires_approval`) with a list of method paths
+that need human sign-off before executing.
 
-```ts
+<CodeGroup>
+```ts TypeScript
 const agentStripe = agentrein.wrap(stripe, session, {
     connector: 'stripe',
     requiresApproval: ['subscriptions.cancel', 'invoices.del'],
@@ -41,5 +58,22 @@ await agentStripe.invoices.create({ customer: 'cus_123', amount: 500 });
 await agentStripe.subscriptions.cancel({ id: 'sub_123' });
 ```
 
-If rejected, `ApprovalRejectedError` is thrown and the session is 
+```python Python
+agent_stripe = agentrein.wrap(
+    stripe_client, session,
+    connector="stripe",
+    requires_approval=["subscriptions.cancel", "invoices.delete"],
+    poll_interval_ms=2000,
+    timeout_ms=300000,
+)
+
+# Executes immediately — no approval needed
+agent_stripe.invoices.create(customer="cus_123", amount=500)
+
+# Pauses here until a reviewer approves from the dashboard
+agent_stripe.subscriptions.cancel(id="sub_123")
+```
+</CodeGroup>
+
+If rejected, `ApprovalRejectedError` is thrown/raised and the session is
 automatically rolled back.
