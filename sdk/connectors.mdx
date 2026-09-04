@@ -101,3 +101,56 @@ the AgentRein backend rollback registry. The supported prefixes are:
 
 For services not in this list, `wrap()` still logs actions, but no built-in
 rollback strategy is available. See [Execution Methods](/sdk/call) for details.
+
+## GitHub Connector Actions
+
+The `github` connector supports 20 actions grouped by resource:
+
+### Files
+| Action | Description / Rollback Behavior |
+|---|---|
+| `github.files.create` | Create a repository file. Rollback deletes the created file. |
+| `github.files.update` | Update a repository file. Rollback restores content from `beforeState`. |
+| `github.files.delete` | Delete a repository file. Rollback recreates file content from `beforeState`. |
+
+### Issues & Comments
+| Action | Description / Rollback Behavior |
+|---|---|
+| `github.issues.create` | Create an issue. Rollback closes the issue. |
+| `github.issues.update` | Update an issue. Rollback restores fields from `beforeState`. |
+| `github.issues.lock` | Lock an issue. Rollback unlocks the issue. |
+| `github.issueComments.create` | Create an issue comment. Rollback deletes the comment. |
+
+### Pull Requests & Comments
+| Action | Description / Rollback Behavior |
+|---|---|
+| `github.pullRequests.update` | Update a pull request. Rollback restores title, body, and state from `beforeState`. |
+| `github.pullRequests.close` | Close a pull request. Rollback reopens the pull request. |
+| `github.pullRequests.reopen` | Reopen a pull request. Rollback closes the pull request. |
+| `github.pullRequests.merge` | Merge a pull request. **Non-reversible** — no automatic rollback (requires human approval). |
+| `github.pullRequestComments.update` | Update a PR comment. Rollback restores comment body from `beforeState`. |
+
+### Releases
+| Action | Description / Rollback Behavior |
+|---|---|
+| `github.releases.create` | Create a release. Rollback deletes the created release. |
+| `github.releases.update` | Update a release. Rollback restores name, body, and tag from `beforeState`. |
+| `github.releases.delete` | Delete a release. **Non-reversible** — no automatic rollback (requires human approval). |
+
+### Reviews
+| Action | Description / Rollback Behavior |
+|---|---|
+| `github.reviews.create` | Submit a pull request review. **Non-reversible** — no automatic rollback (requires human approval). |
+
+### Workflows
+| Action | Description / Rollback Behavior |
+|---|---|
+| `github.workflows.enable` | Enable a workflow. Rollback disables the workflow. |
+| `github.workflows.disable` | Disable a workflow. Rollback enables the workflow. |
+| `github.workflows.dispatch` | Dispatch a workflow run. **Non-reversible** — no automatic rollback (requires human approval). |
+
+### Users
+| Action | Description / Rollback Behavior |
+|---|---|
+| `github.users.invite` | Invite a user to an organization. Rollback cancels the pending invitation. |
+

@@ -159,8 +159,26 @@ in the backend:
   <Tab title="GitHub" icon="github">
     | Action | Undo Strategy |
     |---|---|
+    | `github.files.create` | Delete the file |
+    | `github.files.update` | Restore `beforeState` |
+    | `github.files.delete` | Restore `beforeState` (recreates file content) |
     | `github.issues.create` | Close the issue |
     | `github.issues.update` | Restore `beforeState` |
+    | `github.issues.lock` | Unlock the issue |
+    | `github.issueComments.create` | Delete the comment |
+    | `github.pullRequests.update` | Restore `beforeState` |
+    | `github.pullRequests.close` | Reopen the pull request |
+    | `github.pullRequests.reopen` | Close the pull request |
+    | `github.pullRequests.merge` | No automatic rollback (requires human approval) |
+    | `github.pullRequestComments.update` | Restore `beforeState` |
+    | `github.releases.create` | Delete the release |
+    | `github.releases.update` | Restore `beforeState` |
+    | `github.releases.delete` | No automatic rollback (requires human approval) |
+    | `github.reviews.create` | No automatic rollback (requires human approval) |
+    | `github.workflows.enable` | Disable the workflow |
+    | `github.workflows.disable` | Enable the workflow |
+    | `github.workflows.dispatch` | No automatic rollback (requires human approval) |
+    | `github.users.invite` | Cancel the pending invitation |
   </Tab>
   <Tab title="Slack">
     | Action | Undo Strategy |
