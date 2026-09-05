@@ -208,6 +208,44 @@ The `slack` connector supports 23 actions grouped by resource:
 | `slack.userGroups.update` | Update a user group's name, handle, or description. Rollback restores previous values from `beforeState`. |
 | `slack.userGroups.users.update` | Update the list of users in a user group. Rollback restores the previous member list from `beforeState`. |
 | `slack.userGroups.enable` | Enable a user group. Rollback disables the user group. |
-| `slack.userGroups.disable` | Disable a user group. Rollback enables the user group. |
+| `slack.userGroups.disable` | Disable the user group. Rollback enables the user group. |
 
+## Gmail Connector Actions
 
+The `gmail` connector supports 16 actions grouped by resource:
+
+<Note>
+Gmail distinguishes soft-deletion (`trash`/`untrash`), which moves items to the Trash folder and is recoverable for 30 days, from permanent deletion (`delete`). It is recommended to use `trash` and `untrash` for safe, reversible message and thread management.
+</Note>
+
+### Messages
+| Action | Description / Rollback Behavior |
+|---|---|
+| `gmail.messages.send` | Send an email message. Rollback sends a follow-up correction/disregard message in the thread. |
+| `gmail.messages.reply` | Reply to an email thread. Rollback sends a follow-up correction/disregard message in the thread. |
+| `gmail.messages.trash` | Move a message to trash (soft delete). Rollback untrashes the message. |
+| `gmail.messages.untrash` | Remove a message from trash. Rollback moves the message back to trash. |
+| `gmail.messages.markAsRead` | Mark a message as read. Rollback restores the `UNREAD` label. |
+| `gmail.messages.markAsUnread` | Mark a message as unread. Rollback removes the `UNREAD` label. |
+| `gmail.messages.delete` | Permanently delete a message. **Non-reversible** — no automatic rollback (requires human approval). |
+
+### Drafts
+| Action | Description / Rollback Behavior |
+|---|---|
+| `gmail.drafts.create` | Create a draft. Rollback deletes the created draft. |
+| `gmail.drafts.delete` | Delete a draft. Rollback recreates the draft content from `beforeState` (preserving thread association if applicable). |
+
+### Threads
+| Action | Description / Rollback Behavior |
+|---|---|
+| `gmail.threads.modify` | Modify labels on a thread. Rollback restores previous label IDs from `beforeState`. |
+| `gmail.threads.trash` | Move an entire thread to trash (soft delete). Rollback untrashes the thread. |
+| `gmail.threads.untrash` | Remove an entire thread from trash. Rollback moves the thread back to trash. |
+| `gmail.threads.delete` | Permanently delete a thread. **Non-reversible** — no automatic rollback (requires human approval). |
+
+### Labels
+| Action | Description / Rollback Behavior |
+|---|---|
+| `gmail.labels.create` | Create a label. Rollback deletes the created label. |
+| `gmail.labels.modify` | Modify labels on a message. Rollback restores previous label IDs from `beforeState`. |
+| `gmail.labels.delete` | Delete a label. **Non-reversible** — no automatic rollback (requires human approval). |

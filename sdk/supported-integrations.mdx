@@ -243,9 +243,21 @@ in the backend:
     | Action | Undo Strategy |
     |---|---|
     | `gmail.messages.send` | Send correction reply in thread |
+    | `gmail.messages.reply` | Send correction reply in thread |
     | `gmail.messages.trash` | Untrash the message |
+    | `gmail.messages.untrash` | Trash the message |
+    | `gmail.messages.markAsRead` | Restore `UNREAD` label |
+    | `gmail.messages.markAsUnread` | Remove `UNREAD` label |
+    | `gmail.messages.delete` | No automatic rollback (requires human approval) |
     | `gmail.drafts.create` | Delete the draft |
+    | `gmail.drafts.delete` | Recreate the draft from snapshot |
+    | `gmail.threads.modify` | Reverse the label changes |
+    | `gmail.threads.trash` | Untrash the thread |
+    | `gmail.threads.untrash` | Trash the thread |
+    | `gmail.threads.delete` | No automatic rollback (requires human approval) |
+    | `gmail.labels.create` | Delete the label |
     | `gmail.labels.modify` | Reverse the label changes |
+    | `gmail.labels.delete` | No automatic rollback (requires human approval) |
   </Tab>
   <Tab title="Google Drive">
     | Action | Undo Strategy |
