@@ -154,3 +154,60 @@ The `github` connector supports 20 actions grouped by resource:
 |---|---|
 | `github.users.invite` | Invite a user to an organization. Rollback cancels the pending invitation. |
 
+## Slack Connector Actions
+
+The `slack` connector supports 23 actions grouped by resource:
+
+### Messages
+| Action | Description / Rollback Behavior |
+|---|---|
+| `slack.chat.postMessage` | Post a chat message. Rollback updates the message to a Tombstone (`⚠️ Reverted by AgentRein: [reason]`) and clears all blocks and attachments. |
+| `slack.chat.update` | Update a chat message. Rollback restores content, blocks, attachments, and file IDs from `beforeState`. |
+| `slack.chat.delete` | Delete a chat message. Rollback re-posts original text from `beforeState` with a restoration notice (best-effort text restoration only — thread replies and reactions are not restored). |
+
+### Channels
+| Action | Description / Rollback Behavior |
+|---|---|
+| `slack.channels.create` | Create a public or private channel. Rollback archives the created channel. |
+| `slack.channels.rename` | Rename a channel. Rollback restores the previous channel name from `beforeState`. |
+| `slack.channels.setTopic` | Set a channel's topic. Rollback restores the previous topic from `beforeState`. |
+| `slack.channels.setPurpose` | Set a channel's purpose. Rollback restores the previous purpose from `beforeState`. |
+| `slack.channels.archive` | Archive a channel. Rollback unarchives the channel. |
+| `slack.channels.invite` | Invite users to a channel. Rollback kicks the invited users from the channel. |
+| `slack.channels.kick` | Remove a user from a channel. Rollback re-invites the user to the channel. |
+| `slack.channels.join` | Join a channel. Rollback leaves the channel. |
+| `slack.channels.leave` | Leave a channel. Rollback re-joins the channel. |
+| `slack.channels.close` | Close a direct message or group channel. Rollback opens the channel. |
+| `slack.channels.open` | Open a direct message or group channel. Rollback closes the channel. |
+
+### Files
+| Action | Description / Rollback Behavior |
+|---|---|
+| `slack.files.upload` | Upload a file. Rollback deletes the uploaded file. |
+| `slack.files.delete` | Delete a file. **Non-reversible** — no automatic rollback (requires human approval). |
+
+### Reactions
+| Action | Description / Rollback Behavior |
+|---|---|
+| `slack.reactions.add` | Add a reaction to an item. Rollback removes the reaction. |
+
+### Stars
+| Action | Description / Rollback Behavior |
+|---|---|
+| `slack.stars.add` | Add a star to an item. Rollback removes the star. |
+
+### User Profile
+| Action | Description / Rollback Behavior |
+|---|---|
+| `slack.userProfile.update` | Update a user's profile fields. Rollback restores previous profile fields from `beforeState`. |
+
+### User Groups
+| Action | Description / Rollback Behavior |
+|---|---|
+| `slack.userGroups.create` | Create a user group. Rollback disables the user group. |
+| `slack.userGroups.update` | Update a user group's name, handle, or description. Rollback restores previous values from `beforeState`. |
+| `slack.userGroups.users.update` | Update the list of users in a user group. Rollback restores the previous member list from `beforeState`. |
+| `slack.userGroups.enable` | Enable a user group. Rollback disables the user group. |
+| `slack.userGroups.disable` | Disable a user group. Rollback enables the user group. |
+
+

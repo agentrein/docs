@@ -186,6 +186,27 @@ in the backend:
     | `slack.chat.postMessage` | Updates the message to a Tombstone (⚠️ Reverted by AgentRein: [reason]) and clears all blocks/buttons |
     | `slack.chat.update` | Restore `beforeState` |
     | `slack.chat.delete` | Re-posts the original message content from beforeState with a restoration notice |
+    | `slack.channels.create` | Archive the created channel |
+    | `slack.channels.rename` | Restore `beforeState` |
+    | `slack.channels.setTopic` | Restore `beforeState` |
+    | `slack.channels.setPurpose` | Restore `beforeState` |
+    | `slack.channels.archive` | Unarchive the channel |
+    | `slack.channels.invite` | Kick invited users from the channel |
+    | `slack.channels.kick` | Re-invite the user to the channel |
+    | `slack.channels.join` | Leave the channel |
+    | `slack.channels.leave` | Re-join the channel |
+    | `slack.channels.close` | Open the channel |
+    | `slack.channels.open` | Close the channel |
+    | `slack.files.upload` | Delete the uploaded file |
+    | `slack.files.delete` | No automatic rollback (requires human approval) |
+    | `slack.reactions.add` | Remove the reaction |
+    | `slack.stars.add` | Remove the star |
+    | `slack.userProfile.update` | Restore `beforeState` |
+    | `slack.userGroups.create` | Disable the user group |
+    | `slack.userGroups.update` | Restore `beforeState` |
+    | `slack.userGroups.users.update` | Restore `beforeState` |
+    | `slack.userGroups.enable` | Disable the user group |
+    | `slack.userGroups.disable` | Enable the user group |
   </Tab>
   <Tab title="Stripe">
     | Action | Undo Strategy |
