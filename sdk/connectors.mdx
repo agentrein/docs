@@ -280,3 +280,36 @@ Google Drive distinguishes soft-deletion (`trash`/`untrash`), which moves items 
 | `gdrive.drives.update` | Update a Shared Drive's metadata. Rollback restores fields from `beforeState`. |
 | `gdrive.drives.delete` | Permanently delete a Shared Drive. **Non-reversible** — no automatic rollback (requires human approval). |
 
+## Google Sheets Connector Actions
+
+The `gsheets` connector supports 8 actions grouped by resource:
+
+<Note>
+Row and cell operations in Google Sheets rely on dynamic position references rather than stable resource IDs. As a result, row-level mutations (inserting, appending, deleting, or clearing rows) are non-reversible to prevent accidental data corruption if surrounding rows shift.
+</Note>
+
+### Spreadsheets
+| Action | Description / Rollback Behavior |
+|---|---|
+| `gsheets.spreadsheets.create` | Create a spreadsheet. Rollback moves the created spreadsheet to trash (soft delete — recoverable for 30 days). |
+
+### Sheets & Tabs
+| Action | Description / Rollback Behavior |
+|---|---|
+| `gsheets.sheets.add` | Add a new sheet tab to a spreadsheet. Rollback deletes the created sheet tab by its sheet ID. |
+
+### Values
+| Action | Description / Rollback Behavior |
+|---|---|
+| `gsheets.values.append` | Append values to a spreadsheet. **Non-reversible** — no automatic rollback (requires human approval). |
+| `gsheets.values.update` | Update values in a specified cell range. Rollback restores previous cell values from `beforeState`. |
+| `gsheets.values.clear` | Clear values from a specified cell range. **Non-reversible** — no automatic rollback (requires human approval). |
+
+### Rows
+| Action | Description / Rollback Behavior |
+|---|---|
+| `gsheets.rows.insert` | Insert rows into a sheet. **Non-reversible** — no automatic rollback (requires human approval). |
+| `gsheets.rows.delete` | Delete rows from a sheet. **Non-reversible** — no automatic rollback (requires human approval). |
+| `gsheets.rows.appendOrUpdate` | Append or update rows in a sheet. **Non-reversible** — no automatic rollback (requires human approval). |
+
+

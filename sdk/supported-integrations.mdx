@@ -276,10 +276,14 @@ in the backend:
   <Tab title="Google Sheets">
     | Action | Undo Strategy |
     |---|---|
-    | `gsheets.values.append` | Clear the appended range |
+    | `gsheets.values.append` | No automatic rollback (requires human approval) |
     | `gsheets.values.update` | Restore `beforeState` |
     | `gsheets.spreadsheets.create` | Move the spreadsheet to trash (soft delete — recoverable for 30 days) |
     | `gsheets.sheets.add` | Delete the added sheet |
+    | `gsheets.rows.insert` | No automatic rollback (requires human approval) |
+    | `gsheets.rows.delete` | No automatic rollback (requires human approval) |
+    | `gsheets.rows.appendOrUpdate` | No automatic rollback (requires human approval) |
+    | `gsheets.values.clear` | No automatic rollback (requires human approval) |
   </Tab>
 </Tabs>
 
