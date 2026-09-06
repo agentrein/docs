@@ -1,52 +1,148 @@
 ---
 title: "Introduction"
-description: "AgentRein gives your AI agents automatic rollback, approval gates, and drift detection."
+description: "AgentRein is the reliability, rollback, and governance layer for production AI agents."
 mode: "wide"
 ---
 
-## Zero-Friction Reliability
+## Zero-Friction Reliability for Production AI Agents
 
-AI agents execute sequences of real API calls — creating GitHub issues, sending Slack messages, charging Stripe customers. When something fails midway, the system is left in a partial state.
+AI agents interact with real-world infrastructure by executing sequences of API calls — creating GitHub issues, sending Slack notifications, creating Stripe invoices, and updating databases. However, when an agent encounters an error, experiences goal drift, or fails midway through execution, systems are left in a **partial, corrupted state**.
 
-AgentRein solves this by acting as a safety wrapper around your existing code. You keep using the same SDKs you already know. AgentRein wraps them and takes care of the rest—automatically tracking side-effects and mapping them to our backend rollback registry.
+**AgentRein** provides a safety wrapper around your agent's existing tools and SDKs. Without requiring custom connector classes or modifying your existing codebase, AgentRein intercepts tool executions, logs side-effects, applies governance policies, and enables **automatic Last-In-First-Out (LIFO) rollback**.
 
-<Columns cols={3}>
-  <Card title="Automatic Rollback" icon="rotate-left">
-    When something fails midway, AgentRein reverses every action in the session in correct LIFO order — no manual cleanup required.
+<Columns cols={2}>
+  <Card title="Automatic LIFO Rollback" icon="rotate-left">
+    If an action fails, an approval is rejected, or an error occurs midway, AgentRein automatically reverses every previous production action in strict LIFO order.
   </Card>
 
-  <Card title="Approval Gates" icon="user-check">
-    Pause execution on sensitive operations and wait for a human reviewer to approve or reject from the dashboard.
+  <Card title="Human-in-the-Loop Approval Gates" icon="user-check">
+    Pause execution on sensitive operations (like deleting databases or canceling subscriptions) until approved by a reviewer via the dashboard or API.
   </Card>
 
-  <Card title="Bring Your Own Tools" icon="plug">
-    No custom connector classes to install. Wrap your existing Stripe, Octokit, or Slack clients directly — zero code changes.
+  <Card title="Intent Verification & Drift Detection" icon="compass">
+    Validate agent output against intended goals using LLM-powered outcome verification to catch drift before it impacts downstream systems.
+  </Card>
+
+  <Card title="Centralized Policy Engine" icon="shield-check">
+    Enforce organization-level rules (`ALLOW`, `REQUIRE_APPROVAL`, `BLOCK`) across tools with wildcard API pattern matching and payload field conditions.
   </Card>
 </Columns>
 
-## Bring Your Own Tools
+---
 
-There are no custom AgentRein connector classes to install or replace. You bring your own standard SDKs (like `Stripe`, `Octokit`, or `@slack/web-api`), and we provide the safety net. Zero-friction reliability with no code changes.
+## Bring Your Own Tools & Standard SDKs
 
-```typescript
-// Your normal code...
-const octokit = new Octokit({ auth: 'GITHUB_TOKEN' });
+AgentRein requires **no proprietary connector frameworks** or wrapper SDK replacements. You continue using standard TypeScript or Python libraries — such as `@octokit/rest`, `stripe`, `@slack/web-api`, or `google-api-python-client` — and wrap them using a single method: `agentrein.wrap()`. For supported actions registered under your connector, AgentRein automatically tracks side-effects, applies governance policies, and prepares inverse rollback steps.
 
-// ...wrapped with AgentRein
+<CodeGroup>
+```typescript TypeScript
+import { AgentRein } from 'agentrein';
+import { Octokit } from '@octokit/rest';
+import WebClient from '@slack/web-api';
+
+const agentrein = new AgentRein({ apiKey: process.env.AGENTREIN_API_KEY });
+const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+const slack = new WebClient(process.env.SLACK_TOKEN);
+
+// 1. Start a tracked session with an explicit intent
+const session = await agentrein.newSession({
+  agentId: 'incident-responder',
+  intent: 'Create incident tracking issue and notify the engineering channel',
+});
+
+// 2. Wrap standard clients with AgentRein
 const agentOctokit = agentrein.wrap(octokit, session, { connector: 'github' });
+const agentSlack   = agentrein.wrap(slack, session, { connector: 'slack' });
 
-// Use exactly as before, but natively protected
-const issue = await agentOctokit.issues.create({ owner, repo, title });
+try {
+  // 3. Execute calls naturally — side-effects and rollbacks are tracked automatically
+  const issue = await agentOctokit.issues.create({
+    owner: 'acme-corp',
+    repo: 'infrastructure',
+    title: 'High Memory Usage Alert',
+  });
+
+  await agentSlack.chat.postMessage({
+    channel: '#incidents',
+    text: `Created GitHub issue: ${issue.data.html_url}`,
+  });
+
+  // 4. Mark session complete when successful
+  await agentrein.completeSession(session);
+} catch (err) {
+  // Automatic LIFO rollback has already executed for all logged actions in this session!
+  console.error('Session failed and rolled back:', err);
+}
 ```
 
-<Columns cols={2}>
+```python Python
+import os
+from agentrein import AgentRein
+from github import Github
+from slack_sdk import WebClient
+
+agentrein = AgentRein(api_key=os.environ["AGENTREIN_API_KEY"])
+gh = Github(os.environ["GITHUB_TOKEN"])
+slack = WebClient(token=os.environ["SLACK_TOKEN"])
+
+# 1. Start a tracked session with an explicit intent
+session = agentrein.new_session(
+    agent_id="incident-responder",
+    intent="Create incident tracking issue and notify the engineering channel",
+)
+
+# 2. Wrap standard clients with AgentRein
+repo = gh.get_repo("acme-corp/infrastructure")
+agent_repo = agentrein.wrap(repo, session, connector="github")
+agent_slack = agentrein.wrap(slack, session, connector="slack")
+
+try:
+    # 3. Execute calls naturally — side-effects and rollbacks are tracked automatically
+    issue = agent_repo.create_issue(title="High Memory Usage Alert")
+    
+    agent_slack.chat_postMessage(
+        channel="#incidents",
+        text=f"Created GitHub issue: {issue.html_url}",
+    )
+    
+    # 4. Mark session complete when successful
+    agentrein.complete_session(session)
+except Exception as err:
+    # Automatic LIFO rollback has already executed for all logged actions in this session!
+    print(f"Session failed and rolled back: {err}")
+```
+</CodeGroup>
+
+<Info>
+  **Preserves Native Types & Syntax**: The `wrap()` method uses a dynamic proxy under the hood. IDE autocompletion, type definitions, and original SDK methods remain 100% intact, with full snapshot tracking and rollback protection enabled for all supported connector actions.
+</Info>
+
+---
+
+## Testing Safely with Sandbox Mode
+
+Test your agents without touching production APIs. By using a **Sandbox API Key** (`ar_test_...`), calls wrapped by AgentRein simulate execution against connectors — ensuring zero side-effects on real GitHub repositories, Stripe balances, or Slack channels while fully verifying your session logic and approval workflows.
+
+```bash
+# Switch seamlessly between environments:
+AGENTREIN_API_KEY=ar_test_51Nx... # Development Sandbox
+AGENTREIN_API_KEY=ar_live_98Zb... # Production Environment
+```
+
+---
+
+## Explore the Documentation
+
+<Columns cols={3}>
   <Card title="Quick Start" icon="bolt" href="/quickstart">
-    Get AgentRein protecting your agent in under 5 minutes.
+    Get AgentRein setup in your TypeScript or Python agent in under 5 minutes.
   </Card>
 
   <Card title="Core Concepts" icon="layer-group" href="/core-concepts">
-    Understand the Recursive Proxy, approval gates, and rollback model.
+    Learn how the Transparent Proxy, Session State Machine, and LIFO Engine work.
+  </Card>
+
+  <Card title="SDK Reference" icon="code" href="/sdk/installation">
+    Explore full parameter specifications for `newSession()`, `wrap()`, policies, and error handling.
   </Card>
 </Columns>
-
-If any subsequent action fails, AgentRein automatically reverses every other action in the session in the correct Last-In-First-Out order.
