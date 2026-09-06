@@ -249,3 +249,34 @@ Gmail distinguishes soft-deletion (`trash`/`untrash`), which moves items to the 
 | `gmail.labels.create` | Create a label. Rollback deletes the created label. |
 | `gmail.labels.modify` | Modify labels on a message. Rollback restores previous label IDs from `beforeState`. |
 | `gmail.labels.delete` | Delete a label. **Non-reversible** — no automatic rollback (requires human approval). |
+
+## Google Drive Connector Actions
+
+The `gdrive` connector supports 10 actions grouped by resource:
+
+<Note>
+Google Drive distinguishes soft-deletion (`trash`/`untrash`), which moves items to the Trash folder and is recoverable for 30 days, from permanent deletion (`delete`). It is recommended to use `trash` and `untrash` for safe, reversible file management.
+</Note>
+
+### Files
+| Action | Description / Rollback Behavior |
+|---|---|
+| `gdrive.files.create` | Create a file. Rollback moves the created file to trash (soft delete). |
+| `gdrive.files.update` | Update a file's metadata. Rollback restores fields from `beforeState`. |
+| `gdrive.files.move` | Move a file to another parent folder. Rollback reverses the parent folder change. |
+| `gdrive.files.copy` | Copy a file. Rollback moves the created copy to trash (soft delete). |
+| `gdrive.files.trash` | Move a file to trash (soft delete). Rollback untrashes the file. |
+| `gdrive.files.delete` | Permanently delete a file. **Non-reversible** — no automatic rollback (requires human approval). |
+
+### Sharing & Permissions
+| Action | Description / Rollback Behavior |
+|---|---|
+| `gdrive.files.share` | Grant a permission on a file. Rollback revokes the granted permission. |
+
+### Shared Drives
+| Action | Description / Rollback Behavior |
+|---|---|
+| `gdrive.drives.create` | Create a Shared Drive. Rollback deletes the created empty Shared Drive. |
+| `gdrive.drives.update` | Update a Shared Drive's metadata. Rollback restores fields from `beforeState`. |
+| `gdrive.drives.delete` | Permanently delete a Shared Drive. **Non-reversible** — no automatic rollback (requires human approval). |
+

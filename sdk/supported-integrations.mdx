@@ -265,7 +265,13 @@ in the backend:
     | `gdrive.files.create` | Move the file to trash (soft delete — recoverable for 30 days) |
     | `gdrive.files.update` | Restore `beforeState` |
     | `gdrive.files.move` | Reverse the move |
+    | `gdrive.files.copy` | Move the created copy to trash (soft delete — recoverable for 30 days) |
     | `gdrive.files.trash` | Untrash the file |
+    | `gdrive.files.share` | Revoke the granted permission |
+    | `gdrive.drives.create` | Delete the created empty Shared Drive |
+    | `gdrive.drives.update` | Restore `beforeState` |
+    | `gdrive.files.delete` | No automatic rollback (requires human approval) |
+    | `gdrive.drives.delete` | No automatic rollback (requires human approval) |
   </Tab>
   <Tab title="Google Sheets">
     | Action | Undo Strategy |
