@@ -249,7 +249,12 @@ in the backend:
     |---|---|
     | `notion.pages.create` | Move to trash |
     | `notion.pages.update` | Restore `beforeState` |
+    | `notion.pages.archive` | Restore page from trash (`notion.pages.restore`) |
+    | `notion.pages.restore` | Move page back to trash (`notion.pages.archive`) |
     | `notion.database_items.create` | Move to trash |
+    | `notion.database_items.update` | Restore `beforeState` |
+    | `notion.database_items.archive` | Restore database item from trash (`notion.database_items.restore`) |
+    | `notion.database_items.restore` | Move database item back to trash (`notion.database_items.archive`) |
     | `notion.blocks.append` | Delete appended blocks |
   </Tab>
   <Tab title="Gmail">

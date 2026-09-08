@@ -263,6 +263,35 @@ HubSpot's delete operations archive records with a manual recovery window in Hub
 | `hubspot.contactLists.addContact` | Add a contact to a list. Rollback removes the contact from the list. |
 | `hubspot.contactLists.removeContact` | Remove a contact from a list. Rollback adds the contact back to the list. |
 
+## Notion Connector Actions
+
+The `notion` connector supports 9 actions grouped by resource:
+
+<Note>
+`database_items.*` actions are intentional domain aliases of the equivalent `pages.*` actions, provided for clearer Agent intent when working within a database context.
+</Note>
+
+### Pages
+| Action | Description / Rollback Behavior |
+|---|---|
+| `notion.pages.create` | Create a Notion page. Rollback moves the created page to trash (soft delete). |
+| `notion.pages.update` | Update a Notion page's properties. Rollback restores properties from `beforeState`. |
+| `notion.pages.archive` | Archive (trash) a Notion page. Rollback untrashes the page (`notion.pages.restore`). |
+| `notion.pages.restore` | Restore a previously archived Notion page. Rollback trashes the page (`notion.pages.archive`). |
+
+### Database Items
+| Action | Description / Rollback Behavior |
+|---|---|
+| `notion.database_items.create` | Create a database item (page within a database). Rollback moves the created item to trash (soft delete). |
+| `notion.database_items.update` | Update a database item's properties. Domain alias of `notion.pages.update`; rollback restores properties from `beforeState`. |
+| `notion.database_items.archive` | Archive a database item (page within a database). Domain alias of `notion.pages.archive`; rollback untrashes the item (`notion.database_items.restore`). |
+| `notion.database_items.restore` | Restore a previously archived database item. Domain alias of `notion.pages.restore`; rollback trashes the item (`notion.database_items.archive`). |
+
+### Blocks
+| Action | Description / Rollback Behavior |
+|---|---|
+| `notion.blocks.append` | Append child blocks to a parent block or page. Rollback deletes the appended blocks. |
+
 ## Gmail Connector Actions
 
 The `gmail` connector supports 16 actions grouped by resource:
