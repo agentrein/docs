@@ -210,6 +210,59 @@ The `slack` connector supports 23 actions grouped by resource:
 | `slack.userGroups.enable` | Enable a user group. Rollback disables the user group. |
 | `slack.userGroups.disable` | Disable the user group. Rollback enables the user group. |
 
+## HubSpot Connector Actions
+
+The `hubspot` connector supports 13 actions grouped by resource:
+
+<Note>
+HubSpot's delete operations archive records with a manual recovery window in HubSpot's own UI, but this isn't reachable via automatic rollback.
+</Note>
+
+### Contacts
+| Action | Description / Rollback Behavior |
+|---|---|
+| `hubspot.contacts.create` | Create a contact. Rollback archives the created contact. |
+| `hubspot.contacts.update` | Update a contact. Rollback restores prior properties from `beforeState`. |
+| `hubspot.contacts.delete` | Delete a contact. **Non-reversible** — no automatic rollback (requires human approval). |
+
+### Companies
+| Action | Description / Rollback Behavior |
+|---|---|
+| `hubspot.companies.create` | Create a company. Rollback archives the created company. |
+| `hubspot.companies.update` | Update a company. Rollback restores prior properties from `beforeState`. |
+| `hubspot.companies.delete` | Delete a company. **Non-reversible** — no automatic rollback (requires human approval). |
+
+### Deals
+| Action | Description / Rollback Behavior |
+|---|---|
+| `hubspot.deals.create` | Create a deal. Rollback archives the created deal. |
+| `hubspot.deals.update` | Update a deal. Rollback restores prior properties from `beforeState`. |
+| `hubspot.deals.delete` | Delete a deal. **Non-reversible** — no automatic rollback (requires human approval). |
+
+### Tickets
+| Action | Description / Rollback Behavior |
+|---|---|
+| `hubspot.tickets.create` | Create a ticket. Rollback archives the created ticket. |
+| `hubspot.tickets.update` | Update a ticket. Rollback restores prior properties from `beforeState`. |
+| `hubspot.tickets.delete` | Delete a ticket. **Non-reversible** — no automatic rollback (requires human approval). |
+
+### Engagements
+| Action | Description / Rollback Behavior |
+|---|---|
+| `hubspot.engagements.create` | Create an engagement. Rollback archives the created engagement. |
+| `hubspot.engagements.delete` | Delete an engagement. **Non-reversible** — no automatic rollback (requires human approval). |
+
+### Associations
+| Action | Description / Rollback Behavior |
+|---|---|
+| `hubspot.associations.create` | Link two CRM objects. Rollback removes the association. |
+
+### Contact Lists
+| Action | Description / Rollback Behavior |
+|---|---|
+| `hubspot.contactLists.addContact` | Add a contact to a list. Rollback removes the contact from the list. |
+| `hubspot.contactLists.removeContact` | Remove a contact from a list. Rollback adds the contact back to the list. |
+
 ## Gmail Connector Actions
 
 The `gmail` connector supports 16 actions grouped by resource:

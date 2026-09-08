@@ -220,8 +220,21 @@ in the backend:
     |---|---|
     | `hubspot.contacts.create` | Delete the contact |
     | `hubspot.contacts.update` | Restore `beforeState` |
+    | `hubspot.contacts.delete` | No automatic rollback (requires human approval) |
+    | `hubspot.companies.create` | Archive the company |
+    | `hubspot.companies.update` | Restore `beforeState` |
+    | `hubspot.companies.delete` | No automatic rollback (requires human approval) |
     | `hubspot.deals.create` | Delete the deal |
     | `hubspot.deals.update` | Restore `beforeState` |
+    | `hubspot.deals.delete` | No automatic rollback (requires human approval) |
+    | `hubspot.tickets.create` | Archive the ticket |
+    | `hubspot.tickets.update` | Restore `beforeState` |
+    | `hubspot.tickets.delete` | No automatic rollback (requires human approval) |
+    | `hubspot.engagements.create` | Archive the engagement |
+    | `hubspot.engagements.delete` | No automatic rollback (requires human approval) |
+    | `hubspot.associations.create` | Remove the association |
+    | `hubspot.contactLists.addContact` | Remove the contact from the list |
+    | `hubspot.contactLists.removeContact` | Add the contact back to the list |
   </Tab>
   <Tab title="Salesforce">
     | Action | Undo Strategy |
