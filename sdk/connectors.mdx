@@ -263,6 +263,90 @@ HubSpot's delete operations archive records with a manual recovery window in Hub
 | `hubspot.contactLists.addContact` | Add a contact to a list. Rollback removes the contact from the list. |
 | `hubspot.contactLists.removeContact` | Remove a contact from a list. Rollback adds the contact back to the list. |
 
+## Salesforce Connector Actions
+
+The `salesforce` connector supports 28 actions grouped by resource:
+
+<Note>
+Salesforce delete operations are permanent (hard-delete) and cannot be rolled back automatically across all resource types. In addition, generic sub-resources like `salesforce.notes.create` and `salesforce.campaignMembers.create` use a single generic action covering multiple parent or target types via request payload parameters (such as `ParentId` or `ContactId`/`LeadId`), rather than per-parent action aliases.
+</Note>
+
+### Accounts
+| Action | Description / Rollback Behavior |
+|---|---|
+| `salesforce.accounts.create` | Create an Account. Rollback deletes the created record (permanent). |
+| `salesforce.accounts.update` | Update an Account's fields. Rollback restores prior field values from `beforeState`. |
+| `salesforce.accounts.delete` | Delete an Account. **Non-reversible** — permanent deletion (requires human approval). |
+
+### Contacts
+| Action | Description / Rollback Behavior |
+|---|---|
+| `salesforce.contacts.create` | Create a Contact. Rollback deletes the created record (permanent). |
+| `salesforce.contacts.update` | Update a Contact's fields. Rollback restores prior field values from `beforeState`. |
+| `salesforce.contacts.delete` | Delete a Contact. **Non-reversible** — permanent deletion (requires human approval). |
+
+### Leads
+| Action | Description / Rollback Behavior |
+|---|---|
+| `salesforce.leads.create` | Create a Lead. Rollback deletes the created record (permanent). |
+| `salesforce.leads.update` | Update a Lead's fields. Rollback restores prior field values from `beforeState`. |
+| `salesforce.leads.delete` | Delete a Lead. **Non-reversible** — permanent deletion (requires human approval). |
+
+### Opportunities
+| Action | Description / Rollback Behavior |
+|---|---|
+| `salesforce.opportunities.create` | Create an Opportunity. Rollback deletes the created record (permanent). |
+| `salesforce.opportunities.update` | Update an Opportunity's fields. Rollback restores prior field values from `beforeState`. |
+| `salesforce.opportunities.delete` | Delete an Opportunity. **Non-reversible** — permanent deletion (requires human approval). |
+
+### Cases
+| Action | Description / Rollback Behavior |
+|---|---|
+| `salesforce.cases.create` | Create a Case. Rollback deletes the created record (permanent). |
+| `salesforce.cases.update` | Update a Case's fields. Rollback restores prior field values from `beforeState`. |
+| `salesforce.cases.delete` | Delete a Case. **Non-reversible** — permanent deletion (requires human approval). |
+
+### Custom Objects
+| Action | Description / Rollback Behavior |
+|---|---|
+| `salesforce.customObjects.create` | Create a custom object record (API name specified by caller, e.g. `MyObject__c`). Rollback deletes the created record. |
+| `salesforce.customObjects.update` | Update a custom object record's fields. Rollback restores prior field values from `beforeState`. |
+| `salesforce.customObjects.delete` | Delete a custom object record. **Non-reversible** — permanent deletion (requires human approval). |
+
+### Attachments
+| Action | Description / Rollback Behavior |
+|---|---|
+| `salesforce.attachments.create` | Create a file attachment linked to a record. Rollback deletes the created attachment. |
+| `salesforce.attachments.update` | Update an attachment's fields. Rollback restores prior field values from `beforeState`. |
+| `salesforce.attachments.delete` | Delete an attachment. **Non-reversible** — permanent deletion (requires human approval). |
+
+### Tasks
+| Action | Description / Rollback Behavior |
+|---|---|
+| `salesforce.tasks.create` | Create a Task. Rollback deletes the created record. |
+| `salesforce.tasks.update` | Update a Task's fields. Rollback restores prior field values from `beforeState`. |
+| `salesforce.tasks.delete` | Delete a Task. **Non-reversible** — permanent deletion (requires human approval). |
+
+### Documents
+| Action | Description / Rollback Behavior |
+|---|---|
+| `salesforce.documents.create` | Create a Document in folder-based file storage (distinct from Attachments). Rollback deletes the created record. |
+
+### Notes
+| Action | Description / Rollback Behavior |
+|---|---|
+| `salesforce.notes.create` | Create a Note attached to any parent record (Account, Contact, Lead, or Opportunity, specified via `ParentId`). Rollback deletes the created note. |
+
+### Case Comments
+| Action | Description / Rollback Behavior |
+|---|---|
+| `salesforce.caseComments.create` | Add a comment to a Case. Rollback deletes the created comment. |
+
+### Campaign Members
+| Action | Description / Rollback Behavior |
+|---|---|
+| `salesforce.campaignMembers.create` | Add a Contact or Lead to a Campaign (specified via `ContactId` or `LeadId`). Rollback removes the created campaign membership. |
+
 ## Notion Connector Actions
 
 The `notion` connector supports 9 actions grouped by resource:

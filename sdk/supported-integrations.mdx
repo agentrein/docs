@@ -239,10 +239,34 @@ in the backend:
   <Tab title="Salesforce">
     | Action | Undo Strategy |
     |---|---|
+    | `salesforce.accounts.create` | Delete the record |
+    | `salesforce.accounts.update` | Restore `beforeState` |
+    | `salesforce.accounts.delete` | No automatic rollback (requires human approval) |
     | `salesforce.contacts.create` | Delete the record |
     | `salesforce.contacts.update` | Restore `beforeState` |
+    | `salesforce.contacts.delete` | No automatic rollback (requires human approval) |
+    | `salesforce.leads.create` | Delete the record |
+    | `salesforce.leads.update` | Restore `beforeState` |
+    | `salesforce.leads.delete` | No automatic rollback (requires human approval) |
     | `salesforce.opportunities.create` | Delete the record |
     | `salesforce.opportunities.update` | Restore `beforeState` |
+    | `salesforce.opportunities.delete` | No automatic rollback (requires human approval) |
+    | `salesforce.cases.create` | Delete the record |
+    | `salesforce.cases.update` | Restore `beforeState` |
+    | `salesforce.cases.delete` | No automatic rollback (requires human approval) |
+    | `salesforce.customObjects.create` | Delete the record |
+    | `salesforce.customObjects.update` | Restore `beforeState` |
+    | `salesforce.customObjects.delete` | No automatic rollback (requires human approval) |
+    | `salesforce.attachments.create` | Delete the attachment |
+    | `salesforce.attachments.update` | Restore `beforeState` |
+    | `salesforce.attachments.delete` | No automatic rollback (requires human approval) |
+    | `salesforce.tasks.create` | Delete the task |
+    | `salesforce.tasks.update` | Restore `beforeState` |
+    | `salesforce.tasks.delete` | No automatic rollback (requires human approval) |
+    | `salesforce.documents.create` | Delete the document |
+    | `salesforce.notes.create` | Delete the note |
+    | `salesforce.caseComments.create` | Delete the case comment |
+    | `salesforce.campaignMembers.create` | Delete the campaign membership |
   </Tab>
   <Tab title="Notion">
     | Action | Undo Strategy |
