@@ -210,6 +210,48 @@ The `slack` connector supports 23 actions grouped by resource:
 | `slack.userGroups.enable` | Enable a user group. Rollback disables the user group. |
 | `slack.userGroups.disable` | Disable the user group. Rollback enables the user group. |
 
+## Stripe Connector Actions
+
+The `stripe` connector supports 10 actions grouped by resource:
+
+<Note>
+Stripe actions involving direct financial movement (charges, refunds) or permanent account changes (customer/coupon deletion, payment method detachment) are treated conservatively in this connector — several are non-reversible by design, reflecting real constraints in Stripe's own API rather than a limitation of this integration.
+</Note>
+
+### Invoices
+| Action | Description / Rollback Behavior |
+|---|---|
+| `stripe.invoices.create` | Create a draft invoice. Rollback deletes the draft invoice (if already finalized, requires manual intervention via Void or Credit Note). |
+
+### Customers
+| Action | Description / Rollback Behavior |
+|---|---|
+| `stripe.customers.create` | Create a customer object. Rollback deletes the created customer. |
+| `stripe.customers.delete` | Permanently delete a customer and cancel their active subscriptions. **Non-reversible** — Stripe provides no restore endpoint. |
+
+### Charges & Refunds
+| Action | Description / Rollback Behavior |
+|---|---|
+| `stripe.charges.create` | Create a charge. **Non-reversible** — Stripe charges cannot be deleted, voided, or cancelled via the API. Reversing a charge's effect requires a separate, explicitly human-approved `stripe.refunds.create` action; this is never triggered automatically. |
+| `stripe.refunds.create` | Create a refund against a charge or payment intent. **Non-reversible** — refunds are irreversible on Stripe and require explicit human approval before execution. |
+
+### Coupons
+| Action | Description / Rollback Behavior |
+|---|---|
+| `stripe.coupons.create` | Create a coupon. Rollback deletes the created coupon (prevents future redemptions; does not affect customers who already redeemed it). |
+| `stripe.coupons.delete` | Permanently delete a coupon. **Non-reversible** — Stripe provides no restore endpoint for deleted coupons. |
+
+### Meter Events
+| Action | Description / Rollback Behavior |
+|---|---|
+| `stripe.meterEvents.create` | Record a usage-based billing event. Rollback attempts cancellation via a meter event adjustment, but this only succeeds within 24 hours of the original event; past that window, rollback will fail (this is expected Stripe platform behavior, not a bug). |
+
+### Payment Methods
+| Action | Description / Rollback Behavior |
+|---|---|
+| `stripe.paymentMethods.attach` | Attach a payment method to a customer. Rollback detaches the payment method. |
+| `stripe.paymentMethods.detach` | Detach a payment method from a customer. **Non-reversible** — per Stripe's API, a detached payment method can never be re-attached to any customer. |
+
 ## HubSpot Connector Actions
 
 The `hubspot` connector supports 13 actions grouped by resource:

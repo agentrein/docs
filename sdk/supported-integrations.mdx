@@ -211,9 +211,16 @@ in the backend:
   <Tab title="Stripe">
     | Action | Undo Strategy |
     |---|---|
-    | `stripe.invoices.create` | Delete the invoice |
+    | `stripe.invoices.create` | Delete the draft invoice |
     | `stripe.customers.create` | Delete the customer |
-    | `stripe.refunds.create` | No undo (logged only) |
+    | `stripe.customers.delete` | No automatic rollback (requires human approval) |
+    | `stripe.charges.create` | No automatic rollback (requires human approval) |
+    | `stripe.refunds.create` | No automatic rollback (requires human approval) |
+    | `stripe.coupons.create` | Delete the coupon (prevents future redemptions) |
+    | `stripe.coupons.delete` | No automatic rollback (requires human approval) |
+    | `stripe.meterEvents.create` | Cancel via meter event adjustment (within 24 hours of ingestion) |
+    | `stripe.paymentMethods.attach` | Detach the payment method |
+    | `stripe.paymentMethods.detach` | No automatic rollback (requires human approval) |
   </Tab>
   <Tab title="HubSpot">
     | Action | Undo Strategy |
