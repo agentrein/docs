@@ -26,6 +26,10 @@ The Python signature takes `agent_id` and `intent` directly as arguments — the
 | `agentId` (Python: `agent_id`) | `string` / `str` | No | Developer-defined identifier for the agent. Defaults to a random UUID. |
 | `intent` | `string` / `str` | No | Natural language description of what this session is trying to accomplish. Used by drift detection. |
 
+<Info>
+Agents appear in the dashboard's Agents tab automatically, grouped by `agentId`. Use a stable, descriptive `agentId` (for example `billing-agent`) so all of an agent's sessions are grouped together. If you omit `agentId`, a random ID is generated for every session and those sessions are grouped under a single "Unidentified sessions" entry. To add a display name and description to an agent, open it in the dashboard and choose "Claim / Add details". The agentId is case-sensitive: "Billing-Agent" and "billing-agent" are treated as two different agents.
+</Info>
+
 ## Returns
 
 <CodeGroup>
