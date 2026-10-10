@@ -21,8 +21,6 @@ body {
   --ar-accent-pressed: #2560C4;
   --ar-accent-text: #5B93F0;
   --ar-accent-tint: rgba(42, 106, 216, 0.16);
-  --ar-accent-tint-border: rgba(42, 106, 216, 0.32);
-  --ar-on-accent: #F7F6F9;
 
   --ar-success: #3FBF82;
   --ar-success-bg: rgba(63, 191, 130, 0.12);
@@ -41,47 +39,72 @@ body {
   --ar-failed-border: rgba(236, 93, 87, 0.28);
 }
 
-/* Main Background and Typography Overrides */
-.dark,
-[data-theme='dark'],
-html.dark {
+/* Background & Body Styling */
+html, body, .dark body {
   background-color: var(--ar-bg) !important;
   color: var(--ar-text) !important;
 }
 
-.dark body {
-  background-color: var(--ar-bg) !important;
-  color: var(--ar-text) !important;
-}
-
-/* Navigation & Sidebar Panel Styling */
-.dark #sidebar,
-.dark nav,
-.dark [class*="sidebar"],
-.dark [class*="navigation"] {
+/* Mintlify Sidebar Selectors */
+#sidebar-content,
+sidebar-group,
+.sidebar-group,
+aside {
   background-color: var(--ar-panel) !important;
   border-color: var(--ar-border) !important;
 }
 
-/* Card, Surface & Callout Containers */
-.dark [class*="card"],
-.dark [class*="Callout"],
-.dark [class*="container"],
-.dark [class*="surface"] {
-  background-color: var(--ar-surface) !important;
-  border-color: var(--ar-border) !important;
+/* Mintlify Active Sidebar Link Hook */
+#sidebar-content li[data-active] {
+  background-color: var(--ar-accent-tint) !important;
+  color: var(--ar-accent-text) !important;
+  border-radius: 6px;
 }
 
-/* Code Block and Monospace Containers */
-.dark pre,
-.dark code,
-.dark [class*="codeblock"],
-.dark [class*="code-block"] {
+/* Topbar Navigation Hook */
+nav-tabs,
+nav-tabs-item,
+navbar-link,
+nav-anchor {
+  color: var(--ar-text-2) !important;
+}
+
+.nav-tabs-item[data-active],
+nav-tabs-item[data-active] {
+  color: var(--ar-accent-text) !important;
+  border-bottom-color: var(--ar-accent) !important;
+}
+
+/* Mintlify Cards & Surfaces Hooks */
+mdx-content [data-component-name="card"],
+[data-component-part="card-content-container"],
+panel,
+#panel {
+  background-color: var(--ar-surface) !important;
+  border-color: var(--ar-border) !important;
+  color: var(--ar-text) !important;
+}
+
+[data-component-part="card-title"] {
+  color: var(--ar-text) !important;
+}
+
+[data-component-part="card-content"] {
+  color: var(--ar-text-2) !important;
+}
+
+/* Code Blocks & Monospace */
+pre, code, .codeblock {
   background-color: var(--ar-elevated) !important;
   border-color: var(--ar-border) !important;
 }
 
-/* Status Badges & Alert Styling to match Dashboard States */
+/* Mintlify Badge Data Attribute Hooks */
+[data-badge] {
+  border-radius: 4px;
+}
+
+[data-badge][data-color="green"],
 .status-badge-success,
 [data-status="SUCCESS"],
 [data-status="cleared"] {
@@ -90,6 +113,8 @@ html.dark {
   border: 1px solid var(--ar-success-border) !important;
 }
 
+[data-badge][data-color="amber"],
+[data-badge][data-color="yellow"],
 .status-badge-pending,
 [data-status="PENDING"],
 [data-status="unconfirmed"] {
@@ -98,6 +123,7 @@ html.dark {
   border: 1px solid var(--ar-pending-border) !important;
 }
 
+[data-badge][data-color="purple"],
 .status-badge-rolled-back,
 [data-status="ROLLED_BACK"] {
   color: var(--ar-rolled-back) !important;
@@ -105,14 +131,10 @@ html.dark {
   border: 1px solid var(--ar-rolled-back-border) !important;
 }
 
+[data-badge][data-color="red"],
 .status-badge-failed,
 [data-status="FAILED"] {
   color: var(--ar-failed) !important;
   background-color: var(--ar-failed-bg) !important;
   border: 1px solid var(--ar-failed-border) !important;
-}
-
-/* Interactive elements and accent highlights */
-.dark a:hover {
-  color: var(--ar-accent-hover) !important;
 }
