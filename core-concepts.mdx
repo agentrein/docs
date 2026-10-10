@@ -16,7 +16,7 @@ AgentRein provides zero-friction reliability for AI agents by acting as an invis
   </Card>
 
   <Card title="Human-in-the-Loop" icon="user-check">
-    Pauses execution on high-risk actions to wait for human reviewer sign-off via dashboard or webhook.
+    Pauses or reviews sensitive actions to wait for human reviewer sign-off via dashboard or API.
   </Card>
 </Columns>
 
@@ -64,26 +64,36 @@ Every agent execution run is encapsulated within a **Session**. A Session groups
 ```mermaid
 stateDiagram-v2
     [*] --> ACTIVE: newSession()
-    ACTIVE --> ROLLED_BACK: Reviewer Rejects / Approval Timeout (default 24h, configurable)
-    ACTIVE --> FAILED: Method throws exception
-    FAILED --> ROLLED_BACK: Auto-LIFO Rollback
     ACTIVE --> COMPLETED: completeSession()
+    ACTIVE --> ABANDONED: 24h Inactivity
+    ACTIVE --> FAILED: Action Failure / Auto-Rollback
+    ACTIVE --> ROLLED_BACK: LIFO Rollback
+    ABANDONED --> COMPLETED: completeSession()
+    ABANDONED --> ROLLED_BACK: Operator Rollback
+    COMPLETED --> ROLLED_BACK: Operator Rollback
+    FAILED --> ROLLED_BACK: Operator Rollback
     COMPLETED --> [*]
     ROLLED_BACK --> [*]
 ```
 
 <Note>
-  **Action vs. Session Status**: Individual actions carry an `ActionStatus` of `PENDING_APPROVAL` while waiting for human review, during which the parent Session remains `ACTIVE`. If an approval is rejected or times out, the Session transitions to `ROLLED_BACK` via LIFO compensation.
+  **Action vs. Session Status**: Individual actions carry an `ActionStatus` such as `PENDING_APPROVAL` or `CLEARED` while waiting for human review or execution confirmation, during which the parent Session remains `ACTIVE`. If an approval is rejected or times out, the Session transitions to `FAILED` or `ROLLED_BACK` via LIFO compensation.
 </Note>
 
-### Session States
+### Stored vs Derived Session States
 
-| State | Description |
+The database stores raw session status (`ACTIVE`, `COMPLETED`, `FAILED`, `ROLLED_BACK`, `ABANDONED`). When querying sessions via API, the backend computes a dynamic `displayStatus`:
+
+| Display Status | Plain-Language Meaning |
 | :--- | :--- |
-| `ACTIVE` | Session is live and accepting action calls. |
-| `COMPLETED` | Session finished cleanly after calling `completeSession(session)`. |
-| `FAILED` | An action threw an exception or failed logging. |
-| `ROLLED_BACK` | AgentRein successfully executed LIFO compensation for all logged actions. |
+| `ACTIVE` | Session is live and executing actions. |
+| `COMPLETED` | Session completed cleanly via `completeSession()`. |
+| `ABANDONED` | Session experienced 24 hours of inactivity without completion. |
+| `AWAITING_APPROVAL` | Session has actions currently pending reviewer approval. |
+| `ROLLING_BACK` | Session is actively undergoing undo compensation (`IN_PROGRESS`). |
+| `REVERTED` | All executed actions have been completely rolled back (`ROLLED_BACK`). |
+| `PARTIALLY_REVERTED` | Some actions were rolled back while others remain successful. |
+| `ROLLBACK_FAILED` | An action failed during the rollback process. |
 
 <CodeGroup>
 ```typescript TypeScript
@@ -128,9 +138,9 @@ AgentRein solves this by recording every state-modifying action in the backend *
 1. **Side-Effect Tracking**: Each successful action captures inverse metadata (or an `undoConfig` strategy such as `http-delete` or connector-specific inverse calls).
 2. **Reverse Execution Order**: If any step fails or an approval is rejected, AgentRein executes inverse compensation actions in strict **Last-In-First-Out (LIFO)** order (e.g., Step 3 $\rightarrow$ Step 2 $\rightarrow$ Step 1).
 3. **Automatic Triggering**: Rollback triggers automatically when:
-   - An unhandled exception occurs in wrapped SDK calls.
-   - An approval request is explicitly rejected by a human reviewer.
-   - A policy returns a `BLOCK` or expired approval decision.
+   - An unhandled exception occurs in wrapped SDK calls or action logging fails.
+   - An approval request is rejected by a reviewer.
+   - A policy block or gate unavailable condition occurs.
    - You call `agentrein.rollbackSession(session)`.
 
 <Note>
@@ -141,11 +151,12 @@ AgentRein solves this by recording every state-modifying action in the backend *
 
 ## 4. Human-in-the-Loop (HITL) & Approval Gates
 
-For sensitive operations—such as canceling subscriptions, deleting databases, or deploying code—you can require explicit human approval before execution continues.
+For sensitive operations—such as canceling subscriptions, deleting databases, or deploying code—you can require explicit human approval.
 
-### SDK-Level Approval Gates
+### Pre-Execution vs Post-Execution Approvals
 
-Pass `requiresApproval` (Python: `requires_approval`) with target method paths to `wrap()`:
+- **Pre-Execution (`EXECUTE_PRE`)**: Explicitly requested in the SDK via `wrap({ requiresApproval: ['subscriptions.cancel'] })`. The SDK pauses local execution, logs the action as `PENDING_APPROVAL`, and polls `GET /approvals/:id`. When approved, action becomes `CLEARED`, the SDK executes the call locally, and confirms success via `PATCH`.
+- **Post-Execution (`EXECUTE_POST`)**: Created when a standard logged action matches an organization policy with `REQUIRE_APPROVAL`. The action executed locally, but the backend flags it for post-execution reviewer review. If rejected by a reviewer, single-action rollback is triggered.
 
 <CodeGroup>
 ```typescript TypeScript
@@ -195,58 +206,23 @@ except ApprovalTimeoutError as err:
 ```
 </CodeGroup>
 
-### Approval Execution Flow
-
-<Steps>
-  <Step title="Method Interception">
-    `wrap()` checks if the target call path matches `requiresApproval`.
-  </Step>
-  <Step title="Pending Registration">
-    SDK logs the action as `PENDING_APPROVAL` to the backend and generates an approval request.
-  </Step>
-  <Step title="Review Notification">
-    The backend alerts human reviewers via Dashboard, Slack, or Webhook.
-  </Step>
-  <Step title="Client Polling">
-    The SDK polls `GET /approvals/:id` at `pollIntervalMs` until resolved.
-  </Step>
-  <Step title="Outcome Execution">
-    - **Approved**: Target method executes, action updates to `SUCCESS`.
-    - **Rejected / Timed Out**: Throws `ApprovalRejectedError`/`ApprovalTimeoutError` and triggers automatic LIFO rollback.
-  </Step>
-</Steps>
-
 ---
 
 ## 5. Organization Policy Engine
 
-Centralize governance rules across all agent teams using AgentRein's **Policy Engine**. Managed via the Dashboard REST API, policies enforce runtime behavior without requiring code changes to agents.
+Centralize governance rules across all agent teams using AgentRein's **Policy Engine**. Managed via the Dashboard REST API, policies enforce runtime rules across logged actions.
 
-### Policy Rules & Pattern Matching
-
-Policies target actions using `apiNamePattern` (e.g., `stripe.refunds.*`) and optional payload field conditions:
+### Policy Actions
 
 | Action Type | Behavior |
 | :--- | :--- |
-| `ALLOW` | Permits the action to run immediately. |
-| `REQUIRE_APPROVAL` | Pauses action execution and requests reviewer sign-off. |
-| `BLOCK` | Immediately rejects the action with a `403` error before execution. |
+| `ALLOW` | Permits the action to proceed normally. |
+| `REQUIRE_APPROVAL` | For standard logged actions, records an after-execution approval request (`EXECUTE_POST`). If rejected, triggers single-action rollback. |
+| `BLOCK` | For standard logged calls, records the action as `FAILED` with `POLICY_BLOCK` upon logging and returns HTTP `403`. |
 
-### Payload Conditions & Operators
-
-Policies can evaluate specific payload fields using conditions (`eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `contains`).
-
-```json
-{
-  "apiNamePattern": "stripe.refunds.create",
-  "condition": {
-    "field": "amount",
-    "operator": "gt",
-    "value": 10000
-  },
-  "action": "REQUIRE_APPROVAL"
-}
-```
+<Warning>
+  **Server Enforcement Scope**: Server-side policy results are recorded and enforced as far as the SDK cooperates. An agent that bypasses the AgentRein SDK and invokes external APIs directly is not blocked by the server. AgentRein does not expose a pre-execution authorize endpoint.
+</Warning>
 
 ### Policy Conflict Resolution
 
@@ -264,13 +240,8 @@ AgentRein continuously evaluates whether agent actions align with their declared
 When a session specifies an `intent`, AgentRein's LLM engine evaluates actual execution results against that intent:
 
 - **`VERIFIED`**: The action outcome directly aligns with the stated intent.
-- **`DRIFT_DETECTED`**: Outcome shows significant divergence from the intent (drift score $\ge 0.85$).
-- **`UNVERIFIED`**: Verification system or infrastructure issue prevented evaluation (logged as a non-blocking warning).
-
-### Drift Escalation
-
-- **Standard Connectors**: Intent drift is logged in the audit trail and accessible via `GET /sessions/:id/intent`.
-- **High-Risk Connectors & Policies**: Intent drift automatically creates a `PENDING_APPROVAL` request, pausing execution until a human reviewer inspects the drift.
+- **`DRIFT_DETECTED`**: Outcome shows significant divergence from the intent.
+- **`UNVERIFIED`**: Verification infrastructure issue prevented evaluation.
 
 ---
 

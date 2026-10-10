@@ -5,46 +5,42 @@ description: Configure organization-level rules to allow, gate, or block actions
 
 ## Overview
 
-Policies give your organization fine-grained control over which actions run,
-which require review, and which are blocked outright. They complement the
-built-in high-risk connector defaults and are managed through the authenticated
-dashboard REST API, not through an SDK method.
+Policies give your organization fine-grained control over which actions run, which require review, and which are blocked outright. They complement built-in high-risk connector checks and are managed through the authenticated dashboard REST API (`TEAM` plan required).
 
 ## API
 
-All endpoints require dashboard authentication. Successful responses use this
-envelope:
+All endpoints require operator dashboard authentication (`jwtAuth` with `TEAM` plan). Successful responses use this envelope:
 
-```ts theme={null}
+```json
 {
-  data: /* endpoint result */,
-  error: null,
-  timestamp: "2026-08-09T12:00:00.000Z"
+  "data": { ... },
+  "error": null,
+  "timestamp": "2026-08-09T12:00:00.000Z"
 }
 ```
 
 A policy returned by the API has this shape:
 
-```ts theme={null}
+```json
 {
-  id: "clx...",
-  organizationId: "org_...",
-  apiNamePattern: "stripe.refunds.*",
-  condition: {
-    field: "amount",
-    operator: "gt",
-    value: 10000
+  "id": "clx...",
+  "organizationId": "org_...",
+  "apiNamePattern": "stripe.refunds.*",
+  "condition": {
+    "field": "amount",
+    "operator": "gt",
+    "value": 10000
   },
-  action: "REQUIRE_APPROVAL",
-  enabled: true,
-  createdAt: "2026-08-09T12:00:00.000Z",
-  updatedAt: "2026-08-09T12:00:00.000Z"
+  "action": "REQUIRE_APPROVAL",
+  "enabled": true,
+  "createdAt": "2026-08-09T12:00:00.000Z",
+  "updatedAt": "2026-08-09T12:00:00.000Z"
 }
 ```
 
 ### List policies
 
-```ts theme={null}
+```http
 GET /policies
 
 // 200
@@ -53,7 +49,7 @@ GET /policies
 
 ### Create a policy
 
-```ts theme={null}
+```http
 POST /policies
 Content-Type: application/json
 
@@ -72,16 +68,16 @@ Content-Type: application/json
 { data: Policy, error: null, timestamp: string }
 ```
 
-`apiNamePattern` and `action` are required. `condition` is optional, and
-`enabled` defaults to `true`.
+`apiNamePattern` and `action` are required. `condition` is optional, and `enabled` defaults to `true`.
 
 ### Update a policy
 
-```ts theme={null}
-PATCH /policies/:id
+```http
+PUT /policies/:id
 Content-Type: application/json
 
 {
+  "apiNamePattern": "stripe.refunds.*",
   "action": "BLOCK",
   "enabled": true
 }
@@ -90,12 +86,18 @@ Content-Type: application/json
 { data: Policy, error: null, timestamp: string }
 ```
 
-Send any subset of `apiNamePattern`, `condition`, `action`, and `enabled`.
-Set `condition` to `null` to remove it.
+### Toggle policy enabled status
+
+```http
+PATCH /policies/:id/toggle
+
+// 200
+{ data: Policy, error: null, timestamp: string }
+```
 
 ### Delete a policy
 
-```ts theme={null}
+```http
 DELETE /policies/:id
 
 // 200
@@ -115,23 +117,9 @@ DELETE /policies/:id
 ## Payload conditions
 
 Add an optional `condition` to apply a policy only when a payload field matches.
-Use dot-separated field paths, such as `customer.tier`.
+Supported operators: `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `contains`.
 
-| Operator | Meaning |
-| --- | --- |
-| `eq` | Equal to |
-| `neq` | Not equal to |
-| `gt` | Greater than |
-| `gte` | Greater than or equal to |
-| `lt` | Less than |
-| `lte` | Less than or equal to |
-| `contains` | Contains the supplied value |
-
-For example, block only large Stripe refunds:
-
-```ts theme={null}
-POST /policies
-
+```json
 {
   "apiNamePattern": "stripe.refunds.create",
   "condition": {
@@ -143,23 +131,17 @@ POST /policies
 }
 ```
 
-A policy without a condition matches on `apiNamePattern` alone. Malformed
-conditions fail safe and do not match.
-
 ## Evaluation and approval behavior
 
 When more than one enabled policy matches, the most restrictive result wins:
-`BLOCK` takes precedence over `REQUIRE_APPROVAL`, which takes precedence over
-`ALLOW`. If no policy matches, AgentRein falls back to its built-in
-high-risk-connector check.
+$$\text{BLOCK} > \text{REQUIRE\_APPROVAL} > \text{ALLOW}$$
 
-`BLOCK` rejects the action with HTTP `403` before it executes. `ALLOW` executes
-normally. `REQUIRE_APPROVAL` pauses the action and creates an approval request;
-configured notification channels are notified. If no reviewer responds within
-24 hours, AgentRein rejects the approval, marks the action failed, and rolls
-back the session.
+### Enforcement Mechanism
 
-<Tip>
-  For approval-gate behavior and rollback guarantees, see [Approval Gates](/core-concepts)
-  and [Human-in-the-Loop](/sdk/hitl).
-</Tip>
+- **`BLOCK`**: When logged to `POST /sessions/:id/actions`, transitions the action from `SUCCESS` to `FAILED` with reason `POLICY_BLOCK` and returns HTTP `403` with error type `policy-blocked`.
+- **`REQUIRE_APPROVAL`**: When logged to `POST /sessions/:id/actions`, transitions the action to `PENDING_APPROVAL` with `purpose: EXECUTE_POST`. If a reviewer approves, action becomes `SUCCESS`. If rejected, single-action rollback is executed.
+- **`ALLOW`**: Permits the action to proceed normally.
+
+<Warning>
+  **Server Enforcement Boundary**: Server-side policy results are recorded and enforced as far as the SDK cooperates. An agent that bypasses the AgentRein SDK and invokes external APIs directly is not blocked by the server. AgentRein does not expose a pre-execution authorize endpoint.
+</Warning>
