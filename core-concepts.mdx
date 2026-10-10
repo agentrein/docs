@@ -155,8 +155,8 @@ For sensitive operations—such as canceling subscriptions, deleting databases, 
 
 ### Pre-Execution vs Post-Execution Approvals
 
-- **Pre-Execution (`EXECUTE_PRE`)**: Explicitly requested in the SDK via `wrap({ requiresApproval: ['subscriptions.cancel'] })`. The SDK pauses local execution, logs the action as `PENDING_APPROVAL`, and polls `GET /approvals/:id`. When approved, action becomes `CLEARED`, the SDK executes the call locally, and confirms success via `PATCH`.
-- **Post-Execution (`EXECUTE_POST`)**: Created when a standard logged action matches an organization policy with `REQUIRE_APPROVAL`. The action executed locally, but the backend flags it for post-execution reviewer review. If rejected by a reviewer, single-action rollback is triggered.
+- **Before-Execution Approval**: Explicitly requested in the SDK via `wrap({ requiresApproval: ['subscriptions.cancel'] })`. The SDK pauses local execution, logs the action as `PENDING_APPROVAL`, and polls `GET /approvals/:id`. When approved, action becomes `CLEARED`, the SDK executes the call locally, and confirms success via `PATCH`.
+- **After-Execution Approval**: Created when a standard logged action matches an organization policy with `REQUIRE_APPROVAL`. The action executed locally, but the backend flags it for after-execution reviewer review. If rejected by a reviewer, single-action rollback is triggered.
 
 <CodeGroup>
 ```typescript TypeScript
@@ -217,8 +217,8 @@ Centralize governance rules across all agent teams using AgentRein's **Policy En
 | Action Type | Behavior |
 | :--- | :--- |
 | `ALLOW` | Permits the action to proceed normally. |
-| `REQUIRE_APPROVAL` | For standard logged actions, records an after-execution approval request (`EXECUTE_POST`). If rejected, triggers single-action rollback. |
-| `BLOCK` | For standard logged calls, records the action as `FAILED` with `POLICY_BLOCK` upon logging and returns HTTP `403`. |
+| `REQUIRE_APPROVAL` | For standard logged actions, records an after-execution approval request. If rejected, triggers single-action rollback. |
+| `BLOCK` | For standard logged calls, records the action as `FAILED` upon logging and returns HTTP `403` with error type `policy-blocked`. |
 
 <Warning>
   **Server Enforcement Scope**: Server-side policy results are recorded and enforced as far as the SDK cooperates. An agent that bypasses the AgentRein SDK and invokes external APIs directly is not blocked by the server. AgentRein does not expose a pre-execution authorize endpoint.

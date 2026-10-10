@@ -138,8 +138,8 @@ $$\text{BLOCK} > \text{REQUIRE\_APPROVAL} > \text{ALLOW}$$
 
 ### Enforcement Mechanism
 
-- **`BLOCK`**: When logged to `POST /sessions/:id/actions`, transitions the action from `SUCCESS` to `FAILED` with reason `POLICY_BLOCK` and returns HTTP `403` with error type `policy-blocked`.
-- **`REQUIRE_APPROVAL`**: When logged to `POST /sessions/:id/actions`, transitions the action to `PENDING_APPROVAL` with `purpose: EXECUTE_POST`. If a reviewer approves, action becomes `SUCCESS`. If rejected, single-action rollback is executed.
+- **`BLOCK`**: When logged to `POST /sessions/:id/actions`, records the action as `FAILED` upon logging and returns HTTP `403` with error type `policy-blocked`.
+- **`REQUIRE_APPROVAL`**: When logged to `POST /sessions/:id/actions`, transitions the action to `PENDING_APPROVAL` with an after-execution approval request. If a reviewer approves, action becomes `SUCCESS`. If rejected, single-action rollback is executed.
 - **`ALLOW`**: Permits the action to proceed normally.
 
 <Warning>
