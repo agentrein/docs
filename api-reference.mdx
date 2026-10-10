@@ -1,63 +1,252 @@
 ---
 title: "API Reference"
-description: "SDK methods and REST API reference"
+description: "Comprehensive REST API & SDK method reference."
 mode: "wide"
 ---
 
-AgentRein provides two types of API reference:
+AgentRein provides a REST API for session management, governance, and dashboard integration, alongside SDK primitives for agent applications.
 
-- **SDK methods** for using AgentRein from your application.
-- **REST API** for managing AgentRein resources over HTTP. See the [REST API specification](https://agentrein.com/docs/api-reference/openapi.json).
+---
 
-## Shared REST response convention
+## Shared REST Conventions
 
-Successful REST API responses use the following envelope. Errors use RFC-7807 problem-details.
+### Response Envelope
 
-<ResponseField name="response" type="object">
+All successful REST API responses return HTTP 200/201 wrapped in a standard JSON envelope:
 
-  <ResponseField name="data" type="object">
-
-  The endpoint result.
-
-  </ResponseField>
-
-  <ResponseField name="error" type="null">
-
-  `null` for a successful response.
-
-  </ResponseField>
-
-  <ResponseField name="timestamp" type="string">
-
-  The time the response was generated.
-
-  </ResponseField>
-
-</ResponseField>
-
-## `wrap<T>`
-
-Wrap a standard SDK client to enable automatic logging, interception, and rollbacks.
-
-**Signature:**  
-```ts
-wrap<T extends object>(client: T, session: Session, options: WrapOptions): T
+```json
+{
+  "data": { ... },
+  "error": null,
+  "timestamp": "2026-10-10T12:00:00.000Z"
+}
 ```
 
-- `client`: The standard SDK instance (e.g., `octokit`).
-- `session`: The active agent session object.
-- `options`: A `WrapOptions` object including the `connector` identifier.
+### Error Responses (RFC 7807)
 
-**Returns:**  
-A recursive Proxy of the original client (`T`), ensuring 100% type preservation.
+API errors return standard HTTP status codes (400, 403, 404, 409, 429, 500, 503) using the RFC 7807 Problem Details envelope:
 
-Where `WrapOptions` is:
-```ts
+```json
 {
-    connector: string;
-    requiresApproval?: string[];
-    retryable?: string[];
-    pollIntervalMs?: number;
-    timeoutMs?: number;
+  "data": null,
+  "error": {
+    "type": "https://agentrein.com/errors/operator-required",
+    "title": "Operator Credentials Required",
+    "status": 403,
+    "detail": "This endpoint requires a dashboard login token; API-key tokens cannot call it."
+  },
+  "timestamp": "2026-10-10T12:00:00.000Z"
+}
+```
+
+---
+
+## Authentication & Tokens
+
+AgentRein endpoints distinguish between **Agent API Keys** (`ar_live_...` / `ar_test_...`) and **Dashboard Operator Tokens**.
+
+### `POST /auth/token`
+
+Exchange an API key for a Bearer JWT token.
+
+- **Auth**: None required
+- **Body**: `{ "apiKey": "ar_live_..." }`
+- **Response**: `{ "data": { "token": "eyJhbG..." } }`
+
+---
+
+## Session Management Endpoints
+
+### `POST /sessions`
+
+Create a new safety session.
+
+- **Auth**: API Key or Operator Token
+- **Body**:
+  ```json
+  {
+    "agentId": "billing-agent",
+    "intent": "Process monthly subscription renewals"
+  }
+  ```
+- **Response**: Returns created `Session` object (`201 Created`).
+
+### `GET /sessions`
+
+List sessions for the organization.
+
+- **Auth**: Operator Token
+- **Response**: Array of session objects enriched with:
+  - `displayStatus`: Dynamic status (`ACTIVE`, `COMPLETED`, `ABANDONED`, `AWAITING_APPROVAL`, `ROLLING_BACK`, `REVERTED`, `PARTIALLY_REVERTED`, `ROLLBACK_FAILED`)
+  - `counters`: Status summary count breakdown (`success`, `failed`, `pendingApproval`, `cleared`, `rolledBack`, `rollbackFailed`)
+  - `simulated`: Boolean indicating if session ran in sandbox mode
+  - `allowedCommands`: `{ "rollbackSession": boolean }`
+
+### `GET /sessions/:id`
+
+Retrieve details for a single session, including all logged actions and snapshots.
+
+- **Auth**: API Key or Operator Token
+- **Response**: Single session object with `actions` array and computed `displayStatus`, `counters`, `simulated`, and `allowedCommands`.
+
+### `PATCH /sessions/:id`
+
+Mark a session as `COMPLETED`.
+
+- **Auth**: API Key or Operator Token
+- **Body**: `{ "status": "COMPLETED" }`
+- **Errors**:
+  - `400 Bad Request`: If `status` is not `'COMPLETED'` or session is not active/abandoned.
+  - `409 Conflict`: If status transition conflict occurs.
+
+### `POST /sessions/:id/rollback`
+
+Trigger LIFO rollback compensation for all logged actions in a session.
+
+- **Auth**: API Key or Operator Token
+- **Errors**:
+  - `409 Conflict`: If session cannot be rolled back (e.g. already `REVERTED` or no `SUCCESS` actions).
+
+---
+
+## Action Interception Endpoints
+
+### `POST /sessions/:id/actions/precapture`
+
+Capture pre-mutation resource state before executing a tool call.
+
+- **Auth**: API Key or Operator Token (Rate Limit: 120/min)
+- **Body**: `{ "apiName": "github.issues.update", "payload": { ... } }`
+- **Response**: `{ "data": { "precaptureId": "snap_123", "captureFailed": false } }`
+
+### `POST /sessions/:id/actions`
+
+Log an action during or after execution.
+
+- **Auth**: API Key or Operator Token
+- **Body**:
+  ```json
+  {
+    "apiName": "stripe.customers.create",
+    "operationType": "CREATE",
+    "payload": { "email": "user@example.com" },
+    "response": { "id": "cus_123" },
+    "status": "SUCCESS",
+    "precaptureId": "snap_123"
+  }
+  ```
+- **Errors**:
+  - `403 Blocked by Policy`: If a policy with `BLOCK` matches (`policy-blocked`).
+  - `403 Upgrade Required`: If approval gate triggered on `FREE` plan (`plan-required`).
+  - `429 Quota Exceeded`: Monthly action limit reached (`quota-exceeded`).
+
+### `PATCH /sessions/:id/actions/:actionId`
+
+Update status or response payload of an existing action (used to confirm execution of `CLEARED` or `PENDING_APPROVAL` actions).
+
+- **Auth**: API Key or Operator Token
+- **Body**: `{ "status": "SUCCESS", "response": { ... } }`
+- **Errors**:
+  - `409 Conflict`: If invalid status transition is requested (e.g. patching `SUCCESS` to `PENDING_APPROVAL`).
+
+### `POST /sessions/:id/actions/:actionId/rollback`
+
+Roll back a single action within a session.
+
+- **Auth**: Operator Token
+
+---
+
+## Approval Endpoints (HITL)
+
+### `GET /approvals`
+
+List approval requests (default filter: `PENDING`; optional `?status=PENDING|APPROVED|REJECTED|ALL`).
+
+- **Auth**: Operator Token (`PRO` plan required)
+- **Response**: Array of approval objects including `actionStatus`, `unconfirmed`, `payloadSummary`, and `timeRemaining`.
+
+### `GET /approvals/:id`
+
+Get single approval details including full action payload and snapshot.
+
+- **Auth**: API Key or Operator Token
+
+### `POST /approvals/:id/approve`
+
+Approve a pending approval request.
+
+- **Auth**: Operator Token (`PRO` plan required)
+
+### `POST /approvals/:id/reject`
+
+Reject a pending approval request.
+
+- **Auth**: Operator Token (`PRO` plan required)
+- **Body**: `{ "reason": "Unusual refund amount" }`
+
+---
+
+## Policy Management Endpoints
+
+### `GET /policies`
+
+List organization policies.
+
+- **Auth**: Operator Token (`TEAM` plan required)
+
+### `POST /policies`
+
+Create governance policy.
+
+- **Auth**: Operator Token (`TEAM` plan required)
+- **Body**:
+  ```json
+  {
+    "apiNamePattern": "stripe.refunds.*",
+    "condition": { "field": "amount", "operator": "gt", "value": 10000 },
+    "action": "REQUIRE_APPROVAL",
+    "enabled": true
+  }
+  ```
+
+### `PUT /policies/:id`
+
+Update existing policy.
+
+- **Auth**: Operator Token (`TEAM` plan required)
+
+### `PATCH /policies/:id/toggle`
+
+Toggle policy enabled state.
+
+- **Auth**: Operator Token (`TEAM` plan required)
+
+### `DELETE /policies/:id`
+
+Delete policy.
+
+- **Auth**: Operator Token (`TEAM` plan required)
+
+---
+
+## SDK Execution Primitives
+
+### `wrap<T>`
+
+Wraps any standard SDK client instance to enable automatic side-effect logging, policy enforcement, and LIFO rollback.
+
+```ts
+declare function wrap<T extends object>(client: T, session: Session, options: WrapOptions): T;
+```
+
+`WrapOptions` specification:
+```ts
+interface WrapOptions {
+  connector: string;            // Required connector identifier (e.g. 'github', 'slack', 'stripe')
+  requiresApproval?: string[];   // Method paths requiring pre-execution approval
+  retryable?: string[];          // Method paths eligible for exponential backoff retry
+  pollIntervalMs?: number;       // Polling interval for approval checks (min 1000ms, default 2000ms)
+  timeoutMs?: number;            // Timeout for approval checks (min 5000ms, default 86400000ms)
 }
 ```
