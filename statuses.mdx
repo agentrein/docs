@@ -1,0 +1,93 @@
+---
+title: "Statuses & State Machine"
+description: "Reference for stored vs derived statuses across actions, sessions, and approval requests."
+mode: "default"
+---
+
+AgentRein manages safety state across three core entities: **Actions**, **Sessions**, and **Approval Requests**. This document provides a plain-language reference for all stored and derived statuses.
+
+---
+
+## 1. Action Statuses
+
+Actions represent individual API calls intercepted or logged during an agent session.
+
+### Stored Action Statuses
+
+The database stores one of six status values on each action:
+
+| Status | Plain-Language Meaning |
+| :--- | :--- |
+| `SUCCESS` | The action executed successfully and its side-effects were recorded. |
+| `PENDING_APPROVAL` | The action is paused or logged awaiting reviewer sign-off. |
+| `CLEARED` | An `EXECUTE_PRE` approval was granted by a reviewer. The SDK is authorized to execute the action locally and confirm result via `PATCH`. |
+| `FAILED` | The action threw an exception, failed policy evaluation, or was rejected by a reviewer. |
+| `ROLLED_BACK` | Compensation (undo) executed successfully for this action. |
+| `ROLLBACK_FAILED` | Automatic compensation failed during execution. |
+
+### The `CLEARED` Status Flow
+
+When an action is explicitly configured with `requiresApproval` in `wrap()`:
+1. The SDK logs the action as `PENDING_APPROVAL` (`purpose: EXECUTE_PRE`).
+2. A reviewer approves the request via dashboard or API.
+3. The backend transitions the action to `CLEARED`.
+4. The SDK receives `APPROVED` from polling, executes the local SDK call, and sends `PATCH /sessions/:id/actions/:actionId` with `status: SUCCESS` (transitioning action to `SUCCESS`).
+5. If local execution fails, the SDK sends `PATCH` with `status: FAILED` (transitioning action from `CLEARED` to `FAILED` without auto-rollback or failure notification, since no provider side-effect was confirmed).
+
+---
+
+## 2. Session Statuses
+
+Sessions group actions and track overall agent execution.
+
+### Stored Session Statuses
+
+The database persists one of five raw session statuses:
+
+| Stored Status | Meaning |
+| :--- | :--- |
+| `ACTIVE` | The session is live and accepting new actions. |
+| `COMPLETED` | The session finished cleanly (`PATCH /sessions/:id` with `status: COMPLETED`). |
+| `FAILED` | An action failed or auto-rollback occurred. |
+| `ROLLED_BACK` | All session actions were compensated. |
+| `ABANDONED` | The session experienced 24 hours of inactivity without being completed. |
+
+### Derived Display Statuses
+
+When querying sessions (`GET /sessions` or `GET /sessions/:id`), the backend dynamically computes a `displayStatus` based on action states:
+
+| Display Status | Derivation Rule |
+| :--- | :--- |
+| `ROLLBACK_FAILED` | At least one action has status `ROLLBACK_FAILED`. |
+| `ROLLING_BACK` | At least one action has undo status `IN_PROGRESS`. |
+| `AWAITING_APPROVAL` | At least one action has status `PENDING_APPROVAL`. |
+| `REVERTED` | All executed actions have status `ROLLED_BACK` (and 0 `CLEARED`). |
+| `PARTIALLY_REVERTED` | At least one action is `ROLLED_BACK`, and at least one action is `SUCCESS` or `CLEARED`. |
+| `ABANDONED` | Stored status is `ABANDONED`. |
+| `COMPLETED` | Stored status is not `ACTIVE`. |
+| `ACTIVE` | Stored status is `ACTIVE`. |
+
+---
+
+## 3. Approval Request Statuses & Purposes
+
+Approval requests track human-in-the-loop review operations.
+
+### Approval Statuses
+
+| Status | Meaning |
+| :--- | :--- |
+| `PENDING` | Awaiting reviewer action. |
+| `APPROVED` | Granted by reviewer. |
+| `REJECTED` | Declined by reviewer or timed out. |
+
+### Approval Purposes
+
+- **`EXECUTE_PRE`**: Pre-execution gate created when an action is declared in `requiresApproval`. Approval transitions action to `CLEARED`. Rejection transitions action to `FAILED` and triggers session rollback.
+- **`EXECUTE_POST`**: Post-execution gate created after-the-fact when a standard logged action matches a policy with `REQUIRE_APPROVAL`. Approval updates action to `SUCCESS`. Rejection triggers single-action rollback.
+- **`ROLLBACK`**: Gate for manual or policy-triggered rollback operations.
+
+### Unconfirmed Approvals
+
+In `GET /approvals`, each approval returns an `unconfirmed` boolean flag:
+- `unconfirmed: true` if the action is currently `CLEARED` and was approved over 1 hour ago (`STALE_UNCONFIRMED_THRESHOLD_MS`) without the SDK confirming execution.

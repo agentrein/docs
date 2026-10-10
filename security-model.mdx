@@ -1,0 +1,62 @@
+---
+title: "Security Model & Authentication"
+description: "Authentication scopes, API key permissions, server guarantees, and failure modes."
+mode: "default"
+---
+
+AgentRein enforces a strict security boundary between automated agent clients and human operators.
+
+---
+
+## 1. Authentication Scopes
+
+AgentRein separates authentication into two distinct categories:
+
+### Agent API Keys (`ar_live_...` / `ar_test_...`)
+
+Agent API keys authenticate SDK client instances. Upon initialization, the SDK exchanges the API key for a short-lived Bearer token via `POST /auth/token`.
+
+API keys are restricted to an allow-list of SDK operational endpoints:
+- `POST /sessions` — Create session
+- `GET /sessions/:id` — Read session state
+- `PATCH /sessions/:id` — Complete session
+- `POST /sessions/:id/rollback` — Trigger session rollback
+- `POST /sessions/:id/actions/precapture` — Capture pre-mutation state
+- `POST /sessions/:id/actions` — Log action
+- `PATCH /sessions/:id/actions/:actionId` — Update action status
+- `GET /approvals/:id` — Poll approval status
+- `GET /registry` — Fetch connector registry capabilities
+- `GET /settings/credentials/validate` — Validate connector credentials
+
+<Warning>
+  API key tokens cannot call administrative or operator routes. Attempting to access operator routes (such as policy creation or approval resolution) with an API key returns HTTP `403` with problem type `operator-required`.
+</Warning>
+
+### Dashboard / Operator Tokens
+
+Human operators log in via the dashboard to obtain operator session tokens. Operator tokens have full access to management features:
+- Managing policies (`/policies`)
+- Resolving approval requests (`/approvals/:id/approve`, `/approvals/:id/reject`)
+- Creating or revoking API keys (`/api-keys`)
+- Viewing audit logs (`/audit-logs`), org metrics (`/metrics`), and intent drift logs (`/sessions/intent`)
+
+---
+
+## 2. Server Enforcement & Boundaries
+
+<Warning>
+  **SDK Cooperation Guarantee**: Server-side policy results and safety tracking are recorded and enforced as far as the SDK cooperates. An agent that bypasses the AgentRein SDK and invokes external APIs directly is not blocked by the server.
+</Warning>
+
+- **Pre-execution Blocking**: Pre-execution blocking occurs when actions are explicitly declared in `wrap()` using `requiresApproval`. The SDK pauses local execution before calling the external provider while polling for approval.
+- **After-the-Fact Policy Enforcement**: Standard SDK calls evaluate policy rules when logged to `POST /sessions/:id/actions`. If a policy specifies `BLOCK`, the backend transitions the action to `FAILED` and returns HTTP `403`. If a policy specifies `REQUIRE_APPROVAL`, the backend creates an `EXECUTE_POST` approval request; if rejected, single-action rollback is triggered.
+- **No Pre-Execution Authorize Endpoint**: AgentRein does not expose a pre-execution authorization endpoint.
+
+---
+
+## 3. Resilience & Failure Modes
+
+When the AgentRein backend is unreachable due to network outage or server error, SDK behavior is governed by the `failureMode` setting:
+
+- **`failureMode: 'open'` (Default)**: The SDK logs warnings to standard output and permits tool execution to proceed without safety tracking.
+- **`failureMode: 'closed'`**: The SDK throws or raises `AgentReinUnavailableError` and halts agent execution immediately to prevent unmonitored production actions.
