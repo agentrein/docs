@@ -7,11 +7,12 @@ description: "Create a new agent session before executing actions."
 
 <CodeGroup>
 ```ts TypeScript
-agentrein.newSession(options?: SessionOptions | string): Promise<Session>
+declare function newSession(options?: SessionOptions | string): Promise<Session>;
 ```
 
 ```python Python
-agentrein.new_session(agent_id: str | None = None, intent: str | None = None) -> Session
+def new_session(self, agent_id: str | None = None, intent: str | None = None) -> Session:
+    pass
 ```
 </CodeGroup>
 

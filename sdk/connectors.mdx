@@ -5,10 +5,7 @@ description: How AgentRein intercepts your existing API clients.
 
 ## Bring Your Own Client
 
-AgentRein's SDK contains zero connector logic. There are no Stripe, GitHub,
-or Slack classes to import from `agentrein`. Instead, you install and
-initialize your own standard SDK clients as you normally would, then pass
-them to `wrap()`.
+AgentRein's SDK contains zero connector logic. There are no Stripe, GitHub, or Slack classes to import from `agentrein`. Instead, you install and initialize your own standard SDK clients as you normally would, then pass them to `wrap()`.
 
 <CodeGroup>
 ```ts TypeScript
@@ -64,47 +61,40 @@ agent_slack.chat_postMessage(channel="#ops", text="Issue created")
 
 ## How the Proxy Works
 
-`wrap()` returns a proxy that is transparent to your code — types,
-autocompletion, and runtime behavior are all preserved. When you call any
-method on the wrapped client:
+`wrap()` returns a proxy that is transparent to your code — types, autocompletion, and runtime behavior are all preserved. When you call any method on the wrapped client:
 
 1. The proxy captures the method path and arguments
 2. Your original SDK method executes normally
 3. AgentRein logs the action to the backend
-4. If the call throws, AgentRein triggers a LIFO rollback of all previous
-   actions in the session
+4. If the call throws, AgentRein triggers a LIFO rollback of all previous actions in the session
 
 <Info>
 In TypeScript, step 3 is fire-and-forget (non-blocking). In Python (v1, synchronous), this logging call completes before `wrap()` returns.
 </Info>
 
 <Warning>
-**Python-specific:** wrap the specific object whose methods you're about to call directly, not a top-level client several calls away. Many Python SDKs (unlike their JS counterparts) return a new, unwrapped object from factory/getter methods (`get_repo()`, `get_channel()`, etc.) — calls made on an object returned by a wrapped method are not automatically tracked. If your workflow needs to track a multi-step chain, wrap the specific resource object right before you start calling logged methods on it (see the GitHub example above, which wraps `repo`, not `gh`).
+**Python-specific:** wrap the specific object whose methods you're about to call directly, not a top-level client several calls away. Many Python SDKs return a new, unwrapped object from getter methods (`get_repo()`, etc.). If your workflow needs to track a multi-step chain, wrap the specific resource object right before calling logged methods on it.
 </Warning>
 
-## Connector Prefix
+## Connector Prefix & Total Action Coverage
 
-The `connector` string you pass to `wrap()` must match the prefix used in
-the AgentRein backend rollback registry. The supported prefixes are:
+The `connector` string passed to `wrap()` must match the prefix registered in the backend rollback registry. AgentRein supports **142 actions across 9 connectors**:
 
-| Prefix | External SDK (TypeScript) | External SDK (Python) |
-|---|---|---|
-| `github` | `@octokit/rest` | `PyGithub` |
-| `slack` | `@slack/web-api` | `slack_sdk` |
-| `stripe` | `stripe` | `stripe` |
-| `hubspot` | axios (REST) | `httpx`/`requests` (REST) |
-| `salesforce` | axios (REST) | `simple-salesforce` |
-| `notion` | axios (REST) | `httpx`/`requests` (REST) |
-| `gmail` | `googleapis` | `google-api-python-client` |
-| `gdrive` | `googleapis` | `google-api-python-client` |
-| `gsheets` | `googleapis` | `google-api-python-client` |
+| Prefix | Connector Name | Registered Action Count | External SDK (TypeScript) | External SDK (Python) |
+|---|---|---|---|---|
+| `github` | GitHub | 20 actions | `@octokit/rest` | `PyGithub` |
+| `slack` | Slack | 24 actions | `@slack/web-api` | `slack_sdk` |
+| `stripe` | Stripe | 10 actions | `stripe` | `stripe` |
+| `hubspot` | HubSpot | 17 actions | axios (REST) | `httpx`/`requests` (REST) |
+| `salesforce` | Salesforce | 28 actions | axios (REST) | `simple-salesforce` |
+| `notion` | Notion | 9 actions | axios (REST) | `httpx`/`requests` (REST) |
+| `gmail` | Gmail | 16 actions | `googleapis` | `google-api-python-client` |
+| `gdrive` | Google Drive | 10 actions | `googleapis` | `google-api-python-client` |
+| `gsheets` | Google Sheets | 8 actions | `googleapis` | `google-api-python-client` |
 
-For services not in this list, `wrap()` still logs actions, but no built-in
-rollback strategy is available. See [Execution Methods](/sdk/call) for details.
+---
 
-## GitHub Connector Actions
-
-The `github` connector supports 20 actions grouped by resource:
+## GitHub Connector Actions (20 Actions)
 
 ### Files
 | Action | Description / Rollback Behavior |
@@ -127,7 +117,7 @@ The `github` connector supports 20 actions grouped by resource:
 | `github.pullRequests.update` | Update a pull request. Rollback restores title, body, and state from `beforeState`. |
 | `github.pullRequests.close` | Close a pull request. Rollback reopens the pull request. |
 | `github.pullRequests.reopen` | Reopen a pull request. Rollback closes the pull request. |
-| `github.pullRequests.merge` | Merge a pull request. **Non-reversible** — no automatic rollback (requires human approval). |
+| `github.pullRequests.merge` | Merge a pull request. **Non-reversible** — safety level HIGH (requires human approval). |
 | `github.pullRequestComments.update` | Update a PR comment. Rollback restores comment body from `beforeState`. |
 
 ### Releases
@@ -135,389 +125,243 @@ The `github` connector supports 20 actions grouped by resource:
 |---|---|
 | `github.releases.create` | Create a release. Rollback deletes the created release. |
 | `github.releases.update` | Update a release. Rollback restores name, body, and tag from `beforeState`. |
-| `github.releases.delete` | Delete a release. **Non-reversible** — no automatic rollback (requires human approval). |
+| `github.releases.delete` | Delete a release. **Non-reversible** — safety level HIGH (requires human approval). |
 
 ### Reviews
 | Action | Description / Rollback Behavior |
 |---|---|
-| `github.reviews.create` | Submit a pull request review. **Non-reversible** — no automatic rollback (requires human approval). |
+| `github.reviews.create` | Submit a pull request review. **Non-reversible** — safety level HIGH (requires human approval). |
 
 ### Workflows
 | Action | Description / Rollback Behavior |
 |---|---|
 | `github.workflows.enable` | Enable a workflow. Rollback disables the workflow. |
 | `github.workflows.disable` | Disable a workflow. Rollback enables the workflow. |
-| `github.workflows.dispatch` | Dispatch a workflow run. **Non-reversible** — no automatic rollback (requires human approval). |
+| `github.workflows.dispatch` | Dispatch a workflow run. **Non-reversible** — safety level HIGH (requires human approval). |
 
 ### Users
 | Action | Description / Rollback Behavior |
 |---|---|
 | `github.users.invite` | Invite a user to an organization. Rollback cancels the pending invitation. |
 
-## Slack Connector Actions
+---
 
-The `slack` connector supports 23 actions grouped by resource:
+## Slack Connector Actions (24 Actions)
 
 ### Messages
 | Action | Description / Rollback Behavior |
 |---|---|
 | `slack.chat.postMessage` | Post a chat message. Rollback updates the message to a Tombstone (`⚠️ Reverted by AgentRein: [reason]`) and clears all blocks and attachments. |
-| `slack.chat.update` | Update a chat message. Rollback restores content, blocks, attachments, and file IDs from `beforeState`. |
-| `slack.chat.delete` | Delete a chat message. Rollback re-posts original text from `beforeState` with a restoration notice (best-effort text restoration only — thread replies and reactions are not restored). |
+| `slack.chat.update` | Update a chat message. Rollback restores content from `beforeState`. |
+| `slack.chat.delete` | Delete a chat message. Re-posts original text from `beforeState` with a restoration notice. |
 
 ### Channels
 | Action | Description / Rollback Behavior |
 |---|---|
-| `slack.channels.create` | Create a public or private channel. Rollback archives the created channel. |
-| `slack.channels.rename` | Rename a channel. Rollback restores the previous channel name from `beforeState`. |
-| `slack.channels.setTopic` | Set a channel's topic. Rollback restores the previous topic from `beforeState`. |
-| `slack.channels.setPurpose` | Set a channel's purpose. Rollback restores the previous purpose from `beforeState`. |
+| `slack.channels.create` | Create a channel. Rollback archives the created channel. |
+| `slack.channels.rename` | Rename a channel. Rollback restores previous channel name from `beforeState`. |
+| `slack.channels.setTopic` | Set topic. Rollback restores topic from `beforeState`. |
+| `slack.channels.setPurpose` | Set purpose. Rollback restores purpose from `beforeState`. |
 | `slack.channels.archive` | Archive a channel. Rollback unarchives the channel. |
-| `slack.channels.invite` | Invite users to a channel. Rollback kicks the invited users from the channel. |
-| `slack.channels.kick` | Remove a user from a channel. Rollback re-invites the user to the channel. |
+| `slack.channels.invite` | Invite users. Rollback kicks invited users. |
+| `slack.channels.kick` | Remove a user. Rollback re-invites the user. |
 | `slack.channels.join` | Join a channel. Rollback leaves the channel. |
 | `slack.channels.leave` | Leave a channel. Rollback re-joins the channel. |
-| `slack.channels.close` | Close a direct message or group channel. Rollback opens the channel. |
-| `slack.channels.open` | Open a direct message or group channel. Rollback closes the channel. |
+| `slack.channels.close` | Close direct message. Rollback opens channel. |
+| `slack.channels.open` | Open direct message. Rollback closes channel. |
 
 ### Files
 | Action | Description / Rollback Behavior |
 |---|---|
-| `slack.files.upload` | Upload a file. Rollback deletes the uploaded file. |
-| `slack.files.delete` | Delete a file. **Non-reversible** — no automatic rollback (requires human approval). |
+| `slack.files.upload` | Upload a file. Rollback deletes uploaded file. |
+| `slack.files.delete` | Delete a file. **Non-reversible** — safety level HIGH (requires human approval). |
 
-### Reactions
+### Reactions & Stars
 | Action | Description / Rollback Behavior |
 |---|---|
-| `slack.reactions.add` | Add a reaction to an item. Rollback removes the reaction. |
+| `slack.reactions.add` | Add reaction. Rollback removes reaction. |
+| `slack.stars.add` | Add star. Rollback removes star. |
 
-### Stars
+### User Profile & User Groups
 | Action | Description / Rollback Behavior |
 |---|---|
-| `slack.stars.add` | Add a star to an item. Rollback removes the star. |
+| `slack.userProfile.update` | Update profile fields. Rollback restores from `beforeState`. |
+| `slack.userGroups.create` | Create user group. Rollback disables group. |
+| `slack.userGroups.update` | Update user group. Rollback restores from `beforeState`. |
+| `slack.userGroups.users.update` | Update member list. Rollback restores member list from `beforeState`. |
+| `slack.userGroups.enable` | Enable user group. Rollback disables group. |
+| `slack.userGroups.disable` | Disable user group. Rollback enables group. |
 
-### User Profile
+---
+
+## Stripe Connector Actions (10 Actions)
+
+### Invoices & Customers
 | Action | Description / Rollback Behavior |
 |---|---|
-| `slack.userProfile.update` | Update a user's profile fields. Rollback restores previous profile fields from `beforeState`. |
-
-### User Groups
-| Action | Description / Rollback Behavior |
-|---|---|
-| `slack.userGroups.create` | Create a user group. Rollback disables the user group. |
-| `slack.userGroups.update` | Update a user group's name, handle, or description. Rollback restores previous values from `beforeState`. |
-| `slack.userGroups.users.update` | Update the list of users in a user group. Rollback restores the previous member list from `beforeState`. |
-| `slack.userGroups.enable` | Enable a user group. Rollback disables the user group. |
-| `slack.userGroups.disable` | Disable the user group. Rollback enables the user group. |
-
-## Stripe Connector Actions
-
-The `stripe` connector supports 10 actions grouped by resource:
-
-<Note>
-Stripe actions involving direct financial movement (charges, refunds) or permanent account changes (customer/coupon deletion, payment method detachment) are treated conservatively in this connector — several are non-reversible by design, reflecting real constraints in Stripe's own API rather than a limitation of this integration.
-</Note>
-
-### Invoices
-| Action | Description / Rollback Behavior |
-|---|---|
-| `stripe.invoices.create` | Create a draft invoice. Rollback deletes the draft invoice (if already finalized, requires manual intervention via Void or Credit Note). |
-
-### Customers
-| Action | Description / Rollback Behavior |
-|---|---|
-| `stripe.customers.create` | Create a customer object. Rollback deletes the created customer. |
-| `stripe.customers.delete` | Permanently delete a customer and cancel their active subscriptions. **Non-reversible** — Stripe provides no restore endpoint. |
+| `stripe.invoices.create` | Create draft invoice. Rollback deletes draft invoice. |
+| `stripe.customers.create` | Create customer. Rollback deletes customer. |
+| `stripe.customers.delete` | Permanently delete customer. **Non-reversible** — safety level HIGH. |
 
 ### Charges & Refunds
 | Action | Description / Rollback Behavior |
 |---|---|
-| `stripe.charges.create` | Create a charge. **Non-reversible** — Stripe charges cannot be deleted, voided, or cancelled via the API. Reversing a charge's effect requires a separate, explicitly human-approved `stripe.refunds.create` action; this is never triggered automatically. |
-| `stripe.refunds.create` | Create a refund against a charge or payment intent. **Non-reversible** — refunds are irreversible on Stripe and require explicit human approval before execution. |
+| `stripe.charges.create` | Create charge. **Non-reversible** — safety level HIGH. |
+| `stripe.refunds.create` | Create refund. **Non-reversible** — safety level HIGH. |
 
-### Coupons
+### Coupons & Meter Events
 | Action | Description / Rollback Behavior |
 |---|---|
-| `stripe.coupons.create` | Create a coupon. Rollback deletes the created coupon (prevents future redemptions; does not affect customers who already redeemed it). |
-| `stripe.coupons.delete` | Permanently delete a coupon. **Non-reversible** — Stripe provides no restore endpoint for deleted coupons. |
-
-### Meter Events
-| Action | Description / Rollback Behavior |
-|---|---|
-| `stripe.meterEvents.create` | Record a usage-based billing event. Rollback attempts cancellation via a meter event adjustment, but this only succeeds within 24 hours of the original event; past that window, rollback will fail (this is expected Stripe platform behavior, not a bug). |
+| `stripe.coupons.create` | Create coupon. Rollback deletes coupon. |
+| `stripe.coupons.delete` | Delete coupon. **Non-reversible** — safety level HIGH. |
+| `stripe.meterEvents.create` | Create meter event. Rollback cancels via adjustment within 24h. |
 
 ### Payment Methods
 | Action | Description / Rollback Behavior |
 |---|---|
-| `stripe.paymentMethods.attach` | Attach a payment method to a customer. Rollback detaches the payment method. |
-| `stripe.paymentMethods.detach` | Detach a payment method from a customer. **Non-reversible** — per Stripe's API, a detached payment method can never be re-attached to any customer. |
+| `stripe.paymentMethods.attach` | Attach payment method. Rollback detaches method. |
+| `stripe.paymentMethods.detach` | Detach payment method. **Non-reversible** — safety level HIGH. |
 
-## HubSpot Connector Actions
+---
 
-The `hubspot` connector supports 13 actions grouped by resource:
+## HubSpot Connector Actions (17 Actions)
 
-<Note>
-HubSpot's delete operations archive records with a manual recovery window in HubSpot's own UI, but this isn't reachable via automatic rollback.
-</Note>
-
-### Contacts
+### CRM Objects
 | Action | Description / Rollback Behavior |
 |---|---|
-| `hubspot.contacts.create` | Create a contact. Rollback archives the created contact. |
-| `hubspot.contacts.update` | Update a contact. Rollback restores prior properties from `beforeState`. |
-| `hubspot.contacts.delete` | Delete a contact. **Non-reversible** — no automatic rollback (requires human approval). |
+| `hubspot.contacts.create` | Create contact. Rollback deletes contact. |
+| `hubspot.contacts.update` | Update contact. Rollback restores from `beforeState`. |
+| `hubspot.contacts.delete` | Delete contact. **Non-reversible** — safety level HIGH. |
+| `hubspot.companies.create` | Create company. Rollback archives company. |
+| `hubspot.companies.update` | Update company. Rollback restores from `beforeState`. |
+| `hubspot.companies.delete` | Delete company. **Non-reversible** — safety level HIGH. |
+| `hubspot.deals.create` | Create deal. Rollback deletes deal. |
+| `hubspot.deals.update` | Update deal. Rollback restores from `beforeState`. |
+| `hubspot.deals.delete` | Delete deal. **Non-reversible** — safety level HIGH. |
+| `hubspot.tickets.create` | Create ticket. Rollback archives ticket. |
+| `hubspot.tickets.update` | Update ticket. Rollback restores from `beforeState`. |
+| `hubspot.tickets.delete` | Delete ticket. **Non-reversible** — safety level HIGH. |
 
-### Companies
+### Engagements, Associations & Lists
 | Action | Description / Rollback Behavior |
 |---|---|
-| `hubspot.companies.create` | Create a company. Rollback archives the created company. |
-| `hubspot.companies.update` | Update a company. Rollback restores prior properties from `beforeState`. |
-| `hubspot.companies.delete` | Delete a company. **Non-reversible** — no automatic rollback (requires human approval). |
+| `hubspot.engagements.create` | Create engagement. Rollback archives engagement. |
+| `hubspot.engagements.delete` | Delete engagement. **Non-reversible** — safety level HIGH. |
+| `hubspot.associations.create` | Create association. Rollback removes association. |
+| `hubspot.contactLists.addContact` | Add contact to list. Rollback removes contact. |
+| `hubspot.contactLists.removeContact` | Remove contact from list. Rollback adds contact back. |
 
-### Deals
+---
+
+## Salesforce Connector Actions (28 Actions)
+
+### Objects & Records
 | Action | Description / Rollback Behavior |
 |---|---|
-| `hubspot.deals.create` | Create a deal. Rollback archives the created deal. |
-| `hubspot.deals.update` | Update a deal. Rollback restores prior properties from `beforeState`. |
-| `hubspot.deals.delete` | Delete a deal. **Non-reversible** — no automatic rollback (requires human approval). |
+| `salesforce.accounts.create` | Create Account. Rollback deletes record. |
+| `salesforce.accounts.update` | Update Account. Rollback restores from `beforeState`. |
+| `salesforce.accounts.delete` | Delete Account. **Non-reversible** — safety level HIGH. |
+| `salesforce.contacts.create` | Create Contact. Rollback deletes record. |
+| `salesforce.contacts.update` | Update Contact. Rollback restores from `beforeState`. |
+| `salesforce.contacts.delete` | Delete Contact. **Non-reversible** — safety level HIGH. |
+| `salesforce.leads.create` | Create Lead. Rollback deletes record. |
+| `salesforce.leads.update` | Update Lead. Rollback restores from `beforeState`. |
+| `salesforce.leads.delete` | Delete Lead. **Non-reversible** — safety level HIGH. |
+| `salesforce.opportunities.create` | Create Opportunity. Rollback deletes record. |
+| `salesforce.opportunities.update` | Update Opportunity. Rollback restores from `beforeState`. |
+| `salesforce.opportunities.delete` | Delete Opportunity. **Non-reversible** — safety level HIGH. |
+| `salesforce.cases.create` | Create Case. Rollback deletes record. |
+| `salesforce.cases.update` | Update Case. Rollback restores from `beforeState`. |
+| `salesforce.cases.delete` | Delete Case. **Non-reversible** — safety level HIGH. |
+| `salesforce.customObjects.create` | Create Custom Object. Rollback deletes record. |
+| `salesforce.customObjects.update` | Update Custom Object. Rollback restores from `beforeState`. |
+| `salesforce.customObjects.delete` | Delete Custom Object. **Non-reversible** — safety level HIGH. |
+| `salesforce.attachments.create` | Create Attachment. Rollback deletes attachment. |
+| `salesforce.attachments.update` | Update Attachment. Rollback restores from `beforeState`. |
+| `salesforce.attachments.delete` | Delete Attachment. **Non-reversible** — safety level HIGH. |
+| `salesforce.tasks.create` | Create Task. Rollback deletes task. |
+| `salesforce.tasks.update` | Update Task. Rollback restores from `beforeState`. |
+| `salesforce.tasks.delete` | Delete Task. **Non-reversible** — safety level HIGH. |
+| `salesforce.documents.create` | Create Document. Rollback deletes document. |
+| `salesforce.notes.create` | Create Note. Rollback deletes note. |
+| `salesforce.caseComments.create` | Create Case Comment. Rollback deletes comment. |
+| `salesforce.campaignMembers.create` | Create Campaign Member. Rollback deletes membership. |
 
-### Tickets
+---
+
+## Notion Connector Actions (9 Actions)
+
+### Pages & Database Items
 | Action | Description / Rollback Behavior |
 |---|---|
-| `hubspot.tickets.create` | Create a ticket. Rollback archives the created ticket. |
-| `hubspot.tickets.update` | Update a ticket. Rollback restores prior properties from `beforeState`. |
-| `hubspot.tickets.delete` | Delete a ticket. **Non-reversible** — no automatic rollback (requires human approval). |
+| `notion.pages.create` | Create page. Rollback moves to trash. |
+| `notion.pages.update` | Update page. Rollback restores from `beforeState`. |
+| `notion.pages.archive` | Archive page. Rollback untrashes page (`notion.pages.restore`). |
+| `notion.pages.restore` | Restore page. Rollback trashes page (`notion.pages.archive`). |
+| `notion.database_items.create` | Create database item. Rollback moves to trash. |
+| `notion.database_items.update` | Update database item. Rollback restores from `beforeState`. |
+| `notion.database_items.archive` | Archive database item. Rollback untrashes item (`notion.database_items.restore`). |
+| `notion.database_items.restore` | Restore database item. Rollback trashes item (`notion.database_items.archive`). |
+| `notion.blocks.append` | Append blocks. Rollback deletes appended blocks. |
 
-### Engagements
+---
+
+## Gmail Connector Actions (16 Actions)
+
+### Messages & Drafts
 | Action | Description / Rollback Behavior |
 |---|---|
-| `hubspot.engagements.create` | Create an engagement. Rollback archives the created engagement. |
-| `hubspot.engagements.delete` | Delete an engagement. **Non-reversible** — no automatic rollback (requires human approval). |
+| `gmail.messages.send` | Send email. Rollback sends correction reply. |
+| `gmail.messages.reply` | Reply email. Rollback sends correction reply. |
+| `gmail.messages.trash` | Trash message. Rollback untrashes message. |
+| `gmail.messages.untrash` | Untrash message. Rollback trashes message. |
+| `gmail.messages.markAsRead` | Mark read. Rollback restores `UNREAD` label. |
+| `gmail.messages.markAsUnread` | Mark unread. Rollback removes `UNREAD` label. |
+| `gmail.messages.delete` | Delete message. **Non-reversible** — safety level HIGH. |
+| `gmail.drafts.create` | Create draft. Rollback deletes draft. |
+| `gmail.drafts.delete` | Delete draft. Rollback recreates draft from snapshot. |
 
-### Associations
+### Threads & Labels
 | Action | Description / Rollback Behavior |
 |---|---|
-| `hubspot.associations.create` | Link two CRM objects. Rollback removes the association. |
+| `gmail.threads.modify` | Modify thread labels. Rollback restores label IDs. |
+| `gmail.threads.trash` | Trash thread. Rollback untrashes thread. |
+| `gmail.threads.untrash` | Untrash thread. Rollback trashes thread. |
+| `gmail.threads.delete` | Delete thread. **Non-reversible** — safety level HIGH. |
+| `gmail.labels.create` | Create label. Rollback deletes label. |
+| `gmail.labels.modify` | Modify message labels. Rollback restores label IDs. |
+| `gmail.labels.delete` | Delete label. **Non-reversible** — safety level HIGH. |
 
-### Contact Lists
+---
+
+## Google Drive Connector Actions (10 Actions)
+
+### Files & Drives
 | Action | Description / Rollback Behavior |
 |---|---|
-| `hubspot.contactLists.addContact` | Add a contact to a list. Rollback removes the contact from the list. |
-| `hubspot.contactLists.removeContact` | Remove a contact from a list. Rollback adds the contact back to the list. |
+| `gdrive.files.create` | Create file. Rollback moves to trash. |
+| `gdrive.files.update` | Update file metadata. Rollback restores from `beforeState`. |
+| `gdrive.files.move` | Move file. Rollback reverses move. |
+| `gdrive.files.copy` | Copy file. Rollback moves copy to trash. |
+| `gdrive.files.trash` | Trash file. Rollback untrashes file. |
+| `gdrive.files.share` | Share file. Rollback revokes granted permission. |
+| `gdrive.files.delete` | Delete file. **Non-reversible** — safety level HIGH. |
+| `gdrive.drives.create` | Create Shared Drive. Rollback deletes empty Shared Drive. |
+| `gdrive.drives.update` | Update Shared Drive. Rollback restores from `beforeState`. |
+| `gdrive.drives.delete` | Delete Shared Drive. **Non-reversible** — safety level HIGH. |
 
-## Salesforce Connector Actions
+---
 
-The `salesforce` connector supports 28 actions grouped by resource:
+## Google Sheets Connector Actions (8 Actions)
 
-<Note>
-Salesforce delete operations are permanent (hard-delete) and cannot be rolled back automatically across all resource types. In addition, generic sub-resources like `salesforce.notes.create` and `salesforce.campaignMembers.create` use a single generic action covering multiple parent or target types via request payload parameters (such as `ParentId` or `ContactId`/`LeadId`), rather than per-parent action aliases.
-</Note>
-
-### Accounts
+### Spreadsheets, Sheets & Values
 | Action | Description / Rollback Behavior |
 |---|---|
-| `salesforce.accounts.create` | Create an Account. Rollback deletes the created record (permanent). |
-| `salesforce.accounts.update` | Update an Account's fields. Rollback restores prior field values from `beforeState`. |
-| `salesforce.accounts.delete` | Delete an Account. **Non-reversible** — permanent deletion (requires human approval). |
-
-### Contacts
-| Action | Description / Rollback Behavior |
-|---|---|
-| `salesforce.contacts.create` | Create a Contact. Rollback deletes the created record (permanent). |
-| `salesforce.contacts.update` | Update a Contact's fields. Rollback restores prior field values from `beforeState`. |
-| `salesforce.contacts.delete` | Delete a Contact. **Non-reversible** — permanent deletion (requires human approval). |
-
-### Leads
-| Action | Description / Rollback Behavior |
-|---|---|
-| `salesforce.leads.create` | Create a Lead. Rollback deletes the created record (permanent). |
-| `salesforce.leads.update` | Update a Lead's fields. Rollback restores prior field values from `beforeState`. |
-| `salesforce.leads.delete` | Delete a Lead. **Non-reversible** — permanent deletion (requires human approval). |
-
-### Opportunities
-| Action | Description / Rollback Behavior |
-|---|---|
-| `salesforce.opportunities.create` | Create an Opportunity. Rollback deletes the created record (permanent). |
-| `salesforce.opportunities.update` | Update an Opportunity's fields. Rollback restores prior field values from `beforeState`. |
-| `salesforce.opportunities.delete` | Delete an Opportunity. **Non-reversible** — permanent deletion (requires human approval). |
-
-### Cases
-| Action | Description / Rollback Behavior |
-|---|---|
-| `salesforce.cases.create` | Create a Case. Rollback deletes the created record (permanent). |
-| `salesforce.cases.update` | Update a Case's fields. Rollback restores prior field values from `beforeState`. |
-| `salesforce.cases.delete` | Delete a Case. **Non-reversible** — permanent deletion (requires human approval). |
-
-### Custom Objects
-| Action | Description / Rollback Behavior |
-|---|---|
-| `salesforce.customObjects.create` | Create a custom object record (API name specified by caller, e.g. `MyObject__c`). Rollback deletes the created record. |
-| `salesforce.customObjects.update` | Update a custom object record's fields. Rollback restores prior field values from `beforeState`. |
-| `salesforce.customObjects.delete` | Delete a custom object record. **Non-reversible** — permanent deletion (requires human approval). |
-
-### Attachments
-| Action | Description / Rollback Behavior |
-|---|---|
-| `salesforce.attachments.create` | Create a file attachment linked to a record. Rollback deletes the created attachment. |
-| `salesforce.attachments.update` | Update an attachment's fields. Rollback restores prior field values from `beforeState`. |
-| `salesforce.attachments.delete` | Delete an attachment. **Non-reversible** — permanent deletion (requires human approval). |
-
-### Tasks
-| Action | Description / Rollback Behavior |
-|---|---|
-| `salesforce.tasks.create` | Create a Task. Rollback deletes the created record. |
-| `salesforce.tasks.update` | Update a Task's fields. Rollback restores prior field values from `beforeState`. |
-| `salesforce.tasks.delete` | Delete a Task. **Non-reversible** — permanent deletion (requires human approval). |
-
-### Documents
-| Action | Description / Rollback Behavior |
-|---|---|
-| `salesforce.documents.create` | Create a Document in folder-based file storage (distinct from Attachments). Rollback deletes the created record. |
-
-### Notes
-| Action | Description / Rollback Behavior |
-|---|---|
-| `salesforce.notes.create` | Create a Note attached to any parent record (Account, Contact, Lead, or Opportunity, specified via `ParentId`). Rollback deletes the created note. |
-
-### Case Comments
-| Action | Description / Rollback Behavior |
-|---|---|
-| `salesforce.caseComments.create` | Add a comment to a Case. Rollback deletes the created comment. |
-
-### Campaign Members
-| Action | Description / Rollback Behavior |
-|---|---|
-| `salesforce.campaignMembers.create` | Add a Contact or Lead to a Campaign (specified via `ContactId` or `LeadId`). Rollback removes the created campaign membership. |
-
-## Notion Connector Actions
-
-The `notion` connector supports 9 actions grouped by resource:
-
-<Note>
-`database_items.*` actions are intentional domain aliases of the equivalent `pages.*` actions, provided for clearer Agent intent when working within a database context.
-</Note>
-
-### Pages
-| Action | Description / Rollback Behavior |
-|---|---|
-| `notion.pages.create` | Create a Notion page. Rollback moves the created page to trash (soft delete). |
-| `notion.pages.update` | Update a Notion page's properties. Rollback restores properties from `beforeState`. |
-| `notion.pages.archive` | Archive (trash) a Notion page. Rollback untrashes the page (`notion.pages.restore`). |
-| `notion.pages.restore` | Restore a previously archived Notion page. Rollback trashes the page (`notion.pages.archive`). |
-
-### Database Items
-| Action | Description / Rollback Behavior |
-|---|---|
-| `notion.database_items.create` | Create a database item (page within a database). Rollback moves the created item to trash (soft delete). |
-| `notion.database_items.update` | Update a database item's properties. Domain alias of `notion.pages.update`; rollback restores properties from `beforeState`. |
-| `notion.database_items.archive` | Archive a database item (page within a database). Domain alias of `notion.pages.archive`; rollback untrashes the item (`notion.database_items.restore`). |
-| `notion.database_items.restore` | Restore a previously archived database item. Domain alias of `notion.pages.restore`; rollback trashes the item (`notion.database_items.archive`). |
-
-### Blocks
-| Action | Description / Rollback Behavior |
-|---|---|
-| `notion.blocks.append` | Append child blocks to a parent block or page. Rollback deletes the appended blocks. |
-
-## Gmail Connector Actions
-
-The `gmail` connector supports 16 actions grouped by resource:
-
-<Note>
-Gmail distinguishes soft-deletion (`trash`/`untrash`), which moves items to the Trash folder and is recoverable for 30 days, from permanent deletion (`delete`). It is recommended to use `trash` and `untrash` for safe, reversible message and thread management.
-</Note>
-
-### Messages
-| Action | Description / Rollback Behavior |
-|---|---|
-| `gmail.messages.send` | Send an email message. Rollback sends a follow-up correction/disregard message in the thread. |
-| `gmail.messages.reply` | Reply to an email thread. Rollback sends a follow-up correction/disregard message in the thread. |
-| `gmail.messages.trash` | Move a message to trash (soft delete). Rollback untrashes the message. |
-| `gmail.messages.untrash` | Remove a message from trash. Rollback moves the message back to trash. |
-| `gmail.messages.markAsRead` | Mark a message as read. Rollback restores the `UNREAD` label. |
-| `gmail.messages.markAsUnread` | Mark a message as unread. Rollback removes the `UNREAD` label. |
-| `gmail.messages.delete` | Permanently delete a message. **Non-reversible** — no automatic rollback (requires human approval). |
-
-### Drafts
-| Action | Description / Rollback Behavior |
-|---|---|
-| `gmail.drafts.create` | Create a draft. Rollback deletes the created draft. |
-| `gmail.drafts.delete` | Delete a draft. Rollback recreates the draft content from `beforeState` (preserving thread association if applicable). |
-
-### Threads
-| Action | Description / Rollback Behavior |
-|---|---|
-| `gmail.threads.modify` | Modify labels on a thread. Rollback restores previous label IDs from `beforeState`. |
-| `gmail.threads.trash` | Move an entire thread to trash (soft delete). Rollback untrashes the thread. |
-| `gmail.threads.untrash` | Remove an entire thread from trash. Rollback moves the thread back to trash. |
-| `gmail.threads.delete` | Permanently delete a thread. **Non-reversible** — no automatic rollback (requires human approval). |
-
-### Labels
-| Action | Description / Rollback Behavior |
-|---|---|
-| `gmail.labels.create` | Create a label. Rollback deletes the created label. |
-| `gmail.labels.modify` | Modify labels on a message. Rollback restores previous label IDs from `beforeState`. |
-| `gmail.labels.delete` | Delete a label. **Non-reversible** — no automatic rollback (requires human approval). |
-
-## Google Drive Connector Actions
-
-The `gdrive` connector supports 10 actions grouped by resource:
-
-<Note>
-Google Drive distinguishes soft-deletion (`trash`/`untrash`), which moves items to the Trash folder and is recoverable for 30 days, from permanent deletion (`delete`). It is recommended to use `trash` and `untrash` for safe, reversible file management.
-</Note>
-
-### Files
-| Action | Description / Rollback Behavior |
-|---|---|
-| `gdrive.files.create` | Create a file. Rollback moves the created file to trash (soft delete). |
-| `gdrive.files.update` | Update a file's metadata. Rollback restores fields from `beforeState`. |
-| `gdrive.files.move` | Move a file to another parent folder. Rollback reverses the parent folder change. |
-| `gdrive.files.copy` | Copy a file. Rollback moves the created copy to trash (soft delete). |
-| `gdrive.files.trash` | Move a file to trash (soft delete). Rollback untrashes the file. |
-| `gdrive.files.delete` | Permanently delete a file. **Non-reversible** — no automatic rollback (requires human approval). |
-
-### Sharing & Permissions
-| Action | Description / Rollback Behavior |
-|---|---|
-| `gdrive.files.share` | Grant a permission on a file. Rollback revokes the granted permission. |
-
-### Shared Drives
-| Action | Description / Rollback Behavior |
-|---|---|
-| `gdrive.drives.create` | Create a Shared Drive. Rollback deletes the created empty Shared Drive. |
-| `gdrive.drives.update` | Update a Shared Drive's metadata. Rollback restores fields from `beforeState`. |
-| `gdrive.drives.delete` | Permanently delete a Shared Drive. **Non-reversible** — no automatic rollback (requires human approval). |
-
-## Google Sheets Connector Actions
-
-The `gsheets` connector supports 8 actions grouped by resource:
-
-<Note>
-Row and cell operations in Google Sheets rely on dynamic position references rather than stable resource IDs. As a result, row-level mutations (inserting, appending, deleting, or clearing rows) are non-reversible to prevent accidental data corruption if surrounding rows shift.
-</Note>
-
-### Spreadsheets
-| Action | Description / Rollback Behavior |
-|---|---|
-| `gsheets.spreadsheets.create` | Create a spreadsheet. Rollback moves the created spreadsheet to trash (soft delete — recoverable for 30 days). |
-
-### Sheets & Tabs
-| Action | Description / Rollback Behavior |
-|---|---|
-| `gsheets.sheets.add` | Add a new sheet tab to a spreadsheet. Rollback deletes the created sheet tab by its sheet ID. |
-
-### Values
-| Action | Description / Rollback Behavior |
-|---|---|
-| `gsheets.values.append` | Append values to a spreadsheet. **Non-reversible** — no automatic rollback (requires human approval). |
-| `gsheets.values.update` | Update values in a specified cell range. Rollback restores previous cell values from `beforeState`. |
-| `gsheets.values.clear` | Clear values from a specified cell range. **Non-reversible** — no automatic rollback (requires human approval). |
-
-### Rows
-| Action | Description / Rollback Behavior |
-|---|---|
-| `gsheets.rows.insert` | Insert rows into a sheet. **Non-reversible** — no automatic rollback (requires human approval). |
-| `gsheets.rows.delete` | Delete rows from a sheet. **Non-reversible** — no automatic rollback (requires human approval). |
-| `gsheets.rows.appendOrUpdate` | Append or update rows in a sheet. **Non-reversible** — no automatic rollback (requires human approval). |
-
-
+| `gsheets.spreadsheets.create` | Create spreadsheet. Rollback moves spreadsheet to trash. |
+| `gsheets.sheets.add` | Add sheet tab. Rollback deletes sheet tab. |
+| `gsheets.values.append` | Append values. **Non-reversible** — safety level HIGH. |
+| `gsheets.values.update` | Update values range. Rollback restores values from `beforeState`. |
+| `gsheets.values.clear` | Clear values range. **Non-reversible** — safety level HIGH. |
+| `gsheets.rows.insert` | Insert rows. **Non-reversible** — safety level HIGH. |
+| `gsheets.rows.delete` | Delete rows. **Non-reversible** — safety level HIGH. |
+| `gsheets.rows.appendOrUpdate` | Append/update rows. **Non-reversible** — safety level HIGH. |
