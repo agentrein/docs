@@ -4,8 +4,8 @@
   "name": "AgentRein",
   "colors": {
     "primary": "#2A6AD8",
-    "light": "#2A6AD8",
-    "dark": "#5B93F0"
+    "light": "#5B93F0",
+    "dark": "#2A6AD8"
   },
   "modeToggle": {
     "default": "dark",
@@ -74,7 +74,7 @@
   },
   "appearance": {
     "strict": false,
-    "default": "system"
+    "default": "dark"
   },
   "description": "AI Agent Reliability Platform",
   "navbar": {
