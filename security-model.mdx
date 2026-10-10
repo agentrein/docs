@@ -49,14 +49,18 @@ Human operators log in via the dashboard to obtain operator session tokens. Oper
 </Warning>
 
 - **Pre-execution Blocking**: Pre-execution blocking occurs when actions are explicitly declared in `wrap()` using `requiresApproval`. The SDK pauses local execution before calling the external provider while polling for approval.
-- **After-the-Fact Policy Enforcement**: Standard SDK calls evaluate policy rules when logged to `POST /sessions/:id/actions`. If a policy specifies `BLOCK`, the backend transitions the action to `FAILED` and returns HTTP `403`. If a policy specifies `REQUIRE_APPROVAL`, the backend creates an `EXECUTE_POST` approval request; if rejected, single-action rollback is triggered.
+- **After-the-Fact Policy Enforcement**: Standard SDK calls evaluate policy rules when logged to `POST /sessions/:id/actions`. If a policy specifies `BLOCK`, the backend transitions the action to `FAILED` and returns HTTP `403`. If a policy specifies `REQUIRE_APPROVAL`, the backend creates an after-execution approval request; if rejected, single-action rollback is triggered.
 - **No Pre-Execution Authorize Endpoint**: AgentRein does not expose a pre-execution authorization endpoint.
 
 ---
 
 ## 3. Resilience & Failure Modes
 
-When the AgentRein backend is unreachable due to network outage or server error, SDK behavior is governed by the `failureMode` setting:
+When initializing the client, the `failureMode` option controls SDK behavior when communicating with the AgentRein backend or encountering server errors:
 
-- **`failureMode: 'open'` (Default)**: The SDK logs warnings to standard output and permits tool execution to proceed without safety tracking.
-- **`failureMode: 'closed'`**: The SDK throws or raises `AgentReinUnavailableError` and halts agent execution immediately to prevent unmonitored production actions.
+- **`failureMode: 'open'` (Default)**: If action creation or logging fails—including HTTP `403` server denials (such as `policy-blocked` or plan gate requirements) or network outages—the SDK logs a warning (`console.warn` in Node.js / `logging.warning` in Python) and permits local execution of the tool call to proceed without backend safety tracking or approval gating.
+- **`failureMode: 'closed'`**: If backend errors, server denials, or network failures occur, the SDK re-throws the underlying HTTP status error or raises `AgentReinUnavailableError` and halts agent execution immediately to prevent unmonitored or unapproved production actions.
+
+<Warning>
+  **Open Mode Swallows Server Denials**: In `failureMode: 'open'` (the default setting), server denials such as HTTP `403 Blocked by Policy` (`policy-blocked`) or `Upgrade Required` (`plan-required`) are swallowed as warnings, allowing local SDK tool execution to proceed. Use `failureMode: 'closed'` in high-security environments where server denials must strictly block execution.
+</Warning>
