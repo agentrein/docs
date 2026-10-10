@@ -73,12 +73,12 @@ When querying sessions (`GET /sessions` or `GET /sessions/:id`), the backend dyn
 
 The following rules govern session rollback behavior across AgentRein:
 
-- **Caller Authorization**: Agent callers may trigger rollback only on `ACTIVE` sessions (`canRollbackSession` in `sessionStatusReducer.ts:167`). Operator callers may trigger rollback on sessions with stored status `ACTIVE`, `FAILED`, `COMPLETED`, or `ABANDONED` (`sessionStatusReducer.ts:169-174`).
-- **Required Actions**: A session can only be rolled back if it has at least one action with status `SUCCESS` (`sessionStatusReducer.ts:161-164`). Sessions already in `REVERTED` display status cannot be rolled back (`sessionStatusReducer.ts:153`).
-- **Sandbox Behavior**: Rolling back a sandbox session converts all `PENDING_APPROVAL` actions in bulk to `ROLLED_BACK` (`server.ts:2825-2835`).
-- **Execution Chain**: Rollback iterates backwards through executed `SUCCESS` actions. If an individual undo operation fails, the rollback chain halts immediately (`undoStack.ts:223, 234`).
-- **Declined Rollback Approval**: If a reviewer declines a rollback approval request, the action's undo status is set to `DECLINED` while its execution status remains `SUCCESS` (preserving its side-effects), and the overall session status becomes `FAILED` (`approvalResolutionEngine.ts:390`, `undoStack.ts:302`).
-- **Pending and Cleared Actions**: Actions in `PENDING_APPROVAL` or `CLEARED` status are never rolled back; if rollback completes while such actions remain, the parent session status is left unchanged (`undoStack.ts:312`).
+- **Caller Authorization**: Agent callers may trigger rollback only on `ACTIVE` sessions. Operator callers may trigger rollback on sessions with stored status `ACTIVE`, `FAILED`, `COMPLETED`, or `ABANDONED`.
+- **Required Actions**: A session can only be rolled back if it has at least one action with status `SUCCESS`. Sessions already in `REVERTED` display status cannot be rolled back.
+- **Sandbox Behavior**: Rolling back a sandbox session converts all `SUCCESS` and `PENDING_APPROVAL` actions in bulk to `ROLLED_BACK` in a single transaction; no real compensation logic runs.
+- **Execution Chain**: Rollback iterates backwards through executed `SUCCESS` actions. If an individual undo operation fails, the rollback chain halts immediately.
+- **Declined Rollback Approval**: If a reviewer declines a rollback approval request, the action's undo status is set to `DECLINED` while its execution status remains `SUCCESS` (preserving its side-effects), and the overall session status becomes `FAILED`.
+- **Pending and Cleared Actions**: Actions in `PENDING_APPROVAL` or `CLEARED` status are never rolled back; if rollback completes while such actions remain, the parent session status is left unchanged.
 
 ---
 
