@@ -20,7 +20,7 @@ The database stores one of six status values on each action:
 | :--- | :--- |
 | `SUCCESS` | The action executed successfully and its side-effects were recorded. |
 | `PENDING_APPROVAL` | The action is paused or logged awaiting reviewer sign-off. |
-| `CLEARED` | An `EXECUTE_PRE` approval was granted by a reviewer. The SDK is authorized to execute the action locally and confirm result via `PATCH`. |
+| `CLEARED` | An explicit before-execution approval was granted by a reviewer. The SDK is authorized to execute the action locally and confirm result via `PATCH`. |
 | `FAILED` | The action threw an exception, failed policy evaluation, or was rejected by a reviewer. |
 | `ROLLED_BACK` | Compensation (undo) executed successfully for this action. |
 | `ROLLBACK_FAILED` | Automatic compensation failed during execution. |
@@ -28,11 +28,11 @@ The database stores one of six status values on each action:
 ### The `CLEARED` Status Flow
 
 When an action is explicitly configured with `requiresApproval` in `wrap()`:
-1. The SDK logs the action as `PENDING_APPROVAL` (`purpose: EXECUTE_PRE`).
+1. The SDK logs the action as `PENDING_APPROVAL` (before-execution approval).
 2. A reviewer approves the request via dashboard or API.
 3. The backend transitions the action to `CLEARED`.
 4. The SDK receives `APPROVED` from polling, executes the local SDK call, and sends `PATCH /sessions/:id/actions/:actionId` with `status: SUCCESS` (transitioning action to `SUCCESS`).
-5. If local execution fails, the SDK sends `PATCH` with `status: FAILED` (transitioning action from `CLEARED` to `FAILED` without auto-rollback or failure notification, since no provider side-effect was confirmed).
+5. If local execution fails, the approved action stays `CLEARED` (never `SUCCESS`, never rolled back automatically). The SDK logs a separate failed action (`status: FAILED`), and `GET /approvals` marks the approved action as `unconfirmed: true` after 1 hour if execution is not confirmed.
 
 ---
 
@@ -46,30 +46,43 @@ The database persists one of five raw session statuses:
 
 | Stored Status | Meaning |
 | :--- | :--- |
-| `ACTIVE` | The session is live and accepting new actions. |
-| `COMPLETED` | The session finished cleanly (`PATCH /sessions/:id` with `status: COMPLETED`). |
-| `FAILED` | An action failed or auto-rollback occurred. |
-| `ROLLED_BACK` | All session actions were compensated. |
-| `ABANDONED` | The session experienced 24 hours of inactivity without being completed. |
+| `ACTIVE` | Created when a session is initialized (`POST /sessions`). The session is live and accepting new actions. |
+| `COMPLETED` | Written when a session is completed via `PATCH /sessions/:id` (or `POST /sessions/:id/complete`) with `{ status: 'COMPLETED' }`. |
+| `FAILED` | Written by the backend when session rollback completes with failed or declined actions. |
+| `ROLLED_BACK` | Written by the backend when session rollback completes with no failed/declined actions or when sandbox simulated actions are rolled back. |
+| `ABANDONED` | Written by the background sweeper when an `ACTIVE` session exceeds 24 hours of inactivity. |
 
 ### Derived Display Statuses
 
-When querying sessions (`GET /sessions` or `GET /sessions/:id`), the backend dynamically computes a `displayStatus` based on action states:
+When querying sessions (`GET /sessions` or `GET /sessions/:id`), the backend dynamically computes a `displayStatus` based on action states in priority order (`deriveDisplayStatus` in `sessionStatusReducer.ts`):
 
-| Display Status | Derivation Rule |
-| :--- | :--- |
-| `ROLLBACK_FAILED` | At least one action has status `ROLLBACK_FAILED`. |
-| `ROLLING_BACK` | At least one action has undo status `IN_PROGRESS`. |
-| `AWAITING_APPROVAL` | At least one action has status `PENDING_APPROVAL`. |
-| `REVERTED` | All executed actions have status `ROLLED_BACK` (and 0 `CLEARED`). |
-| `PARTIALLY_REVERTED` | At least one action is `ROLLED_BACK`, and at least one action is `SUCCESS` or `CLEARED`. |
-| `ABANDONED` | Stored status is `ABANDONED`. |
-| `COMPLETED` | Stored status is not `ACTIVE`. |
-| `ACTIVE` | Stored status is `ACTIVE`. |
+| Priority | Display Status | Derivation Rule |
+| :--- | :--- | :--- |
+| 1 | `ROLLBACK_FAILED` | At least one action has status `ROLLBACK_FAILED`. |
+| 2 | `ROLLING_BACK` | At least one action has undo status `IN_PROGRESS`. |
+| 3 | `AWAITING_APPROVAL` | At least one action has status `PENDING_APPROVAL`. |
+| 4 | `REVERTED` | All executed actions (`SUCCESS`, `ROLLED_BACK`, `ROLLBACK_FAILED`) have status `ROLLED_BACK` and 0 `CLEARED`. |
+| 5 | `PARTIALLY_REVERTED` | At least one action is `ROLLED_BACK`, and at least one action is `SUCCESS` or `CLEARED`. |
+| 6 | `ABANDONED` | Stored session status is `ABANDONED`. |
+| 7 | `COMPLETED` | Stored session status is not `ACTIVE` (includes stored `COMPLETED`, `FAILED`, or `ROLLED_BACK` sessions without matching rollback/approval rules above). |
+| 8 | `ACTIVE` | Stored session status is `ACTIVE`. |
 
 ---
 
-## 3. Approval Request Statuses & Purposes
+## 3. Rollback Rules
+
+The following rules govern session rollback behavior across AgentRein:
+
+- **Caller Authorization**: Agent callers may trigger rollback only on `ACTIVE` sessions (`canRollbackSession` in `sessionStatusReducer.ts:167`). Operator callers may trigger rollback on sessions with stored status `ACTIVE`, `FAILED`, `COMPLETED`, or `ABANDONED` (`sessionStatusReducer.ts:169-174`).
+- **Required Actions**: A session can only be rolled back if it has at least one action with status `SUCCESS` (`sessionStatusReducer.ts:161-164`). Sessions already in `REVERTED` display status cannot be rolled back (`sessionStatusReducer.ts:153`).
+- **Sandbox Behavior**: Rolling back a sandbox session converts all `PENDING_APPROVAL` actions in bulk to `ROLLED_BACK` (`server.ts:2825-2835`).
+- **Execution Chain**: Rollback iterates backwards through executed `SUCCESS` actions. If an individual undo operation fails, the rollback chain halts immediately (`undoStack.ts:223, 234`).
+- **Declined Rollback Approval**: If a reviewer declines a rollback approval request, the action's undo status is set to `DECLINED` while its execution status remains `SUCCESS` (preserving its side-effects), and the overall session status becomes `FAILED` (`approvalResolutionEngine.ts:390`, `undoStack.ts:302`).
+- **Pending and Cleared Actions**: Actions in `PENDING_APPROVAL` or `CLEARED` status are never rolled back; if rollback completes while such actions remain, the parent session status is left unchanged (`undoStack.ts:312`).
+
+---
+
+## 4. Approval Requests
 
 Approval requests track human-in-the-loop review operations.
 
@@ -83,11 +96,13 @@ Approval requests track human-in-the-loop review operations.
 
 ### Approval Purposes
 
-- **`EXECUTE_PRE`**: Pre-execution gate created when an action is declared in `requiresApproval`. Approval transitions action to `CLEARED`. Rejection transitions action to `FAILED` and triggers session rollback.
-- **`EXECUTE_POST`**: Post-execution gate created after-the-fact when a standard logged action matches a policy with `REQUIRE_APPROVAL`. Approval updates action to `SUCCESS`. Rejection triggers single-action rollback.
-- **`ROLLBACK`**: Gate for manual or policy-triggered rollback operations.
+- **Before-Execution Approval**: Pre-execution gate created when an action is declared in `requiresApproval`. Approval transitions action to `CLEARED`. Rejection transitions action to `FAILED` and triggers session rollback.
+- **After-Execution Approval**: Post-execution gate created after-the-fact when a standard logged action matches a policy with `REQUIRE_APPROVAL`. Approval updates action to `SUCCESS`. Rejection triggers single-action rollback.
+- **Rollback Approval**: Gate for manual or policy-triggered rollback operations.
 
-### Unconfirmed Approvals
+### Approval Fields & Unconfirmed Flag
 
-In `GET /approvals`, each approval returns an `unconfirmed` boolean flag:
-- `unconfirmed: true` if the action is currently `CLEARED` and was approved over 1 hour ago (`STALE_UNCONFIRMED_THRESHOLD_MS`) without the SDK confirming execution.
+`GET /approvals` returns an array of objects containing the following fields: `approvalId`, `actionId`, `apiName`, `operationType`, `sessionId`, `agentId`, `payloadSummary`, `requestedAt`, `timeoutAt`, `timeRemaining`, `status`, `resolvedAt`, `resolvedBy`, `reason`, `actionStatus`, and `unconfirmed`.
+
+- `unconfirmed: true` if the action is currently `CLEARED` and was approved over 1 hour ago without the SDK confirming execution.
+
