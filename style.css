@@ -1,0 +1,118 @@
+/* AgentRein Dashboard Visual Identity Alignment for Mintlify Docs */
+
+:root,
+.dark,
+html.dark,
+body {
+  /* Dashboard Design Tokens */
+  --ar-bg: #09080C;
+  --ar-panel: #0F0D13;
+  --ar-surface: #141218;
+  --ar-elevated: #1B1820;
+  --ar-border: #26232D;
+  --ar-border-strong: #37333F;
+
+  --ar-text: #EDEBF0;
+  --ar-text-2: #A8A3B0;
+  --ar-text-3: #857F8F;
+
+  --ar-accent: #2A6AD8;
+  --ar-accent-hover: #2760C4;
+  --ar-accent-pressed: #2560C4;
+  --ar-accent-text: #5B93F0;
+  --ar-accent-tint: rgba(42, 106, 216, 0.16);
+  --ar-accent-tint-border: rgba(42, 106, 216, 0.32);
+  --ar-on-accent: #F7F6F9;
+
+  --ar-success: #3FBF82;
+  --ar-success-bg: rgba(63, 191, 130, 0.12);
+  --ar-success-border: rgba(63, 191, 130, 0.28);
+
+  --ar-pending: #E5A93D;
+  --ar-pending-bg: rgba(229, 169, 61, 0.12);
+  --ar-pending-border: rgba(229, 169, 61, 0.28);
+
+  --ar-rolled-back: #9682E8;
+  --ar-rolled-back-bg: rgba(150, 130, 232, 0.12);
+  --ar-rolled-back-border: rgba(150, 130, 232, 0.28);
+
+  --ar-failed: #EC5D57;
+  --ar-failed-bg: rgba(236, 93, 87, 0.12);
+  --ar-failed-border: rgba(236, 93, 87, 0.28);
+}
+
+/* Main Background and Typography Overrides */
+.dark,
+[data-theme='dark'],
+html.dark {
+  background-color: var(--ar-bg) !important;
+  color: var(--ar-text) !important;
+}
+
+.dark body {
+  background-color: var(--ar-bg) !important;
+  color: var(--ar-text) !important;
+}
+
+/* Navigation & Sidebar Panel Styling */
+.dark #sidebar,
+.dark nav,
+.dark [class*="sidebar"],
+.dark [class*="navigation"] {
+  background-color: var(--ar-panel) !important;
+  border-color: var(--ar-border) !important;
+}
+
+/* Card, Surface & Callout Containers */
+.dark [class*="card"],
+.dark [class*="Callout"],
+.dark [class*="container"],
+.dark [class*="surface"] {
+  background-color: var(--ar-surface) !important;
+  border-color: var(--ar-border) !important;
+}
+
+/* Code Block and Monospace Containers */
+.dark pre,
+.dark code,
+.dark [class*="codeblock"],
+.dark [class*="code-block"] {
+  background-color: var(--ar-elevated) !important;
+  border-color: var(--ar-border) !important;
+}
+
+/* Status Badges & Alert Styling to match Dashboard States */
+.status-badge-success,
+[data-status="SUCCESS"],
+[data-status="cleared"] {
+  color: var(--ar-success) !important;
+  background-color: var(--ar-success-bg) !important;
+  border: 1px solid var(--ar-success-border) !important;
+}
+
+.status-badge-pending,
+[data-status="PENDING"],
+[data-status="unconfirmed"] {
+  color: var(--ar-pending) !important;
+  background-color: var(--ar-pending-bg) !important;
+  border: 1px solid var(--ar-pending-border) !important;
+}
+
+.status-badge-rolled-back,
+[data-status="ROLLED_BACK"] {
+  color: var(--ar-rolled-back) !important;
+  background-color: var(--ar-rolled-back-bg) !important;
+  border: 1px solid var(--ar-rolled-back-border) !important;
+}
+
+.status-badge-failed,
+[data-status="FAILED"] {
+  color: var(--ar-failed) !important;
+  background-color: var(--ar-failed-bg) !important;
+  border: 1px solid var(--ar-failed-border) !important;
+}
+
+/* Interactive elements and accent highlights */
+.dark a:hover {
+  color: var(--ar-accent-hover) !important;
+}
