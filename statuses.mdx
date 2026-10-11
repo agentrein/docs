@@ -48,9 +48,9 @@ The database persists one of five raw session statuses:
 | :--- | :--- |
 | `ACTIVE` | Created when a session is initialized (`POST /sessions`). The session is live and accepting new actions. |
 | `COMPLETED` | Written when a session is completed via `PATCH /sessions/:id` with `{ status: 'COMPLETED' }`. |
-| `FAILED` | Written by the backend when session rollback completes with failed or declined actions. |
+| `FAILED` | Written by the backend when session rollback completes with failed or declined actions. Shown as `ROLLBACK_FAILED`. |
 | `ROLLED_BACK` | Written by the backend when session rollback completes with no failed/declined actions or when sandbox simulated actions are rolled back. |
-| `ABANDONED` | Written automatically when an `ACTIVE` session exceeds 24 hours of inactivity. |
+| `ABANDONED` | Written automatically when an `ACTIVE` session exceeds 24 hours of inactivity. Sessions with a pending approval, a `CLEARED` action, or an undo in progress are not abandoned. |
 
 ### Derived Display Statuses
 
@@ -58,13 +58,13 @@ When querying sessions (`GET /sessions` or `GET /sessions/:id`), the backend dyn
 
 | Priority | Display Status | Derivation Rule |
 | :--- | :--- | :--- |
-| 1 | `ROLLBACK_FAILED` | At least one action has status `ROLLBACK_FAILED`. |
+| 1 | `ROLLBACK_FAILED` | At least one action has status `ROLLBACK_FAILED`, or the stored session status is `FAILED` (a rollback did not complete). |
 | 2 | `ROLLING_BACK` | At least one action has undo status `IN_PROGRESS`. |
 | 3 | `AWAITING_APPROVAL` | At least one action has status `PENDING_APPROVAL`. |
 | 4 | `REVERTED` | All executed actions (`SUCCESS`, `ROLLED_BACK`, `ROLLBACK_FAILED`) have status `ROLLED_BACK` and 0 `CLEARED`. |
 | 5 | `PARTIALLY_REVERTED` | At least one action is `ROLLED_BACK`, and at least one action is `SUCCESS` or `CLEARED`. |
 | 6 | `ABANDONED` | Stored session status is `ABANDONED`. |
-| 7 | `COMPLETED` | Stored session status is not `ACTIVE` (includes stored `COMPLETED`, `FAILED`, or `ROLLED_BACK` sessions without matching rollback/approval rules above). |
+| 7 | `COMPLETED` | Stored session status is not `ACTIVE` (stored status is `COMPLETED`, or stored `ROLLED_BACK` with no executed actions, and no higher rule matches). |
 | 8 | `ACTIVE` | Stored session status is `ACTIVE`. |
 
 ---
