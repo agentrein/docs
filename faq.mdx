@@ -13,7 +13,7 @@ description: "Common integration states and how to handle them."
 
 <Accordion title="What does UNVERIFIED mean?">
 
-`UNVERIFIED` means the outcome-verification call could not be completed. It is an infrastructure warning rather than a judgment about the agent, and it never creates an approval. Read [Core Concepts](/core-concepts#how-drift-detection-triggers-approval) for the other outcome states.
+`UNVERIFIED` means the outcome-verification call could not be completed. It is an infrastructure warning rather than a judgment about the agent, and it never creates an approval. Read [Core Concepts](/core-concepts#6-intent-verification--drift-detection) for the other outcome states.
 
 </Accordion>
 
@@ -25,7 +25,7 @@ AgentRein throws `ApprovalRejectedError` when a reviewer rejects a `requiresAppr
 
 <Accordion title="What happens when an approval expires?">
 
-Approvals created automatically by policies or high-risk outcome-drift checks are rejected after 24 hours without a response. AgentRein marks the action as failed and automatically rolls back the session. See [Approval Expiry](/core-concepts#approval-expiry) for the distinction from SDK-managed approval timeouts.
+Approvals created automatically by policies or high-risk outcome-drift checks are rejected after 24 hours without a response. AgentRein marks the action as failed and automatically rolls back the session. See [Human-in-the-Loop & Approval Gates](/core-concepts#4-human-in-the-loop-hitl--approval-gates) for the distinction from SDK-managed approval timeouts.
 
 </Accordion>
 
