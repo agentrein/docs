@@ -25,7 +25,13 @@ AgentRein throws `ApprovalRejectedError` when a reviewer rejects a `requiresAppr
 
 <Accordion title="What happens when an approval expires?">
 
-Approvals created automatically by policies or high-risk outcome-drift checks are rejected after 24 hours without a response. AgentRein marks the action as failed and automatically rolls back the session. See [Human-in-the-Loop & Approval Gates](/core-concepts#4-human-in-the-loop-hitl--approval-gates) for the distinction from SDK-managed approval timeouts.
+Approvals that receive no response expire after 24 hours and are rejected. What happens next depends on the approval type:
+
+- **Before-execution approval** (action declared in `requiresApproval`): The approval is rejected, the action is marked `FAILED`, session rollback is triggered, and a failure email is sent.
+- **After-execution approval** (drift check or policy `REQUIRE_APPROVAL` on a logged action): The approval is rejected, the action stays `SUCCESS`, no rollback occurs, and no email is sent; it stays visible to the operator.
+- **Rollback approval** (`undoConfig.requireApproval`): The approval is rejected, the action stays `SUCCESS`, its undo is marked `DECLINED`, and no rollback occurs.
+
+Expiry never approves anything and never triggers an automatic undo for the last two cases. See [Human-in-the-Loop & Approval Gates](/core-concepts#4-human-in-the-loop-hitl--approval-gates) for the distinction from SDK-managed approval timeouts.
 
 </Accordion>
 
