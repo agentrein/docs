@@ -1,0 +1,108 @@
+---
+title: "Statuses & State Machine"
+description: "Reference for stored vs derived statuses across actions, sessions, and approval requests."
+mode: "default"
+---
+
+AgentRein manages safety state across three core entities: **Actions**, **Sessions**, and **Approval Requests**. This document provides a plain-language reference for all stored and derived statuses.
+
+---
+
+## 1. Action Statuses
+
+Actions represent individual API calls intercepted or logged during an agent session.
+
+### Stored Action Statuses
+
+The database stores one of six status values on each action:
+
+| Status | Plain-Language Meaning |
+| :--- | :--- |
+| `SUCCESS` | The action executed successfully and its side-effects were recorded. |
+| `PENDING_APPROVAL` | The action is paused or logged awaiting reviewer sign-off. |
+| `CLEARED` | An explicit before-execution approval was granted by a reviewer. The SDK is authorized to execute the action locally and confirm result via `PATCH`. |
+| `FAILED` | The action threw an exception, failed policy evaluation, or was rejected by a reviewer. |
+| `ROLLED_BACK` | Compensation (undo) executed successfully for this action. |
+| `ROLLBACK_FAILED` | Automatic compensation failed during execution. |
+
+### The `CLEARED` Status Flow
+
+When an action is explicitly configured with `requiresApproval` in `wrap()`:
+1. The SDK logs the action as `PENDING_APPROVAL` (before-execution approval).
+2. A reviewer approves the request via dashboard or API.
+3. The backend transitions the action to `CLEARED`.
+4. The SDK receives `APPROVED` from polling, executes the local SDK call, and sends `PATCH /sessions/:id/actions/:actionId` with `status: SUCCESS` (transitioning action to `SUCCESS`).
+5. If local execution fails, the approved action stays `CLEARED` (never `SUCCESS`, never rolled back automatically). The SDK logs a separate failed action (`status: FAILED`), and `GET /approvals` marks the approved action as `unconfirmed: true` after 1 hour if execution is not confirmed.
+
+---
+
+## 2. Session Statuses
+
+Sessions group actions and track overall agent execution.
+
+### Stored Session Statuses
+
+The database persists one of five raw session statuses:
+
+| Stored Status | Meaning |
+| :--- | :--- |
+| `ACTIVE` | Created when a session is initialized (`POST /sessions`). The session is live and accepting new actions. |
+| `COMPLETED` | Written when a session is completed via `PATCH /sessions/:id` with `{ status: 'COMPLETED' }`. |
+| `FAILED` | Written by the backend when session rollback completes with failed or declined actions. Shown as `ROLLBACK_FAILED`. |
+| `ROLLED_BACK` | Written by the backend when session rollback completes with no failed/declined actions or when sandbox simulated actions are rolled back. |
+| `ABANDONED` | Written automatically when an `ACTIVE` session exceeds 24 hours of inactivity. Sessions with a pending approval, a `CLEARED` action, or an undo in progress are not abandoned. |
+
+### Derived Display Statuses
+
+When querying sessions (`GET /sessions` or `GET /sessions/:id`), the backend dynamically computes a `displayStatus` based on action states in priority order:
+
+| Priority | Display Status | Derivation Rule |
+| :--- | :--- | :--- |
+| 1 | `ROLLBACK_FAILED` | At least one action has status `ROLLBACK_FAILED`, or the stored session status is `FAILED` (a rollback did not complete). |
+| 2 | `ROLLING_BACK` | At least one action has undo status `IN_PROGRESS`. |
+| 3 | `AWAITING_APPROVAL` | At least one action has status `PENDING_APPROVAL`. |
+| 4 | `REVERTED` | All executed actions (`SUCCESS`, `ROLLED_BACK`, `ROLLBACK_FAILED`) have status `ROLLED_BACK` and 0 `CLEARED`. |
+| 5 | `PARTIALLY_REVERTED` | At least one action is `ROLLED_BACK`, and at least one action is `SUCCESS` or `CLEARED`. |
+| 6 | `ABANDONED` | Stored session status is `ABANDONED`. |
+| 7 | `COMPLETED` | Stored session status is not `ACTIVE` (stored status is `COMPLETED`, or stored `ROLLED_BACK` with no executed actions, and no higher rule matches). |
+| 8 | `ACTIVE` | Stored session status is `ACTIVE`. |
+
+---
+
+## 3. Rollback Rules
+
+The following rules govern session rollback behavior across AgentRein:
+
+- **Caller Authorization**: Agent callers may trigger rollback only on `ACTIVE` sessions. Operator callers may trigger rollback on sessions with stored status `ACTIVE`, `FAILED`, `COMPLETED`, or `ABANDONED`.
+- **Required Actions**: A session can only be rolled back if it has at least one action with status `SUCCESS`. Sessions already in `REVERTED` display status cannot be rolled back.
+- **Sandbox Behavior**: Rolling back a sandbox session converts all `SUCCESS` and `PENDING_APPROVAL` actions in bulk to `ROLLED_BACK` in a single transaction; no real compensation logic runs.
+- **Execution Chain**: Rollback iterates backwards through executed `SUCCESS` actions. If an individual undo operation fails, the rollback chain halts immediately.
+- **Declined Rollback Approval**: If a reviewer declines a rollback approval request, the action's undo status is set to `DECLINED` while its execution status remains `SUCCESS` (preserving its side-effects), and the overall session status becomes `FAILED`.
+- **Pending and Cleared Actions**: Actions in `PENDING_APPROVAL` or `CLEARED` status are never rolled back; if rollback completes while such actions remain, the parent session status is left unchanged.
+
+---
+
+## 4. Approval Requests
+
+Approval requests track human-in-the-loop review operations.
+
+### Approval Statuses
+
+| Status | Meaning |
+| :--- | :--- |
+| `PENDING` | Awaiting reviewer action. |
+| `APPROVED` | Granted by reviewer. |
+| `REJECTED` | Declined by reviewer or timed out. |
+
+### Approval Purposes
+
+- **Before-Execution Approval**: Pre-execution gate created when an action is declared in `requiresApproval`. Approval transitions action to `CLEARED`. Rejection transitions action to `FAILED` and triggers session rollback.
+- **After-Execution Approval**: Post-execution gate created after-the-fact when a standard logged action matches a policy with `REQUIRE_APPROVAL`. Approval updates action to `SUCCESS`. Rejection triggers single-action rollback.
+- **Rollback Approval**: Gate created during action rollback when an action's compensation configuration specifies `requireApproval: true`. Approval resumes compensation execution, while rejection sets the action's undo status to `DECLINED` and transitions the parent session to `FAILED`.
+
+### Approval Fields & Unconfirmed Flag
+
+`GET /approvals` returns an array of objects containing the following fields: `approvalId`, `actionId`, `apiName`, `operationType`, `sessionId`, `agentId`, `payloadSummary`, `requestedAt`, `timeoutAt`, `timeRemaining`, `status`, `resolvedAt`, `resolvedBy`, `reason`, `actionStatus`, and `unconfirmed`.
+
+- `unconfirmed: true` if the action is currently `CLEARED` and was approved over 1 hour ago without the SDK confirming execution.
+

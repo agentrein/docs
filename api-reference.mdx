@@ -1,63 +1,402 @@
 ---
 title: "API Reference"
-description: "SDK methods and REST API reference"
+description: "Comprehensive REST API & SDK method reference."
 mode: "wide"
 ---
 
-AgentRein provides two types of API reference:
+AgentRein provides a REST API for session management, governance, and dashboard integration, alongside SDK primitives for agent applications.
 
-- **SDK methods** for using AgentRein from your application.
-- **REST API** for managing AgentRein resources over HTTP. See the [REST API specification](https://agentrein.com/docs/api-reference/openapi.json).
+---
 
-## Shared REST response convention
+## Shared REST Conventions
 
-Successful REST API responses use the following envelope. Errors use RFC-7807 problem-details.
+### Response Envelope
 
-<ResponseField name="response" type="object">
+All successful REST API responses return HTTP 200/201 wrapped in a standard JSON envelope:
 
-  <ResponseField name="data" type="object">
-
-  The endpoint result.
-
-  </ResponseField>
-
-  <ResponseField name="error" type="null">
-
-  `null` for a successful response.
-
-  </ResponseField>
-
-  <ResponseField name="timestamp" type="string">
-
-  The time the response was generated.
-
-  </ResponseField>
-
-</ResponseField>
-
-## `wrap<T>`
-
-Wrap a standard SDK client to enable automatic logging, interception, and rollbacks.
-
-**Signature:**  
-```ts
-wrap<T extends object>(client: T, session: Session, options: WrapOptions): T
+```json
+{
+  "data": { ... },
+  "error": null,
+  "timestamp": "2026-10-10T12:00:00.000Z"
+}
 ```
 
-- `client`: The standard SDK instance (e.g., `octokit`).
-- `session`: The active agent session object.
-- `options`: A `WrapOptions` object including the `connector` identifier.
+### Error Responses (RFC 7807)
 
-**Returns:**  
-A recursive Proxy of the original client (`T`), ensuring 100% type preservation.
+API errors return standard HTTP status codes (400, 403, 404, 409, 429, 500, 503) using the RFC 7807 Problem Details envelope:
 
-Where `WrapOptions` is:
-```ts
+```json
 {
-    connector: string;
-    requiresApproval?: string[];
-    retryable?: string[];
-    pollIntervalMs?: number;
-    timeoutMs?: number;
+  "data": null,
+  "error": {
+    "type": "https://agentrein.com/errors/operator-required",
+    "title": "Operator Credentials Required",
+    "status": 403,
+    "detail": "This endpoint requires a dashboard login token; API-key tokens cannot call it."
+  },
+  "timestamp": "2026-10-10T12:00:00.000Z"
+}
+```
+
+---
+
+## System & Health Endpoints
+
+### `GET /health`
+
+Service health check endpoint.
+
+- **Auth**: None required (Public)
+- **Response**: `{ "status": "ok", "timestamp": "2026-10-10T12:00:00.000Z" }`
+
+### `POST /webhooks/paddle`
+
+Paddle billing subscription webhook endpoint.
+
+- **Auth**: None required (Public; HMAC signature verified, Rate Limit: 300/min)
+- **Response**: `{ "received": true }`
+
+---
+
+## Authentication & Tokens
+
+AgentRein endpoints distinguish between **Agent API Keys** (`ar_live_...` / `ar_test_...`) and **Dashboard Operator Tokens**.
+
+### `POST /auth/token`
+
+Exchange an API key for a Bearer JWT token.
+
+- **Auth**: None required (Public, Rate Limit: 60/min)
+- **Body**: `{ "apiKey": "ar_live_..." }`
+- **Response**: `{ "data": { "token": "eyJhbG..." } }`
+
+### `POST /auth/register`
+
+Register a new operator account and organization.
+
+- **Auth**: None required (Public, Rate Limit: 20/15min)
+- **Body**: `{ "email": "admin@example.com", "password": "...", "name": "Admin" }`
+- **Response**: Returns created user and organization tokens (`201 Created`).
+
+### `POST /auth/login`
+
+Authenticate operator credentials with email and password.
+
+- **Auth**: None required (Public, Rate Limit: 20/15min)
+- **Body**: `{ "email": "admin@example.com", "password": "..." }`
+- **Response**: Returns session JWT token.
+
+### `POST /auth/forgot-password`
+
+Send a password reset link to a registered email address.
+
+- **Auth**: None required (Public, Rate Limit: 20/15min)
+- **Body**: `{ "email": "user@example.com" }`
+- **Response**: Confirmation message.
+
+### `POST /auth/reset-password`
+
+Reset operator account password using a reset token.
+
+- **Auth**: None required (Public, Rate Limit: 20/15min)
+- **Body**: `{ "token": "...", "newPassword": "..." }`
+- **Response**: Password reset confirmation.
+
+### `GET /auth/verify-email`
+
+Verify operator email address using a verification token query parameter.
+
+- **Auth**: None required (Public, Rate Limit: 20/15min)
+- **Query**: `?token=...`
+- **Response**: `{ "verified": true, "email": "user@example.com" }`
+
+### `GET /auth/google`
+
+Initiate Google OAuth2 operator sign-in flow.
+
+- **Auth**: None required (Public)
+- **Response**: Redirects to Google consent screen.
+
+### `GET /auth/google/callback`
+
+Google OAuth2 redirect callback receiver.
+
+- **Auth**: None required (Public)
+- **Response**: Redirects to dashboard with session token.
+
+### `GET /auth/github`
+
+Initiate GitHub OAuth2 operator sign-in flow.
+
+- **Auth**: None required (Public)
+- **Response**: Redirects to GitHub consent screen.
+
+### `GET /auth/github/callback`
+
+GitHub OAuth2 redirect callback receiver.
+
+- **Auth**: None required (Public)
+- **Response**: Redirects to dashboard with session token.
+
+---
+
+## Session Management Endpoints
+
+### `POST /sessions`
+
+Create a new safety session.
+
+- **Auth**: API Key or Operator Token
+- **Body**:
+  ```json
+  {
+    "agentId": "billing-agent",
+    "intent": "Process monthly subscription renewals"
+  }
+  ```
+- **Response**: Returns created `Session` object (`201 Created`).
+
+### `GET /sessions`
+
+List sessions for the organization.
+
+- **Auth**: Operator Token
+- **Response**: Array of session objects enriched with:
+  - `displayStatus`: Dynamic status (`ACTIVE`, `COMPLETED`, `ABANDONED`, `AWAITING_APPROVAL`, `ROLLING_BACK`, `REVERTED`, `PARTIALLY_REVERTED`, `ROLLBACK_FAILED`)
+  - `counters`: Status summary count breakdown (`success`, `failed`, `pendingApproval`, `cleared`, `rolledBack`, `rollbackFailed`)
+  - `simulated`: Boolean indicating if session ran in sandbox mode
+  - `allowedCommands`: `{ "rollbackSession": boolean }`
+
+### `GET /sessions/:id`
+
+Retrieve details for a single session, including all logged actions and snapshots.
+
+- **Auth**: API Key or Operator Token
+- **Response**: Single session object with `actions` array and computed `displayStatus`, `counters`, `simulated`, and `allowedCommands`.
+
+### `PATCH /sessions/:id`
+
+Mark a session as `COMPLETED`.
+
+- **Auth**: API Key or Operator Token
+- **Body**: `{ "status": "COMPLETED" }`
+- **Errors**:
+  - `400 Bad Request`: If `status` is not `'COMPLETED'` or session is not active/abandoned.
+  - `409 Conflict`: If status transition conflict occurs.
+
+### `POST /sessions/:id/rollback`
+
+Trigger LIFO rollback compensation for all logged actions in a session.
+
+- **Auth**: API Key or Operator Token
+- **Errors**:
+  - `409 Conflict`: If session cannot be rolled back (e.g. already `REVERTED` or no `SUCCESS` actions).
+
+---
+
+## Action Interception Endpoints
+
+### `POST /sessions/:id/actions/precapture`
+
+Capture pre-mutation resource state before executing a tool call.
+
+- **Auth**: API Key or Operator Token (Rate Limit: 120/min)
+- **Body**: `{ "apiName": "github.issues.update", "payload": { ... } }`
+- **Response**: `{ "data": { "precaptureId": "snap_123", "captureFailed": false } }`
+
+### `POST /sessions/:id/actions`
+
+Log an action during or after execution.
+
+- **Auth**: API Key or Operator Token
+- **Body**:
+  ```json
+  {
+    "apiName": "stripe.customers.create",
+    "operationType": "CREATE",
+    "payload": { "email": "user@example.com" },
+    "response": { "id": "cus_123" },
+    "status": "SUCCESS",
+    "precaptureId": "snap_123"
+  }
+  ```
+- **Errors**:
+  - `403 Blocked by Policy`: If a policy with `BLOCK` matches (`policy-blocked`).
+  - `403 Upgrade Required`: If approval gate triggered on `FREE` plan (`plan-required`).
+  - `429 Quota Exceeded`: Monthly action limit reached (`quota-exceeded`).
+
+### `PATCH /sessions/:id/actions/:actionId`
+
+Update status or response payload of an existing action (used to confirm execution of `CLEARED` or `PENDING_APPROVAL` actions).
+
+- **Auth**: API Key or Operator Token
+- **Body**: `{ "status": "SUCCESS", "response": { ... } }`
+- **Errors**:
+  - `409 Conflict`: If invalid status transition is requested (e.g. patching `SUCCESS` to `PENDING_APPROVAL`).
+
+### `POST /sessions/:id/actions/:actionId/rollback`
+
+Roll back a single action within a session.
+
+- **Auth**: Operator Token
+
+---
+
+## Approval Endpoints (HITL)
+
+### `GET /approvals`
+
+List approval requests (default filter: `PENDING`; optional `?status=PENDING|APPROVED|REJECTED|ALL`).
+
+- **Auth**: Operator Token (`PRO` plan required)
+- **Response**: Array of approval objects including `actionStatus`, `unconfirmed`, `payloadSummary`, and `timeRemaining`.
+
+### `GET /approvals/:id`
+
+Get single approval details including full action payload and snapshot.
+
+- **Auth**: API Key or Operator Token
+
+### `POST /approvals/:id/approve`
+
+Approve a pending approval request.
+
+- **Auth**: Operator Token (`PRO` plan required)
+
+### `POST /approvals/:id/reject`
+
+Reject a pending approval request.
+
+- **Auth**: Operator Token (`PRO` plan required)
+- **Body**: `{ "reason": "Unusual refund amount" }`
+
+---
+
+## Registry & Connector Validation
+
+### `GET /registry`
+
+Fetch connector registry metadata and action definitions.
+
+- **Auth**: API Key or Operator Token
+- **Response**: Array of connector actions with definitions, supported operations, and precapture requirements.
+
+### `GET /settings/credentials/validate`
+
+Validate configured connector credentials for agent operations.
+
+- **Auth**: API Key or Operator Token (Rate Limit: 30/min)
+- **Query**: `?connectors=github,slack,stripe`
+- **Response**: `{ "valid": true, "configured": [...], "missing": [...], "suggestions": [...] }`
+
+---
+
+## Policy Management Endpoints
+
+### `GET /policies`
+
+List organization policies.
+
+- **Auth**: Operator Token (`TEAM` plan required)
+
+### `POST /policies`
+
+Create governance policy.
+
+- **Auth**: Operator Token (`TEAM` plan required)
+- **Body**:
+  ```json
+  {
+    "apiNamePattern": "stripe.refunds.*",
+    "condition": { "field": "amount", "operator": "gt", "value": 10000 },
+    "action": "REQUIRE_APPROVAL",
+    "enabled": true
+  }
+  ```
+
+### `PUT /policies/:id`
+
+Update existing policy.
+
+- **Auth**: Operator Token (`TEAM` plan required)
+
+### `PATCH /policies/:id/toggle`
+
+Toggle policy enabled state.
+
+- **Auth**: Operator Token (`TEAM` plan required)
+
+### `DELETE /policies/:id`
+
+Delete policy.
+
+- **Auth**: Operator Token (`TEAM` plan required)
+
+---
+
+## Operator Management Routes
+
+The following endpoints require Dashboard Operator credentials (`authKind === 'USER'`). Calling these endpoints with an Agent API Key returns HTTP 403 `operator-required`.
+
+| Method | Path | Plan | Purpose |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/me` | FREE | Retrieve authenticated user profile, organization details, and monthly usage metrics |
+| `PATCH` | `/me` | FREE | Update user profile information (e.g. display name) |
+| `DELETE` | `/me` | FREE | Permanently delete user and organization data cascade (Rate limit: 3/hour) |
+| `GET` | `/billing/portal` | FREE | Generate authenticated session URL for the Paddle billing portal |
+| `POST` | `/auth/resend-verification` | FREE | Resend email verification token to user email address |
+| `GET` | `/agents` | FREE | List organization agents merged from registered metadata and session activity |
+| `POST` | `/agents` | FREE | Register a new named agent with slug and description |
+| `GET` | `/agents/:id` | FREE | Retrieve configuration and details for a registered agent |
+| `PUT` | `/agents/:id` | FREE | Update agent display name, description, or active/paused status |
+| `DELETE` | `/agents/:id` | FREE | Delete a registered agent record |
+| `GET` | `/policies` | TEAM | List organization governance policies |
+| `POST` | `/policies` | TEAM | Create a governance policy rule (ALLOW, REQUIRE_APPROVAL, or BLOCK) |
+| `PUT` | `/policies/:id` | TEAM | Update conditions, actions, or pattern on an existing governance policy |
+| `DELETE` | `/policies/:id` | TEAM | Permanently delete a governance policy |
+| `PATCH` | `/policies/:id/toggle` | TEAM | Toggle a governance policy rule between enabled and disabled |
+| `GET` | `/api-keys` | FREE | List active and revoked API keys for the organization |
+| `POST` | `/api-keys` | FREE | Generate a new live or test API key (Rate limit: 10/15min) |
+| `DELETE` | `/api-keys/:id` | FREE | Revoke an organization API key |
+| `GET` | `/sessions` | FREE | List sessions enriched with computed display status, counters, and allowed commands |
+| `GET` | `/sessions/dirty` | PRO | List sessions containing uncompensated actions or incomplete rollbacks |
+| `POST` | `/sessions/:id/actions/:actionId/rollback` | FREE | Roll back a single executed action within a session |
+| `GET` | `/metrics` | FREE | Retrieve organization-wide action counts, success rates, and safety statistics |
+| `GET` | `/sessions/:id/dirty` | FREE | Check whether a specific session contains uncompensated actions |
+| `GET` | `/sessions/:id/intent` | TEAM | Fetch intent alignment evaluation result for a session |
+| `GET` | `/sessions/:id/intent/summary` | TEAM | Fetch detailed intent drift summary and metric scores for a session |
+| `GET` | `/sessions/intent/summary` | TEAM | Retrieve organization-level intent verification statistics across all sessions |
+| `GET` | `/approvals` | PRO | List approval requests with filtering by status and unconfirmed flags |
+| `POST` | `/approvals/:id/approve` | PRO | Approve a pending approval request |
+| `POST` | `/approvals/:id/reject` | PRO | Reject a pending approval request and record rejection reason |
+| `GET` | `/settings/connectors/health` | PRO | Query connectivity and credential health status for all integrated connectors |
+| `GET` | `/settings/credentials` | FREE | List configured connector integrations without revealing secret values |
+| `PUT` | `/settings/credentials/:connector` | PRO | Store or update encrypted credential for a connector (Rate limit: 15/15min) |
+| `DELETE` | `/settings/credentials/:connector` | PRO | Remove stored credential for a connector (Rate limit: 15/15min) |
+| `GET` | `/audit-logs` | TEAM | Aggregate audit log entries from API keys, policies, connector credentials, and agents for the organization (no filters) |
+| `GET` | `/team/members` | TEAM | List organization team members (role is currently always MEMBER) |
+| `DELETE` | `/sessions/:id/purge` | PRO | Permanently purge session and related actions for GDPR compliance (Rate limit: 5/15min) |
+
+---
+
+## SDK Execution Primitives
+
+### `wrap<T>`
+
+Wraps any standard SDK client instance to enable automatic side-effect logging, policy enforcement, and LIFO rollback.
+
+```ts
+declare function wrap<T extends object>(client: T, session: Session, options: WrapOptions): T;
+```
+
+`WrapOptions` specification:
+```ts
+interface WrapOptions {
+  connector: string;            // Required connector identifier (e.g. 'github', 'slack', 'stripe')
+  requiresApproval?: string[];   // Method paths requiring pre-execution approval
+  retryable?: string[];          // Method paths eligible for exponential backoff retry
+  pollIntervalMs?: number;       // Polling interval for approval checks (min 1000ms, default 2000ms)
+  timeoutMs?: number;            // Timeout for approval checks (min 5000ms, default 86400000ms)
 }
 ```

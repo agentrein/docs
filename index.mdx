@@ -38,7 +38,7 @@ AgentRein requires **no proprietary connector frameworks** or wrapper SDK replac
 ```typescript TypeScript
 import { AgentRein } from 'agentrein';
 import { Octokit } from '@octokit/rest';
-import WebClient from '@slack/web-api';
+import { WebClient } from '@slack/web-api';
 
 const agentrein = new AgentRein({ apiKey: process.env.AGENTREIN_API_KEY });
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });

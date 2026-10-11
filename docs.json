@@ -3,9 +3,9 @@
   "theme": "mint",
   "name": "AgentRein",
   "colors": {
-    "primary": "#09090B",
-    "light": "#FAFAFA",
-    "dark": "#09090B"
+    "primary": "#2A6AD8",
+    "light": "#5B93F0",
+    "dark": "#2A6AD8"
   },
   "modeToggle": {
     "default": "dark",
@@ -32,6 +32,8 @@
               "index",
               "quickstart",
               "core-concepts",
+              "statuses",
+              "security-model",
               "faq"
             ]
           },
@@ -72,7 +74,7 @@
   },
   "appearance": {
     "strict": false,
-    "default": "system"
+    "default": "dark"
   },
   "description": "AI Agent Reliability Platform",
   "navbar": {
@@ -100,7 +102,7 @@
   "background": {
     "color": {
       "light": "#FFFFFF",
-      "dark": "#0E0E10"
+      "dark": "#09080C"
     }
   },
   "logo": {

@@ -5,8 +5,7 @@ description: Which external SDKs have automatic rollback support in the backend.
 
 ## Credentials
 
-Add connector credentials in **Dashboard → Integrations**. Each credential
-has a Key (the token name below) and a Value (Plain Text or JSON).
+Add connector credentials in **Dashboard → Integrations**. Each credential has a Key (the token name below) and a Value (Plain Text or JSON).
 
 <Tabs>
   <Tab title="GitHub" icon="github">
@@ -62,18 +61,6 @@ has a Key (the token name below) and a Value (Plain Text or JSON).
     | `refreshToken`  | OAuth refresh token (Gmail scope) |
 
     **Required scope:** `https://www.googleapis.com/auth/gmail.modify`
-
-    <Steps>
-      <Step title="Create OAuth credentials">
-        Go to [Google Cloud Console → APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials) and create an OAuth 2.0 Client ID.
-      </Step>
-      <Step title="Enable Gmail API">
-        Enable the [Gmail API](https://console.cloud.google.com/apis/library/gmail.googleapis.com) for your project.
-      </Step>
-      <Step title="Generate refresh token">
-        Use [OAuth Playground](https://developers.google.com/oauthplayground) to authorize the Gmail scope and get a refresh token.
-      </Step>
-    </Steps>
   </Tab>
 
   <Tab title="Google Drive">
@@ -87,23 +74,6 @@ has a Key (the token name below) and a Value (Plain Text or JSON).
     | `refreshToken`  | OAuth refresh token (Drive scope) |
 
     **Required scope:** `https://www.googleapis.com/auth/drive`
-
-    <Steps>
-      <Step title="Create OAuth credentials">
-        Go to [Google Cloud Console → APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials) and create an OAuth 2.0 Client ID.
-      </Step>
-      <Step title="Enable Drive API">
-        Enable the [Google Drive API](https://console.cloud.google.com/apis/library/drive.googleapis.com) for your project.
-      </Step>
-      <Step title="Generate refresh token">
-        Use [OAuth Playground](https://developers.google.com/oauthplayground) to authorize the Drive scope and get a refresh token.
-      </Step>
-    </Steps>
-
-    <Note>
-      Gmail and Google Drive can share the same `clientId` and `clientSecret`
-      but require separate refresh tokens unless both scopes were authorized together.
-    </Note>
   </Tab>
 
   <Tab title="Google Sheets">
@@ -117,43 +87,14 @@ has a Key (the token name below) and a Value (Plain Text or JSON).
     | `refreshToken`  | OAuth refresh token (Sheets scope) |
 
     **Required scope:** `https://www.googleapis.com/auth/spreadsheets`
-
-    <Steps>
-      <Step title="Create OAuth credentials">
-        Go to [Google Cloud Console → APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials) and create an OAuth 2.0 Client ID.
-      </Step>
-      <Step title="Enable Sheets API">
-        Enable the [Google Sheets API](https://console.cloud.google.com/apis/library/sheets.googleapis.com) for your project.
-      </Step>
-      <Step title="Generate refresh token">
-        Use [OAuth Playground](https://developers.google.com/oauthplayground) to authorize the Sheets scope and get a refresh token.
-      </Step>
-    </Steps>
   </Tab>
 </Tabs>
 
-<Tip>
-  The tab order here matches the dashboard. You can add any key-value pair not
-  listed above — AgentRein stores it encrypted and passes it to your connector
-  at runtime.
-</Tip>
+---
 
-## How Rollback Works
+## Registry & Automatic Rollback Strategies
 
-<Tip>
-When you use `wrap()`, AgentRein intercepts every method call and logs it
-to the backend with the action name (e.g. `stripe.invoices.create`) and
-the method response. The backend maintains a **Rollback Registry** — a map
-of action names to compensation strategies.
-
-When rollback is triggered for a session, the backend looks up each action
-in the registry and executes the appropriate undo strategy in LIFO order.
-</Tip>
-
-## Registry
-
-The following action names have automatic rollback strategies registered
-in the backend:
+AgentRein supports **142 actions across 9 connectors**. When rollback is triggered for a session, the backend executes inverse compensation in LIFO order.
 
 <Tabs>
   <Tab title="GitHub" icon="github">
@@ -180,199 +121,181 @@ in the backend:
     | `github.workflows.dispatch` | No automatic rollback (requires human approval) |
     | `github.users.invite` | Cancel the pending invitation |
   </Tab>
+
   <Tab title="Slack">
     | Action | Undo Strategy |
     |---|---|
-    | `slack.chat.postMessage` | Updates the message to a Tombstone (⚠️ Reverted by AgentRein: [reason]) and clears all blocks/buttons |
+    | `slack.chat.postMessage` | Updates message to Tombstone (`⚠️ Reverted by AgentRein: [reason]`) |
     | `slack.chat.update` | Restore `beforeState` |
-    | `slack.chat.delete` | Re-posts the original message content from beforeState with a restoration notice |
-    | `slack.channels.create` | Archive the created channel |
+    | `slack.chat.delete` | Re-posts original content from `beforeState` |
+    | `slack.channels.create` | Archive channel |
     | `slack.channels.rename` | Restore `beforeState` |
     | `slack.channels.setTopic` | Restore `beforeState` |
     | `slack.channels.setPurpose` | Restore `beforeState` |
-    | `slack.channels.archive` | Unarchive the channel |
-    | `slack.channels.invite` | Kick invited users from the channel |
-    | `slack.channels.kick` | Re-invite the user to the channel |
-    | `slack.channels.join` | Leave the channel |
-    | `slack.channels.leave` | Re-join the channel |
-    | `slack.channels.close` | Open the channel |
-    | `slack.channels.open` | Close the channel |
-    | `slack.files.upload` | Delete the uploaded file |
+    | `slack.channels.archive` | Unarchive channel |
+    | `slack.channels.invite` | Kick invited users |
+    | `slack.channels.kick` | Re-invite user |
+    | `slack.channels.join` | Leave channel |
+    | `slack.channels.leave` | Re-join channel |
+    | `slack.channels.close` | Open channel |
+    | `slack.channels.open` | Close channel |
+    | `slack.files.upload` | Delete uploaded file |
     | `slack.files.delete` | No automatic rollback (requires human approval) |
-    | `slack.reactions.add` | Remove the reaction |
-    | `slack.stars.add` | Remove the star |
+    | `slack.reactions.add` | Remove reaction |
+    | `slack.stars.add` | Remove star |
     | `slack.userProfile.update` | Restore `beforeState` |
-    | `slack.userGroups.create` | Disable the user group |
+    | `slack.userGroups.create` | Disable user group |
     | `slack.userGroups.update` | Restore `beforeState` |
     | `slack.userGroups.users.update` | Restore `beforeState` |
-    | `slack.userGroups.enable` | Disable the user group |
-    | `slack.userGroups.disable` | Enable the user group |
+    | `slack.userGroups.enable` | Disable user group |
+    | `slack.userGroups.disable` | Enable user group |
   </Tab>
+
   <Tab title="Stripe">
     | Action | Undo Strategy |
     |---|---|
-    | `stripe.invoices.create` | Delete the draft invoice |
-    | `stripe.customers.create` | Delete the customer |
+    | `stripe.invoices.create` | Delete draft invoice |
+    | `stripe.customers.create` | Delete customer |
     | `stripe.customers.delete` | No automatic rollback (requires human approval) |
     | `stripe.charges.create` | No automatic rollback (requires human approval) |
     | `stripe.refunds.create` | No automatic rollback (requires human approval) |
-    | `stripe.coupons.create` | Delete the coupon (prevents future redemptions) |
+    | `stripe.coupons.create` | Delete coupon |
     | `stripe.coupons.delete` | No automatic rollback (requires human approval) |
-    | `stripe.meterEvents.create` | Cancel via meter event adjustment (within 24 hours of ingestion) |
-    | `stripe.paymentMethods.attach` | Detach the payment method |
+    | `stripe.meterEvents.create` | Cancel via adjustment (within 24h) |
+    | `stripe.paymentMethods.attach` | Detach payment method |
     | `stripe.paymentMethods.detach` | No automatic rollback (requires human approval) |
   </Tab>
+
   <Tab title="HubSpot">
     | Action | Undo Strategy |
     |---|---|
-    | `hubspot.contacts.create` | Delete the contact |
+    | `hubspot.contacts.create` | Delete contact |
     | `hubspot.contacts.update` | Restore `beforeState` |
     | `hubspot.contacts.delete` | No automatic rollback (requires human approval) |
-    | `hubspot.companies.create` | Archive the company |
+    | `hubspot.companies.create` | Archive company |
     | `hubspot.companies.update` | Restore `beforeState` |
     | `hubspot.companies.delete` | No automatic rollback (requires human approval) |
-    | `hubspot.deals.create` | Delete the deal |
+    | `hubspot.deals.create` | Delete deal |
     | `hubspot.deals.update` | Restore `beforeState` |
     | `hubspot.deals.delete` | No automatic rollback (requires human approval) |
-    | `hubspot.tickets.create` | Archive the ticket |
+    | `hubspot.tickets.create` | Archive ticket |
     | `hubspot.tickets.update` | Restore `beforeState` |
     | `hubspot.tickets.delete` | No automatic rollback (requires human approval) |
-    | `hubspot.engagements.create` | Archive the engagement |
+    | `hubspot.engagements.create` | Archive engagement |
     | `hubspot.engagements.delete` | No automatic rollback (requires human approval) |
-    | `hubspot.associations.create` | Remove the association |
-    | `hubspot.contactLists.addContact` | Remove the contact from the list |
-    | `hubspot.contactLists.removeContact` | Add the contact back to the list |
+    | `hubspot.associations.create` | Remove association |
+    | `hubspot.contactLists.addContact` | Remove contact from list |
+    | `hubspot.contactLists.removeContact` | Add contact back to list |
   </Tab>
+
   <Tab title="Salesforce">
     | Action | Undo Strategy |
     |---|---|
-    | `salesforce.accounts.create` | Delete the record |
+    | `salesforce.accounts.create` | Delete record |
     | `salesforce.accounts.update` | Restore `beforeState` |
     | `salesforce.accounts.delete` | No automatic rollback (requires human approval) |
-    | `salesforce.contacts.create` | Delete the record |
+    | `salesforce.contacts.create` | Delete record |
     | `salesforce.contacts.update` | Restore `beforeState` |
     | `salesforce.contacts.delete` | No automatic rollback (requires human approval) |
-    | `salesforce.leads.create` | Delete the record |
+    | `salesforce.leads.create` | Delete record |
     | `salesforce.leads.update` | Restore `beforeState` |
     | `salesforce.leads.delete` | No automatic rollback (requires human approval) |
-    | `salesforce.opportunities.create` | Delete the record |
+    | `salesforce.opportunities.create` | Delete record |
     | `salesforce.opportunities.update` | Restore `beforeState` |
     | `salesforce.opportunities.delete` | No automatic rollback (requires human approval) |
-    | `salesforce.cases.create` | Delete the record |
+    | `salesforce.cases.create` | Delete record |
     | `salesforce.cases.update` | Restore `beforeState` |
     | `salesforce.cases.delete` | No automatic rollback (requires human approval) |
-    | `salesforce.customObjects.create` | Delete the record |
+    | `salesforce.customObjects.create` | Delete record |
     | `salesforce.customObjects.update` | Restore `beforeState` |
     | `salesforce.customObjects.delete` | No automatic rollback (requires human approval) |
-    | `salesforce.attachments.create` | Delete the attachment |
+    | `salesforce.attachments.create` | Delete attachment |
     | `salesforce.attachments.update` | Restore `beforeState` |
     | `salesforce.attachments.delete` | No automatic rollback (requires human approval) |
-    | `salesforce.tasks.create` | Delete the task |
+    | `salesforce.tasks.create` | Delete task |
     | `salesforce.tasks.update` | Restore `beforeState` |
     | `salesforce.tasks.delete` | No automatic rollback (requires human approval) |
-    | `salesforce.documents.create` | Delete the document |
-    | `salesforce.notes.create` | Delete the note |
-    | `salesforce.caseComments.create` | Delete the case comment |
-    | `salesforce.campaignMembers.create` | Delete the campaign membership |
+    | `salesforce.documents.create` | Delete document |
+    | `salesforce.notes.create` | Delete note |
+    | `salesforce.caseComments.create` | Delete case comment |
+    | `salesforce.campaignMembers.create` | Delete campaign membership |
   </Tab>
+
   <Tab title="Notion">
     | Action | Undo Strategy |
     |---|---|
     | `notion.pages.create` | Move to trash |
     | `notion.pages.update` | Restore `beforeState` |
-    | `notion.pages.archive` | Restore page from trash (`notion.pages.restore`) |
-    | `notion.pages.restore` | Move page back to trash (`notion.pages.archive`) |
+    | `notion.pages.archive` | Untrash page (`notion.pages.restore`) |
+    | `notion.pages.restore` | Trash page (`notion.pages.archive`) |
     | `notion.database_items.create` | Move to trash |
     | `notion.database_items.update` | Restore `beforeState` |
-    | `notion.database_items.archive` | Restore database item from trash (`notion.database_items.restore`) |
-    | `notion.database_items.restore` | Move database item back to trash (`notion.database_items.archive`) |
+    | `notion.database_items.archive` | Untrash database item (`notion.database_items.restore`) |
+    | `notion.database_items.restore` | Trash database item (`notion.database_items.archive`) |
     | `notion.blocks.append` | Delete appended blocks |
   </Tab>
+
   <Tab title="Gmail">
     | Action | Undo Strategy |
     |---|---|
     | `gmail.messages.send` | Send correction reply in thread |
     | `gmail.messages.reply` | Send correction reply in thread |
-    | `gmail.messages.trash` | Untrash the message |
-    | `gmail.messages.untrash` | Trash the message |
+    | `gmail.messages.trash` | Untrash message |
+    | `gmail.messages.untrash` | Trash message |
     | `gmail.messages.markAsRead` | Restore `UNREAD` label |
     | `gmail.messages.markAsUnread` | Remove `UNREAD` label |
     | `gmail.messages.delete` | No automatic rollback (requires human approval) |
-    | `gmail.drafts.create` | Delete the draft |
-    | `gmail.drafts.delete` | Recreate the draft from snapshot |
-    | `gmail.threads.modify` | Reverse the label changes |
-    | `gmail.threads.trash` | Untrash the thread |
-    | `gmail.threads.untrash` | Trash the thread |
+    | `gmail.drafts.create` | Delete draft |
+    | `gmail.drafts.delete` | Recreate draft from snapshot |
+    | `gmail.threads.modify` | Restore label IDs |
+    | `gmail.threads.trash` | Untrash thread |
+    | `gmail.threads.untrash` | Trash thread |
     | `gmail.threads.delete` | No automatic rollback (requires human approval) |
-    | `gmail.labels.create` | Delete the label |
-    | `gmail.labels.modify` | Reverse the label changes |
+    | `gmail.labels.create` | Delete label |
+    | `gmail.labels.modify` | Restore label IDs |
     | `gmail.labels.delete` | No automatic rollback (requires human approval) |
   </Tab>
+
   <Tab title="Google Drive">
     | Action | Undo Strategy |
     |---|---|
-    | `gdrive.files.create` | Move the file to trash (soft delete — recoverable for 30 days) |
+    | `gdrive.files.create` | Move file to trash |
     | `gdrive.files.update` | Restore `beforeState` |
-    | `gdrive.files.move` | Reverse the move |
-    | `gdrive.files.copy` | Move the created copy to trash (soft delete — recoverable for 30 days) |
-    | `gdrive.files.trash` | Untrash the file |
-    | `gdrive.files.share` | Revoke the granted permission |
-    | `gdrive.drives.create` | Delete the created empty Shared Drive |
-    | `gdrive.drives.update` | Restore `beforeState` |
+    | `gdrive.files.move` | Reverse move |
+    | `gdrive.files.copy` | Move copy to trash |
+    | `gdrive.files.trash` | Untrash file |
+    | `gdrive.files.share` | Revoke granted permission |
     | `gdrive.files.delete` | No automatic rollback (requires human approval) |
+    | `gdrive.drives.create` | Delete empty Shared Drive |
+    | `gdrive.drives.update` | Restore `beforeState` |
     | `gdrive.drives.delete` | No automatic rollback (requires human approval) |
   </Tab>
+
   <Tab title="Google Sheets">
     | Action | Undo Strategy |
     |---|---|
+    | `gsheets.spreadsheets.create` | Move spreadsheet to trash |
+    | `gsheets.sheets.add` | Delete added sheet tab |
     | `gsheets.values.append` | No automatic rollback (requires human approval) |
     | `gsheets.values.update` | Restore `beforeState` |
-    | `gsheets.spreadsheets.create` | Move the spreadsheet to trash (soft delete — recoverable for 30 days) |
-    | `gsheets.sheets.add` | Delete the added sheet |
+    | `gsheets.values.clear` | No automatic rollback (requires human approval) |
     | `gsheets.rows.insert` | No automatic rollback (requires human approval) |
     | `gsheets.rows.delete` | No automatic rollback (requires human approval) |
     | `gsheets.rows.appendOrUpdate` | No automatic rollback (requires human approval) |
-    | `gsheets.values.clear` | No automatic rollback (requires human approval) |
   </Tab>
 </Tabs>
 
+---
+
 ## Validating Credentials Before Execution
 
-Before running your agent, you can verify that all required connector credentials
-are configured in the dashboard using `validateConfig()`:
+Call `validateConfig()` during agent startup:
 
 ```ts
 const result = await agentrein.validateConfig(['github', 'slack']);
 
 if (!result.valid) {
   console.error('Missing credentials:', result.missing);
-  // result.suggestions → ['Configure GitHub credentials at Dashboard → Settings → Connectors']
   process.exit(1);
 }
 ```
-
-### Return Value
-
-| Field | Type | Description |
-|---|---|---|
-| `valid` | `boolean` | `true` only if ALL requested connectors have credentials configured |
-| `configured` | `string[]` | Connectors that have credentials stored |
-| `missing` | `string[]` | Connectors that do not have credentials stored |
-| `suggestions` | `string[]` | Human-readable setup instructions for each missing connector |
-
-<Warning>
-Rollback will fail with `ROLLBACK_FAILED` if connector credentials are not 
-configured before executing actions. Always call `validateConfig()` during 
-your agent's startup to catch this early.
-</Warning>
-
-<Warning>
-## Unsupported Services
-
-For services not in the registry, `wrap()` will still log all actions and 
-trigger session rollback on failure — but the compensation step will be 
-marked `ROLLBACK_FAILED` since no undo strategy exists yet.
-
-To request support for a new connector, open an issue at 
-[github.com/AgentReinAi](https://github.com/AgentReinAi).
-</Warning>
