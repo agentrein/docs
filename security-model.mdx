@@ -58,9 +58,13 @@ Human operators log in via the dashboard to obtain operator session tokens. Oper
 
 When initializing the client, the `failureMode` option controls SDK behavior when communicating with the AgentRein backend or encountering server errors:
 
-- **`failureMode: 'open'` (Default)**: If action creation or logging fails—including HTTP `403` server denials (such as `policy-blocked` or plan gate requirements) or network outages—the SDK logs a warning (`console.warn` in Node.js / `logging.warning` in Python) and permits local execution of the tool call to proceed without backend safety tracking or approval gating.
-- **`failureMode: 'closed'`**: If backend errors, server denials, or network failures occur, the SDK re-throws the underlying HTTP status error or raises `AgentReinUnavailableError` and halts agent execution immediately to prevent unmonitored or unapproved production actions.
+- **Standard Calls**: For actions not configured in `requiresApproval`, the external provider call has already executed before action logging occurs. If logging to `POST /sessions/:id/actions` fails—including network outages, backend errors, or HTTP `403` server denials (such as `policy-blocked` or plan gate requirements):
+  - In `failureMode: 'open'` (default), the SDK logs a warning (`console.warn` in Node.js / `logging.warning` in Python) and returns the provider result without recording the action.
+  - In `failureMode: 'closed'`, the SDK re-throws the underlying HTTP error immediately (or raises `AgentReinUnavailableError` during session completion/rollback), halting execution.
+- **`requiresApproval` Calls**: For actions configured in `requiresApproval`, the SDK attempts to create a pending-approval record via `POST /sessions/:id/actions` before invoking the external provider. If pending-approval creation fails:
+  - In `failureMode: 'open'`, the SDK logs a warning and permits the local provider call to proceed directly without approval gating.
+  - In `failureMode: 'closed'`, the SDK re-throws the underlying error immediately, halting execution and preventing the provider call from executing.
 
 <Warning>
-  **Open Mode Swallows Server Denials**: In `failureMode: 'open'` (the default setting), server denials such as HTTP `403 Blocked by Policy` (`policy-blocked`) or `Upgrade Required` (`plan-required`) are swallowed as warnings, allowing local SDK tool execution to proceed. Use `failureMode: 'closed'` in high-security environments where server denials must strictly block execution.
+  **Open Mode Swallows Server Denials**: In `failureMode: 'open'` (the default setting), server errors and policy denials during action logging are logged as warnings rather than throwing errors. For `requiresApproval` calls, open mode bypasses approval creation and permits the provider call to execute unapproved. Use `failureMode: 'closed'` in high-security environments where unmonitored operations or backend communication failures must strictly halt execution.
 </Warning>
