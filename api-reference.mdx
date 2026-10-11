@@ -374,8 +374,8 @@ The following endpoints require Dashboard Operator credentials (`authKind === 'U
 | `GET` | `/settings/credentials` | FREE | List configured connector integrations without revealing secret values |
 | `PUT` | `/settings/credentials/:connector` | PRO | Store or update encrypted credential for a connector (Rate limit: 15/15min) |
 | `DELETE` | `/settings/credentials/:connector` | PRO | Remove stored credential for a connector (Rate limit: 15/15min) |
-| `GET` | `/audit-logs` | TEAM | Query tamper-evident audit logs with actor and date filters |
-| `GET` | `/team/members` | TEAM | List organization team members and role assignments |
+| `GET` | `/audit-logs` | TEAM | Aggregate audit log entries from API keys, policies, connector credentials, and agents for the organization (no filters) |
+| `GET` | `/team/members` | TEAM | List organization team members (role is currently always MEMBER) |
 | `DELETE` | `/sessions/:id/purge` | PRO | Permanently purge session and related actions for GDPR compliance (Rate limit: 5/15min) |
 
 ---
