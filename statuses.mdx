@@ -50,11 +50,11 @@ The database persists one of five raw session statuses:
 | `COMPLETED` | Written when a session is completed via `PATCH /sessions/:id` with `{ status: 'COMPLETED' }`. |
 | `FAILED` | Written by the backend when session rollback completes with failed or declined actions. |
 | `ROLLED_BACK` | Written by the backend when session rollback completes with no failed/declined actions or when sandbox simulated actions are rolled back. |
-| `ABANDONED` | Written by the background sweeper when an `ACTIVE` session exceeds 24 hours of inactivity. |
+| `ABANDONED` | Written automatically when an `ACTIVE` session exceeds 24 hours of inactivity. |
 
 ### Derived Display Statuses
 
-When querying sessions (`GET /sessions` or `GET /sessions/:id`), the backend dynamically computes a `displayStatus` based on action states in priority order (`deriveDisplayStatus` in `sessionStatusReducer.ts`):
+When querying sessions (`GET /sessions` or `GET /sessions/:id`), the backend dynamically computes a `displayStatus` based on action states in priority order:
 
 | Priority | Display Status | Derivation Rule |
 | :--- | :--- | :--- |
@@ -98,7 +98,7 @@ Approval requests track human-in-the-loop review operations.
 
 - **Before-Execution Approval**: Pre-execution gate created when an action is declared in `requiresApproval`. Approval transitions action to `CLEARED`. Rejection transitions action to `FAILED` and triggers session rollback.
 - **After-Execution Approval**: Post-execution gate created after-the-fact when a standard logged action matches a policy with `REQUIRE_APPROVAL`. Approval updates action to `SUCCESS`. Rejection triggers single-action rollback.
-- **Rollback Approval**: Gate for manual or policy-triggered rollback operations.
+- **Rollback Approval**: Gate created during action rollback when an action's compensation configuration specifies `requireApproval: true`. Approval resumes compensation execution, while rejection sets the action's undo status to `DECLINED` and transitions the parent session to `FAILED`.
 
 ### Approval Fields & Unconfirmed Flag
 
