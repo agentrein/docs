@@ -106,8 +106,8 @@
     }
   },
   "logo": {
-    "light": "/images/Dark-Docs.svg",
-    "dark": "/images/Light-Docs.svg",
-    "href": "https://agentrein.com/docs"
+    "light": "/images/light-mode-logo.svg",
+    "dark": "/images/dark-mode-logo.svg",
+    "href": "https://agentrein.com"
   }
 }
