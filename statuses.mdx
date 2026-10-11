@@ -47,7 +47,7 @@ The database persists one of five raw session statuses:
 | Stored Status | Meaning |
 | :--- | :--- |
 | `ACTIVE` | Created when a session is initialized (`POST /sessions`). The session is live and accepting new actions. |
-| `COMPLETED` | Written when a session is completed via `PATCH /sessions/:id` (or `POST /sessions/:id/complete`) with `{ status: 'COMPLETED' }`. |
+| `COMPLETED` | Written when a session is completed via `PATCH /sessions/:id` with `{ status: 'COMPLETED' }`. |
 | `FAILED` | Written by the backend when session rollback completes with failed or declined actions. |
 | `ROLLED_BACK` | Written by the backend when session rollback completes with no failed/declined actions or when sandbox simulated actions are rolled back. |
 | `ABANDONED` | Written by the background sweeper when an `ACTIVE` session exceeds 24 hours of inactivity. |
