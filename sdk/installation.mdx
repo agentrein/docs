@@ -137,9 +137,7 @@ when you are ready for production — no other code changes needed.
 </Note>
 
 <Warning>
-`rollbackSession()` (Python: `rollback_session()`) in sandbox mode marks all actions as `ROLLED_BACK` instantly
-without calling any real connector. This lets you verify your rollback handling
-logic without side effects.
+`rollbackSession()` (Python: `rollback_session()`) in sandbox mode converts actions whose status is `SUCCESS` or `PENDING_APPROVAL` to `ROLLED_BACK`; `FAILED` and `ROLLBACK_FAILED` actions are left untouched. No real compensation runs. A session with no `SUCCESS` action cannot be rolled back (HTTP 409).
 </Warning>
 
 <Info>
