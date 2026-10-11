@@ -41,6 +41,24 @@ API errors return standard HTTP status codes (400, 403, 404, 409, 429, 500, 503)
 
 ---
 
+## System & Health Endpoints
+
+### `GET /health`
+
+Service health check endpoint.
+
+- **Auth**: None required (Public)
+- **Response**: `{ "status": "ok", "timestamp": "2026-10-10T12:00:00.000Z" }`
+
+### `POST /webhooks/paddle`
+
+Paddle billing subscription webhook endpoint.
+
+- **Auth**: None required (Public; HMAC signature verified, Rate Limit: 300/min)
+- **Response**: `{ "received": true }`
+
+---
+
 ## Authentication & Tokens
 
 AgentRein endpoints distinguish between **Agent API Keys** (`ar_live_...` / `ar_test_...`) and **Dashboard Operator Tokens**.
@@ -49,9 +67,77 @@ AgentRein endpoints distinguish between **Agent API Keys** (`ar_live_...` / `ar_
 
 Exchange an API key for a Bearer JWT token.
 
-- **Auth**: None required
+- **Auth**: None required (Public, Rate Limit: 60/min)
 - **Body**: `{ "apiKey": "ar_live_..." }`
 - **Response**: `{ "data": { "token": "eyJhbG..." } }`
+
+### `POST /auth/register`
+
+Register a new operator account and organization.
+
+- **Auth**: None required (Public, Rate Limit: 20/15min)
+- **Body**: `{ "email": "admin@example.com", "password": "...", "name": "Admin" }`
+- **Response**: Returns created user and organization tokens (`201 Created`).
+
+### `POST /auth/login`
+
+Authenticate operator credentials with email and password.
+
+- **Auth**: None required (Public, Rate Limit: 20/15min)
+- **Body**: `{ "email": "admin@example.com", "password": "..." }`
+- **Response**: Returns session JWT token.
+
+### `POST /auth/forgot-password`
+
+Send a password reset link to a registered email address.
+
+- **Auth**: None required (Public, Rate Limit: 20/15min)
+- **Body**: `{ "email": "user@example.com" }`
+- **Response**: Confirmation message.
+
+### `POST /auth/reset-password`
+
+Reset operator account password using a reset token.
+
+- **Auth**: None required (Public, Rate Limit: 20/15min)
+- **Body**: `{ "token": "...", "newPassword": "..." }`
+- **Response**: Password reset confirmation.
+
+### `GET /auth/verify-email`
+
+Verify operator email address using a verification token query parameter.
+
+- **Auth**: None required (Public, Rate Limit: 20/15min)
+- **Query**: `?token=...`
+- **Response**: `{ "verified": true, "email": "user@example.com" }`
+
+### `GET /auth/google`
+
+Initiate Google OAuth2 operator sign-in flow.
+
+- **Auth**: None required (Public)
+- **Response**: Redirects to Google consent screen.
+
+### `GET /auth/google/callback`
+
+Google OAuth2 redirect callback receiver.
+
+- **Auth**: None required (Public)
+- **Response**: Redirects to dashboard with session token.
+
+### `GET /auth/github`
+
+Initiate GitHub OAuth2 operator sign-in flow.
+
+- **Auth**: None required (Public)
+- **Response**: Redirects to GitHub consent screen.
+
+### `GET /auth/github/callback`
+
+GitHub OAuth2 redirect callback receiver.
+
+- **Auth**: None required (Public)
+- **Response**: Redirects to dashboard with session token.
 
 ---
 
@@ -187,6 +273,25 @@ Reject a pending approval request.
 
 ---
 
+## Registry & Connector Validation
+
+### `GET /registry`
+
+Fetch connector registry metadata and action definitions.
+
+- **Auth**: API Key or Operator Token
+- **Response**: Array of connector actions with definitions, supported operations, and precapture requirements.
+
+### `GET /settings/credentials/validate`
+
+Validate configured connector credentials for agent operations.
+
+- **Auth**: API Key or Operator Token (Rate Limit: 30/min)
+- **Query**: `?connectors=github,slack,stripe`
+- **Response**: `{ "valid": true, "configured": [...], "missing": [...], "suggestions": [...] }`
+
+---
+
 ## Policy Management Endpoints
 
 ### `GET /policies`
@@ -227,6 +332,51 @@ Toggle policy enabled state.
 Delete policy.
 
 - **Auth**: Operator Token (`TEAM` plan required)
+
+---
+
+## Operator Management Routes
+
+The following endpoints require Dashboard Operator credentials (`authKind === 'USER'`). Calling these endpoints with an Agent API Key returns HTTP 403 `operator-required`.
+
+| Method | Path | Plan | Purpose |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/me` | FREE | Retrieve authenticated user profile, organization details, and monthly usage metrics |
+| `PATCH` | `/me` | FREE | Update user profile information (e.g. display name) |
+| `DELETE` | `/me` | FREE | Permanently delete user and organization data cascade (Rate limit: 3/hour) |
+| `GET` | `/billing/portal` | FREE | Generate authenticated session URL for the Paddle billing portal |
+| `POST` | `/auth/resend-verification` | FREE | Resend email verification token to user email address |
+| `GET` | `/agents` | FREE | List organization agents merged from registered metadata and session activity |
+| `POST` | `/agents` | FREE | Register a new named agent with slug and description |
+| `GET` | `/agents/:id` | FREE | Retrieve configuration and details for a registered agent |
+| `PUT` | `/agents/:id` | FREE | Update agent display name, description, or active/paused status |
+| `DELETE` | `/agents/:id` | FREE | Delete a registered agent record |
+| `GET` | `/policies` | TEAM | List organization governance policies |
+| `POST` | `/policies` | TEAM | Create a governance policy rule (ALLOW, REQUIRE_APPROVAL, or BLOCK) |
+| `PUT` | `/policies/:id` | TEAM | Update conditions, actions, or pattern on an existing governance policy |
+| `DELETE` | `/policies/:id` | TEAM | Permanently delete a governance policy |
+| `PATCH` | `/policies/:id/toggle` | TEAM | Toggle a governance policy rule between enabled and disabled |
+| `GET` | `/api-keys` | FREE | List active and revoked API keys for the organization |
+| `POST` | `/api-keys` | FREE | Generate a new live or test API key (Rate limit: 10/15min) |
+| `DELETE` | `/api-keys/:id` | FREE | Revoke an organization API key |
+| `GET` | `/sessions` | FREE | List sessions enriched with computed display status, counters, and allowed commands |
+| `GET` | `/sessions/dirty` | PRO | List sessions containing uncompensated actions or incomplete rollbacks |
+| `POST` | `/sessions/:id/actions/:actionId/rollback` | FREE | Roll back a single executed action within a session |
+| `GET` | `/metrics` | FREE | Retrieve organization-wide action counts, success rates, and safety statistics |
+| `GET` | `/sessions/:id/dirty` | FREE | Check whether a specific session contains uncompensated actions |
+| `GET` | `/sessions/:id/intent` | TEAM | Fetch intent alignment evaluation result for a session |
+| `GET` | `/sessions/:id/intent/summary` | TEAM | Fetch detailed intent drift summary and metric scores for a session |
+| `GET` | `/sessions/intent/summary` | TEAM | Retrieve organization-level intent verification statistics across all sessions |
+| `GET` | `/approvals` | PRO | List approval requests with filtering by status and unconfirmed flags |
+| `POST` | `/approvals/:id/approve` | PRO | Approve a pending approval request |
+| `POST` | `/approvals/:id/reject` | PRO | Reject a pending approval request and record rejection reason |
+| `GET` | `/settings/connectors/health` | PRO | Query connectivity and credential health status for all integrated connectors |
+| `GET` | `/settings/credentials` | FREE | List configured connector integrations without revealing secret values |
+| `PUT` | `/settings/credentials/:connector` | PRO | Store or update encrypted credential for a connector (Rate limit: 15/15min) |
+| `DELETE` | `/settings/credentials/:connector` | PRO | Remove stored credential for a connector (Rate limit: 15/15min) |
+| `GET` | `/audit-logs` | TEAM | Query tamper-evident audit logs with actor and date filters |
+| `GET` | `/team/members` | TEAM | List organization team members and role assignments |
+| `DELETE` | `/sessions/:id/purge` | PRO | Permanently purge session and related actions for GDPR compliance (Rate limit: 5/15min) |
 
 ---
 
