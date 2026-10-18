@@ -5,86 +5,72 @@ description: Which external SDKs have automatic rollback support in the backend.
 
 ## Credentials
 
-Add connector credentials in **Dashboard → Integrations**. Each credential has a Key (the token name below) and a Value (Plain Text or JSON).
+Add connector credentials in **Dashboard → Settings → Connectors**: click **Add Connector**, select the provider, and fill in the fields shown. Credentials are encrypted (AES-256-GCM) at rest.
 
 <Tabs>
   <Tab title="GitHub" icon="github">
-    **Key:** `GITHUB_TOKEN`
-    **Type:** Plain Text
+    **Fields:** Personal Access Token
 
     Get your token at: [GitHub → Settings → Developer settings → Personal access tokens](https://github.com/settings/tokens)
   </Tab>
 
   <Tab title="Slack">
-    **Key:** `SLACK_TOKEN`
-    **Type:** Plain Text
+    **Fields:** Bot User OAuth Token
 
     Get your token at: [Slack API → Your Apps → OAuth & Permissions → Bot Token](https://api.slack.com/apps)
   </Tab>
 
   <Tab title="Stripe">
-    **Key:** `STRIPE_TOKEN`
-    **Type:** Plain Text
+    **Fields:** Secret API Key
 
     Get your key at: [Stripe Dashboard → Developers → API keys → Secret key](https://dashboard.stripe.com/apikeys)
   </Tab>
 
   <Tab title="HubSpot">
-    **Key:** `HUBSPOT_TOKEN`
-    **Type:** Plain Text
+    **Fields:** Access Token
 
     Get your token at: [HubSpot → Settings → Integrations → Private Apps](https://app.hubspot.com/private-apps)
   </Tab>
 
   <Tab title="Salesforce">
-    **Key:** `SALESFORCE_TOKEN`
-    **Type:** Plain Text
+    **Fields:**
+    - Instance URL
+    - Access Token
 
-    Get your token at: [Salesforce → Settings → Personal → Reset My Security Token](https://help.salesforce.com/s/articleView?id=sf.user_security_token.htm)
+    The Instance URL must be an `https://` URL on a Salesforce domain, for example `https://yourdomain.my.salesforce.com` (sandboxes look like `https://yourdomain--sandboxname.sandbox.my.salesforce.com`). It must not include a port, path, or credentials.
+
+    The Access Token must be an OAuth 2.0 access token or a session ID. A Salesforce security token is not an access token (it is only appended to a password when requesting a session ID), so it cannot be pasted here directly. See [Salesforce REST API Developer Guide → Set Up Authorization](https://developer.salesforce.com/docs/atlas.en-us.232.0.api_rest.meta/api/quickstart_oauth.htm).
   </Tab>
 
   <Tab title="Notion">
-    **Key:** `NOTION_TOKEN`
-    **Type:** Plain Text
+    **Fields:** Integration Token
 
     Get your token at: [Notion → Settings → Connections → Develop or manage integrations](https://www.notion.so/my-integrations)
   </Tab>
 
   <Tab title="Gmail">
-    **Key:** `GMAIL_TOKEN`
-    **Type:** JSON
-
-    | Field           | Description                    |
-    | --------------- | ------------------------------ |
-    | `clientId`      | Google OAuth client ID         |
-    | `clientSecret`  | Google OAuth client secret     |
-    | `refreshToken`  | OAuth refresh token (Gmail scope) |
+    **Fields:**
+    - Client ID
+    - Client Secret
+    - Refresh Token
 
     **Required scope:** `https://www.googleapis.com/auth/gmail.modify`
   </Tab>
 
   <Tab title="Google Drive">
-    **Key:** `GDRIVE_TOKEN`
-    **Type:** JSON
-
-    | Field           | Description                    |
-    | --------------- | ------------------------------ |
-    | `clientId`      | Google OAuth client ID         |
-    | `clientSecret`  | Google OAuth client secret     |
-    | `refreshToken`  | OAuth refresh token (Drive scope) |
+    **Fields:**
+    - Client ID
+    - Client Secret
+    - Refresh Token
 
     **Required scope:** `https://www.googleapis.com/auth/drive`
   </Tab>
 
   <Tab title="Google Sheets">
-    **Key:** `GSHEETS_TOKEN`
-    **Type:** JSON
-
-    | Field           | Description                    |
-    | --------------- | ------------------------------ |
-    | `clientId`      | Google OAuth client ID         |
-    | `clientSecret`  | Google OAuth client secret     |
-    | `refreshToken`  | OAuth refresh token (Sheets scope) |
+    **Fields:**
+    - Client ID
+    - Client Secret
+    - Refresh Token
 
     **Required scope:** `https://www.googleapis.com/auth/spreadsheets`
   </Tab>
