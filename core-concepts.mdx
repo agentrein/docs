@@ -93,7 +93,7 @@ The database stores raw session status (`ACTIVE`, `COMPLETED`, `FAILED`, `ROLLED
 | `ROLLING_BACK` | Session is actively undergoing undo compensation (`IN_PROGRESS`). |
 | `REVERTED` | All executed actions have been completely rolled back (`ROLLED_BACK`). |
 | `PARTIALLY_REVERTED` | Some actions were rolled back while others remain successful. |
-| `ROLLBACK_FAILED` | An action failed during the rollback process. |
+| `ROLLBACK_FAILED` | An action failed during the rollback process. Operators can retry it; see [Statuses](/statuses). |
 
 <CodeGroup>
 ```typescript TypeScript
