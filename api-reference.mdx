@@ -173,7 +173,7 @@ List sessions for the organization.
 Retrieve details for a single session, including all logged actions and snapshots.
 
 - **Auth**: API Key or Operator Token
-- **Response**: Single session object with `actions` array and computed `displayStatus`, `counters`, `simulated`, and `allowedCommands`.
+- **Response**: Single session object with `actions` array and computed `displayStatus`, `counters`, `simulated`, and `allowedCommands`. Each action in `actions` includes `allowedCommands: { "retryUndo": boolean }` (true only for operator tokens on retryable actions).
 
 ### `PATCH /sessions/:id`
 
@@ -240,6 +240,20 @@ Update status or response payload of an existing action (used to confirm executi
 Roll back a single action within a session.
 
 - **Auth**: Operator Token
+
+### `POST /sessions/:id/actions/:actionId/retry-undo`
+
+Retry undo compensation for a failed action rollback.
+
+- **Auth**: Operator Token (API-key tokens get 403)
+- **Preconditions**: Retryable only when action status is `ROLLBACK_FAILED` and its undo status is `FAILED`, the session is not sandbox, and the action's connector action has an automated undo strategy.
+- **Responses**:
+  - `200`: Updated action (both when the retry succeeds, action becomes `ROLLED_BACK` with undo `UNDONE`, and when it fails again, action stays `ROLLBACK_FAILED` with undo `FAILED`).
+  - `202`: Current action when the provider call succeeded but recording the result failed (action stays `ROLLBACK_FAILED`, undo `IN_PROGRESS`; the system recovers the marker automatically after about 15 minutes; do not retry until status updates).
+  - `404`: Session or action not found.
+  - `409`: Not retryable or another retry in progress.
+  - `422`: No automated undo strategy.
+- **Note**: A successful retry moves the session from `FAILED` to `ROLLED_BACK` only if no `SUCCESS`, `PENDING_APPROVAL`, `CLEARED`, `DECLINED` or `ROLLBACK_FAILED` action remains. It does not resume the interrupted rollback; actions the halted chain never reached stay `SUCCESS` until the operator calls session rollback again. Each retry uses a fresh attempt id. The retry path sends no email.
 
 ---
 

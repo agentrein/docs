@@ -23,7 +23,7 @@ The database stores one of six status values on each action:
 | `CLEARED` | An explicit before-execution approval was granted by a reviewer. The SDK is authorized to execute the action locally and confirm result via `PATCH`. |
 | `FAILED` | The action threw an exception, failed policy evaluation, or was rejected by a reviewer. |
 | `ROLLED_BACK` | Compensation (undo) executed successfully for this action. |
-| `ROLLBACK_FAILED` | Automatic compensation failed during execution. |
+| `ROLLBACK_FAILED` | Automatic compensation failed during execution. An operator can retry the undo; a successful retry moves the action to `ROLLED_BACK`. |
 
 ### The `CLEARED` Status Flow
 
@@ -76,7 +76,7 @@ The following rules govern session rollback behavior across AgentRein:
 - **Caller Authorization**: Agent callers may trigger rollback only on `ACTIVE` sessions. Operator callers may trigger rollback on sessions with stored status `ACTIVE`, `FAILED`, `COMPLETED`, or `ABANDONED`.
 - **Required Actions**: A session can only be rolled back if it has at least one action with status `SUCCESS`. Sessions already in `REVERTED` display status cannot be rolled back.
 - **Sandbox Behavior**: Rolling back a sandbox session converts all `SUCCESS` and `PENDING_APPROVAL` actions in bulk to `ROLLED_BACK` in a single transaction; no real compensation logic runs.
-- **Execution Chain**: Rollback iterates backwards through executed `SUCCESS` actions. If an individual undo operation fails, the rollback chain halts immediately.
+- **Execution Chain**: Rollback iterates backwards through executed `SUCCESS` actions. If an individual undo operation fails, the rollback chain halts immediately. The operator can then retry the failed action (`POST /sessions/:id/actions/:actionId/retry-undo` or the Retry undo button) and call session rollback again for the actions the chain did not reach.
 - **Declined Rollback Approval**: If a reviewer declines a rollback approval request, the action's undo status is set to `DECLINED` while its execution status remains `SUCCESS` (preserving its side-effects), and the overall session status becomes `FAILED`.
 - **Pending and Cleared Actions**: Actions in `PENDING_APPROVAL` or `CLEARED` status are never rolled back; if rollback completes while such actions remain, the parent session status is left unchanged.
 

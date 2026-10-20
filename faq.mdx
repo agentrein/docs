@@ -9,6 +9,8 @@ description: "Common integration states and how to handle them."
 
 `ROLLBACK_FAILED` can occur when connector credentials were not configured before actions were executed. Run `validateConfig()` during agent startup to identify missing connector credentials before execution. See [Supported Integrations](/sdk/supported-integrations#validating-credentials-before-execution) for the complete setup guidance.
 
+To recover, fix the underlying credentials or provider issue, then use the "Retry undo" button in the dashboard or call `POST /sessions/:id/actions/:actionId/retry-undo`. Irreversible actions without an automated undo strategy cannot be retried. If the retry returns a 202 response, the system recovers the marker automatically after about 15 minutes; do not retry until status updates.
+
 </Accordion>
 
 <Accordion title="What does UNVERIFIED mean?">
