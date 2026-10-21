@@ -69,7 +69,7 @@
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/agentrein"
+      "github": "https://github.com/agentrein/agentrein"
     }
   },
   "appearance": {
@@ -80,13 +80,13 @@
   "navbar": {
     "links": [
       {
-        "href": "https://github.com/agentrein",
+        "href": "https://github.com/agentrein/agentrein",
         "label": "GitHub"
       }
     ],
     "primary": {
       "type": "github",
-      "href": "https://github.com/AgentReinAi"
+      "href": "https://github.com/agentrein/agentrein"
     }
   },
   "fonts": {
