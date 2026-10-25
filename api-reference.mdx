@@ -156,6 +156,8 @@ Create a new safety session.
   }
   ```
 - **Response**: Returns created `Session` object (`201 Created`).
+- **Errors**:
+  - `403 Agent Paused`: If registered agent has status `paused` (`agent-paused`).
 
 ### `GET /sessions`
 
