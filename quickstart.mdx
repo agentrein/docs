@@ -109,13 +109,17 @@ AgentRein has four plan tiers: **FREE**, **PRO**, **TEAM**, and **ENTERPRISE**.
 
 Your API key works across all plans, but certain features require a minimum plan:
 
-| Feature | FREE | PRO | TEAM |
-| --- | --- | --- | --- |
-| Session Rollback | ✓ | ✓ | ✓ |
-| API Key Management | ✓ | ✓ | ✓ |
-| Connector Credentials | ✓ | ✓ | ✓ |
-| Approval Gates (HITL) | ✗ | ✓ | ✓ |
-| Intent Drift Detection | ✗ | ✗ | ✓ |
+| Feature | FREE | PRO | TEAM | ENTERPRISE |
+| --- | --- | --- | --- | --- |
+| Session Rollback | ✓ | ✓ | ✓ | ✓ |
+| Session Retention | 7 days | 30 days | 90 days | Unlimited |
+| Actions / month | 1,000 | 30,000 | 150,000 | Unlimited |
+| API Key Management | ✓ | ✓ | ✓ | ✓ |
+| Approval Gates (HITL) | ✗ | ✓ | ✓ | ✓ |
+| Connector Credentials Vault | ✗ | ✓ | ✓ | ✓ |
+| Custom Governance Policies | ✗ | ✗ | ✓ | ✓ |
+| Intent Drift Detection | ✗ | ✗ | ✓ | ✓ |
+| Audit Logs | ✗ | ✗ | ✓ | ✓ |
 
 <Note>
   If you call a PRO or TEAM feature on a FREE plan, the backend returns a `403` with a clear error message. Upgrade at [Dashboard → Settings → Billing](https://agentrein.com/dashboard/settings/billing).
