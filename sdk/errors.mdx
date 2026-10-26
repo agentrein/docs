@@ -8,7 +8,46 @@ The Python SDK additionally provides a common `AgentReinError` base class that a
 </Info>
 
 <AccordionGroup>
-<Accordion title="AgentReinUnavailableError" icon="triangle-exclamation" defaultOpen={true}>
+<Accordion title="AgentReinDeniedError" icon="ban" defaultOpen={true}>
+Thrown/raised when the AgentRein backend explicitly denies an operation (HTTP 401, 403, 409, or 429). Common causes include `agent-paused`, `policy-blocked`, `plan-required`, `quota-exceeded`, `subscription-inactive`, or concurrent rollback conflict.
+
+<Warning>
+**Safety Under `failureMode: 'open'`**:
+Under `failureMode: 'open'`, explicit server denials are **never** swallowed or fallen open. Only infrastructure outages and network disconnects fall open. An approval-gated action that receives an explicit server decision will **never** execute without a valid approval.
+</Warning>
+
+<CodeGroup>
+```ts TypeScript
+import { AgentReinDeniedError } from 'agentrein';
+
+try {
+  const session = await agentrein.newSession({ agentId: 'paused-agent' });
+} catch (err) {
+  if (err instanceof AgentReinDeniedError) {
+    console.error(`Request denied (${err.status}): ${err.errorType} - ${err.detail}`);
+  }
+}
+```
+
+```python Python
+from agentrein import AgentReinDeniedError
+
+try:
+    session = agentrein.new_session(agent_id="paused-agent")
+except AgentReinDeniedError as err:
+    print(f"Request denied ({err.status}): {err.error_type} - {err.detail}")
+```
+</CodeGroup>
+
+**Error Attributes:**
+| Property (TS) | Attribute (Python) | Description |
+|---|---|---|
+| `status` | `status` | HTTP status code (e.g. 401, 403, 409, 429) |
+| `errorType` | `error_type` | Error type slug from RFC 7807 (e.g. `'agent-paused'`, `'policy-blocked'`) |
+| `detail` | `detail` | Human-readable explanation string |
+</Accordion>
+
+<Accordion title="AgentReinUnavailableError" icon="triangle-exclamation">
 Thrown/raised when the SDK cannot reach the AgentRein backend during authentication. If authentication succeeds but session creation fails, an `AxiosError` (TS) or `httpx.HTTPError` (Python) is thrown/raised.
 
 > Developers should catch both error types when using `failureMode`/`failure_mode: 'closed'`.

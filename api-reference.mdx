@@ -39,6 +39,21 @@ API errors return standard HTTP status codes (400, 403, 404, 409, 429, 500, 503)
 }
 ```
 
+#### SDK Error Mapping
+
+AgentRein SDKs (TypeScript and Python) classify errors into typed exceptions:
+- **Server Decisions (HTTP 401, 403, 409, 429)**: Always raised as `AgentReinDeniedError` carrying `status`, `errorType`, and `detail`. Under `failureMode: 'open'`, server denials are **never** fallen open.
+- **Server Outages & Network Disconnects (HTTP 5xx, socket timeouts, DNS failure)**: Raised as `AgentReinUnavailableError`. Under `failureMode: 'open'`, outages fall open with a warning log.
+
+Common RFC 7807 problem types:
+- `agent-paused` (403): Agent is registered with status `'paused'`.
+- `policy-blocked` (403): Action blocked by organizational policy.
+- `plan-required` (403): Feature requires plan upgrade.
+- `quota-exceeded` (403): Monthly action quota reached.
+- `subscription-inactive` (403): Organization subscription is inactive or past due.
+- `conflict` (409): State machine conflict or concurrent rollback.
+- `rate-limit-exceeded` (429): Endpoint rate limit exceeded.
+
 ---
 
 ## System & Health Endpoints

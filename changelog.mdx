@@ -3,6 +3,31 @@ title: "Changelog"
 description: "Product updates and announcements"
 ---
 
+<Update label="2026-10-25" description="SDK failure mode safety, agent pause enforcement, and platform reliability">
+
+## SDK Failure Mode Safety (Option A)
+
+Under `failureMode: 'open'`, explicit server decisions (HTTP 401, 403, 409, 429) are now strictly enforced and raised as `AgentReinDeniedError`. Only network outages and HTTP 5xx fall open with a warning.
+- **Approval Gate Guarantee**: Vendor functions wrapped with `requiresApproval` will **never** execute without a valid server approval record.
+- **Typed Error**: `AgentReinDeniedError` exports across both TypeScript (`v1.0.46`) and Python (`v0.1.1`) SDKs.
+
+## Agent Pause Enforcement
+
+Registered agents marked with status `'paused'` in the dashboard will immediately reject session initialization (`POST /sessions`) with RFC 7807 403 `agent-paused`. Both SDKs raise `AgentReinDeniedError`.
+
+## Python Precapture Parity
+
+The Python SDK now caches connector definitions and invokes `/sessions/:id/actions/precapture` before mutation vendor calls, ensuring complete `beforeState` recording for automated single-action and session rollbacks. CREATE actions bypass precapture in both SDKs.
+
+## Platform Integrity and Hardening
+
+- **Atomic Registration**: Registration of organizations and users is wrapped in an atomic transaction (`createOrganizationWithUser`), preventing orphan records.
+- **Safe Session Queries**: `GET /sessions` bounds returned session payloads to a default of 250 items with cursor pagination support.
+- **Session Tabs Filtering**: Sessions in `ROLLBACK_FAILED` are categorized under the Active tab, and `ABANDONED` under Completed.
+- **API Key Security**: Plaintext API keys are migrated to SHA-256 hash-on-write during registration.
+
+</Update>
+
 <Update label="Organization Policies" description="Organization policies">
 
 ## Organization policies
